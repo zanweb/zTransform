@@ -131,8 +131,9 @@ class TSCIIData(DataFactory):
 
 
 class LysaghtRead(IReader):
-    def read(self, file_with_path):
-        pass
+    def read(self, file_path):
+        temp = TransformFunctions.read_data_from_lysaght_engine(file_path)
+        return temp
 
 
 class DTRWrite(IWriter):

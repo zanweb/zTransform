@@ -1,6 +1,8 @@
 import csv
 import re
 
+from LysaghtPurlin.Part import Hole, Part
+
 
 class CsvFile:
     def __init__(self, file_with_path):
@@ -20,7 +22,6 @@ class CsvFile:
         try:
             with open(self.file_with_path) as f:
                 f_csv = csv.DictReader(f)
-                name_unit_length = f_csv
                 for row in f_csv:
                     info_line = {}
                     print(row)
@@ -52,9 +53,7 @@ class CsvFile:
                 f_csv = csv.DictReader(f)
 
                 for row in f_csv:
-                    info_line = {}
-                    info_line['Section'] = row['Section']
-                    info_line['Width'] = row['Width']
+                    info_line = {'Section': row['Section'], 'Width': row['Width']}
                     # info_line['Depth'] = row['Depth']
                     # info_line['THK'] = row['THK']
                     # info_line['Flange Width'] = row['Flange Width']
@@ -73,9 +72,7 @@ class CsvFile:
                 f_csv = csv.DictReader(f)
 
                 for row in f_csv:
-                    info_line = {}
-                    info_line['HoleType'] = row['HoleType']
-                    info_line['HoleName'] = row['HoleName']
+                    info_line = {'HoleType': row['HoleType'], 'HoleName': row['HoleName']}
 
                     #
                     self.seq_info.append(info_line)
@@ -91,10 +88,7 @@ class CsvFile:
                 f_csv = csv.DictReader(f)
 
                 for row in f_csv:
-                    info_line = {}
-                    info_line['Dia'] = float(row['Dia'])
-                    info_line['Gauge'] = float(row['Gauge'])
-                    info_line['ToolID'] = int(row['ToolID'])
+                    info_line = {'Dia': float(row['Dia']), 'Gauge': float(row['Gauge']), 'ToolID': int(row['ToolID'])}
                     #
                     self.seq_info.append(info_line)
                 f.close()
@@ -103,19 +97,67 @@ class CsvFile:
         finally:
             return self.seq_info
 
+    def get_lysaght_dia_no(self):
+        try:
+            with open(self.file_with_path) as f:
+                f_csv = csv.DictReader(f)
+                for row in f_csv:
+                    info_line = {'DiaNo': float(row['DiaNo']), 'Dia': float(row['Dia'])}
+                    self.seq_info.append(info_line)
+                f.close()
+        except Exception as e:
+            print(e)
+        finally:
+            return self.seq_info
+
+    def get_lysaght_punch(self):
+        try:
+            with open(self.file_with_path) as f:
+                lines = f.readlines()
+                parts = []
+                for line in lines:
+                    item = line.split(',')
+                    if len(item) % 5 != 0:
+                        raise NameError('数据格式不对')
+                    size = str(item[0]).split('*')
+                    thick = float(size[len(size) - 1])
+                    part = Part(part_no=str(item[1]), part_length=int(item[2]), part_thickness=thick,
+                                quantity=int(item[3]),
+                                section=str(item[0]), material='')
+                    for i in range(1, len(item) // 5):
+                        if item[i * 5] == 'Hole':
+                            hole = Hole(location=item[1 * 5 + 1], x=float(item[i * 5 + 3]), y=float(item[i * 5 + 4]),
+                                        dia=float(item[i * 5 + 2]))
+                            part.add_hole(hole)
+                    parts.append(part)
+                f.close()
+            self.seq_info = parts
+        except NameError:
+            print('请检查数据格式的长度！')
+        except Exception as e:
+            print(e)
+        finally:
+            return self.seq_info
+
 
 if __name__ == '__main__':
-    csv_f = CsvFile('E:/Zanweb/Bradbury_Import_Test/in_test/BSCN.csv')
-    csv_info = csv_f.get_seq_list()
-    for row in csv_info:
-        print(row)
+    # csv_f = CsvFile('E:/Zanweb/Bradbury_Import_Test/in_test/BSCN.csv')
+    # csv_info = csv_f.get_seq_list()
+    # for row in csv_info:
+    #     print(row)
+    #
+    # csv_z = CsvFile('../Z.csv')
+    # csv_z_list = csv_z.get_z_list()
+    # for row in csv_z_list:
+    #     print(row)
+    #
+    # csv_t = CsvFile('../DTRTools.csv')
+    # csv_tools = csv_t.get_tool_id()
+    # for row in csv_tools:
+    #     print(row)
 
-    csv_z = CsvFile('../Z.csv')
-    csv_z_list = csv_z.get_z_list()
-    for row in csv_z_list:
-        print(row)
-
-    csv_t = CsvFile('../Tool.csv')
-    csv_tools = csv_t.get_tool_id()
-    for row in csv_tools:
-        print(row)
+    csv_p = CsvFile('../testfiles/punch.csv')
+    csv_part = csv_p.get_lysaght_punch()
+    print(csv_part)
+    for item_line in csv_part:
+        print(item_line.part_no)

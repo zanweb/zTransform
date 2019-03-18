@@ -1,14 +1,15 @@
 __author__ = "zanweb <zanweb@163.com>"
 
+import math
 # from operator import attrgetter
 import operator
 from itertools import groupby
 from operator import attrgetter
 
-import math
-
 from Base.base import String, Integer, Float
 from Base.constant import *
+# from DTRGen.TransformFunctions import get_lysaght_real_dia
+from DTRGen import TransformFunctions
 
 
 class Hole(object):
@@ -63,12 +64,13 @@ class DTRHole(Hole):
 
 
 class Part(object):
+    """ Lysaght Part """
     part_no = String('part_no')
     part_length = Integer('part_length')
     part_thickness = Float('part_thickness')
     quantity = Integer('quantity')
     section = String('section')
-    part_material = String('material')
+    material = String('material')
 
     def __init__(self, part_no, part_length, part_thickness, quantity, section, material):
         self.material = material
@@ -93,19 +95,12 @@ class Part(object):
 
     def convert_to_dtr_holes(self):
         # self.dtr_holes = []
+        tool_list = TransformFunctions.get_dtr_tools('./DTRTools.csv')
         for one_group in self.holes_group_y:
             # print('one_group len -->{0}'.format(len(one_group)))
             dtr_hole = DTRHole()
             if len(one_group) == 1:
-                dtr_hole.__dict__ = one_group[0].__dict__
-                dtr_hole.group_type = 'single hole'
-                dtr_hole.x_reference = LEADING_EDGE
-                dtr_hole.y_reference = CENTER_P
-                dtr_hole.group_x = 0.0
-                dtr_hole.group_y = 0.0
-                dtr_hole.group_x_reference = LEADING_EDGE
-                dtr_hole.group_y_reference = CENTER_P
-                dtr_hole.gauge = 0.0
+                dtr_hole = self.single_dtr_hole(one_group[0])
                 self.dtr_holes.append(dtr_hole)
             if len(one_group) == 2:
                 dtr_hole.__dict__ = one_group[1].__dict__
@@ -118,7 +113,32 @@ class Part(object):
                 dtr_hole.group_y_reference = CENTER_P
                 if one_group[0].y == - one_group[1].y:
                     dtr_hole.gauge = math.fabs(one_group[1].y) * 2
+                else:
+                    dtr_hole.gauge = math.fabs(one_group[1].y-one_group[0].y)
+                    dtr_hole.group_y = one_group[1].y-dtr_hole.gauge/2
+                is_normal_gauge = TransformFunctions.get_dtr_tool_id(tool_list, dtr_hole.dia, dtr_hole.gauge)
+                if is_normal_gauge == -1:
+                    dtr_hole = self.single_dtr_hole(one_group[0])
+                    self.dtr_holes.append(dtr_hole)
+                    dtr_hole = self.single_dtr_hole(one_group[1])
+                    self.dtr_holes.append(dtr_hole)
+                    continue
+
                 self.dtr_holes.append(dtr_hole)
+
+    def single_dtr_hole(self, one_of_group):
+        dtr_hole = DTRHole()
+        dtr_hole.__dict__ = one_of_group.__dict__
+        dtr_hole.group_type = 'single hole'
+        dtr_hole.x_reference = LEADING_EDGE
+        dtr_hole.y_reference = CENTER_P
+        dtr_hole.group_x = 0.0
+        dtr_hole.group_y = 0.0
+        dtr_hole.group_x_reference = LEADING_EDGE
+        dtr_hole.group_y_reference = CENTER_P
+        dtr_hole.gauge = 0.0
+        return dtr_hole
+
 
     def group_holes_by_y(self):
         for dia_index, dia_group in groupby(self.holes, key=attrgetter('dia')):
@@ -126,9 +146,18 @@ class Part(object):
                 self.holes_group_y.append(list(x_group))
                 # print(self.holes_group_y)
 
+    def change_dia_no_to_real_dia(self, dia_list):
+        try:
+            for one_hole in self.holes:
+                one_hole.dia = TransformFunctions.get_lysaght_real_dia(dia_list, one_hole.dia)
+        except Exception as e:
+            print(e)
+        finally:
+            return
+
 
 def test():
-    part = Part('abc123', 8265, 2.4, 21, 'C200190')
+    part = Part('abc123', 8265, 2.4, 21, 'C200190', '')
     part.add_hole(Hole('OF', 35.0, 158.0, 8.0))
     part.add_hole(Hole('OF', 635.0, 158.0, 8.0))
     part.add_hole(Hole('OF', 1235.0, 158.0, 8.0))
