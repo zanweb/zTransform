@@ -1,5 +1,7 @@
 import os
 
+from PyQt5.QtWidgets import QMessageBox
+
 
 def is_sub_string(sub_str_list, str):
     """''
@@ -56,6 +58,16 @@ def get_indicate_ext_file(path, ext):
         return file_name_list
     else:
         return
+
+
+def check_file_exist(file_name_exist):
+    try:
+        f = open(file_name_exist)
+        f.close()
+        return True
+    except IOError:
+        QMessageBox.warning(None, '警告', file_name_exist + ' :文件不存在！', QMessageBox.Ok)
+        return False
 
 
 if __name__ == '__main__':

@@ -267,7 +267,7 @@
           <widget class="QLineEdit" name="lineEdit_dist_folder"/>
          </item>
          <item>
-          <widget class="QPushButton" name="push_botton_dist_folder">
+          <widget class="QPushButton" name="push_button_dist_folder">
            <property name="maximumSize">
             <size>
              <width>100</width>
