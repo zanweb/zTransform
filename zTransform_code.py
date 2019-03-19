@@ -5,6 +5,9 @@ from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtWidgets import QApplication, QMainWindow, QMessageBox
 from PyQt5.QtWidgets import QFileDialog
 
+# from PyQt5 import sip
+
+
 from CamGen import DataTransform
 from zTransform import Ui_zTransform
 
@@ -49,7 +52,7 @@ class z_transform(QMainWindow):
             self.ui.statusbar.showMessage('Transform Process Finished!')
             is_open_dist_folder = QMessageBox.question(self, '打开转换目录', '转换完成！是否打开转换后的目录?（y/n）',
                                                        QMessageBox.Yes | QMessageBox.No)
-            if is_open_dist_folder:
+            if is_open_dist_folder == QMessageBox.Yes:
                 os.chdir(self.directory_dist_folder)
                 explorer_fold = os.getcwd()
                 os.system("explorer.exe %s" % explorer_fold)
