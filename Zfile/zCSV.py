@@ -38,6 +38,25 @@ class CsvFile:
                             # str(row['Item Desc'])[:5]
                         if row['Mark No']:
                             info_line['Mark No'] = row['Mark No']
+                        if row['ORG']:
+                            info_line['ORG'] = row['ORG']
+                        info_line['Catalog'] = row['Item Cat']
+                        info_line['Batch'] = row['Batch Id']
+                        info_line['Sequence'] = row['Seq']
+                        info_line['Department'] = row['Dept']
+                        info_line['Reshape'] = row['Res']
+                        info_line['Reshape Description'] = row['Res Desc']
+                        info_line['Raw Material'] = row['Raw Material']
+                        info_line['Coil Width'] = row['Coil Width']
+                        if row['Coil Color']:
+                            info_line['Coil Color'] = row['Coil Color']
+                        info_line['Job'] = row['Fa Job']
+                        info_line['Product Width'] = row['Prd Width']
+                        info_line['Stack'] = row['Stack']
+                        info_line['Factory Sequence'] = row['Fa Seq']
+                        info_line['Line Sequence'] = row['Line Seq']
+
+                        info_line['Bundle'] = re.findall(r'\d+', str(row['Bundle']))[0]
 
                         print(info_line['Item'])
                         self.seq_info.append(info_line)
@@ -155,9 +174,13 @@ if __name__ == '__main__':
     # csv_tools = csv_t.get_tool_id()
     # for row in csv_tools:
     #     print(row)
+    # csv_p = CsvFile('../testfiles/punch.csv')
+    # csv_part = csv_p.get_lysaght_punch()
+    # print(csv_part)
+    # for item_line in csv_part:
+    #     print(item_line.part_no)
 
-    csv_p = CsvFile('../testfiles/punch.csv')
-    csv_part = csv_p.get_lysaght_punch()
-    print(csv_part)
-    for item_line in csv_part:
-        print(item_line.part_no)
+    csv_f = CsvFile('E:/Desktop/NC文件/1816474.csv')
+    csv_info = csv_f.get_seq_list()
+    for row in csv_info:
+        print(row)

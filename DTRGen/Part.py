@@ -189,7 +189,8 @@ class Part(_Call):
 
 class Parts:
     def __init__(self):
-        self.parts = [UNITES]
+        # self.parts = [UNITES]
+        self.parts = []
 
     def __str__(self):
         return '\n'.join(str(x) for x in self.parts)

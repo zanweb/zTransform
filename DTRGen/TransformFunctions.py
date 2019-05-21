@@ -12,6 +12,7 @@ from Zfile import zCSV, zFBase
 
 
 def lysaght_to_dtr(orders, file_path):
+    mm_inch = 25.4
     tool_list = get_dtr_tools('./DTRTools.csv')
 
     order_list = CutList()
@@ -20,7 +21,7 @@ def lysaght_to_dtr(orders, file_path):
         for bundle in batch.bundles:
             for part in bundle.parts:
                 order_item = CutItem(order_number=orders.order_no, bundle=bundle.bundle_no,
-                                     quantity=part.quantity, length=float(part.part_length), material=part.material,
+                                     quantity=part.quantity, length=float(part.part_length)/mm_inch, material=part.material,
                                      product_code=orders.product_code, part_option='R', item_id=part.part_no,
                                      action='C')
                 order_list.append(order_item)
@@ -31,9 +32,9 @@ def lysaght_to_dtr(orders, file_path):
                         tool_num = get_dtr_tool_id(tool_list, dtr_hole.dia, dtr_hole.gauge)
                         if tool_num > 0:
                             part_item = Part(part_name=part.part_no, tool_number=tool_num,
-                                             x_offset=dtr_hole.group_x,
+                                             x_offset=dtr_hole.group_x/mm_inch,
                                              x_reference=dtr_hole.group_x_reference, permanent=True,
-                                             y_offset=dtr_hole.group_y,
+                                             y_offset=dtr_hole.group_y/mm_inch,
                                              y_reference=dtr_hole.group_y_reference)
                             part_list.append(part_item)
                         else:
