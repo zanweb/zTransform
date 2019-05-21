@@ -44,9 +44,9 @@ def lysaght_to_dtr(orders, file_path):
                     else:
                         tool_num = get_dtr_tool_id(tool_list, dtr_hole.dia, dtr_hole.gauge)
                         if tool_num > 0:
-                            part_item = Part(part_name=part.part_no, tool_number=tool_num, x_offset=dtr_hole.x,
+                            part_item = Part(part_name=part.part_no, tool_number=tool_num, x_offset=dtr_hole.x/mm_inch,
                                              x_reference=dtr_hole.x_reference, permanent=True,
-                                             y_offset=dtr_hole.y,
+                                             y_offset=dtr_hole.y/mm_inch,
                                              y_reference=dtr_hole.y_reference)
                             part_list.append(part_item)
                         else:
