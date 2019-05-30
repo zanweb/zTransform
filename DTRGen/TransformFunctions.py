@@ -20,7 +20,9 @@ def lysaght_to_dtr(orders, file_path):
     for batch in orders.batches:
         for bundle in batch.bundles:
             for part in bundle.parts:
-                order_item = CutItem(order_number=orders.order_no, bundle=bundle.bundle_no,
+                orders.product_code = 'CEES'
+                part.material = 'C00000'
+                order_item = CutItem(order_number=orders.order_no, bundle=bundle.bundle_no,part_number=part.part_no,
                                      quantity=part.quantity, length=float(part.part_length)/mm_inch, material=part.material,
                                      product_code=orders.product_code, part_option='R', item_id=part.part_no,
                                      action='C')
@@ -56,7 +58,8 @@ def lysaght_to_dtr(orders, file_path):
                             return 0
     # print(order_list)
     # print(part_list)
-    file_path += 'D' + time.strftime('%y%m%d', time.localtime()) + '0'  # str(random.randint(0, 9))
+    # file_path += 'D' + time.strftime('%y%m%d', time.localtime()) + '0'  # str(random.randint(0, 9))
+    file_path += 'D' + '0'*7
     # print(file_path)
     order_list.save_as(file_path + '.ORD')
     part_list.save_as(file_path + '.PRT')
@@ -106,7 +109,7 @@ def read_data_from_lysaght_engine(file_path):
             order = Order('', '', '')
             one_order = order.get_order_no_from_lysaght_txt(order_file)
             batch = Batch(176590)
-            bundle = Bundle(999)
+            bundle = Bundle(7)
             for punch_file in punch_files:
                 punch = zCSV.CsvFile(punch_file)
                 punches = punch.get_lysaght_punch()
