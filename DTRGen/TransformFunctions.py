@@ -109,10 +109,12 @@ def read_data_from_lysaght_engine(file_path):
             order = Order('', '', '')
             one_order = order.get_order_no_from_lysaght_txt(order_file)
             batch = Batch(176590)
-            bundle = Bundle(7)
+            # bundle = Bundle(7)
             for punch_file in punch_files:
                 punch = zCSV.CsvFile(punch_file)
                 punches = punch.get_lysaght_punch()
+                bundle_info = punch.get_lysaght_bundle_cz_info()
+                bundle = Bundle(bundle_info[0])
                 for one_part in punches:
                     one_part.change_dia_no_to_real_dia(lysaght_dia_list)
                     one_part.sort_holes()

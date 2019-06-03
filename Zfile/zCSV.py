@@ -135,7 +135,10 @@ class CsvFile:
                 lines = f.readlines()
                 parts = []
                 for line in lines:
-                    item = line.split(',')
+                    item = line.replace('\r', '').replace('\n', '').replace('\t', '')
+                    if item[-1] == ',':
+                        item = item[0:-2]
+                    item = item.split(',')
                     if len(item) % 5 != 0:
                         raise NameError('数据格式不对')
                     size = str(item[0]).split('*')
@@ -152,12 +155,27 @@ class CsvFile:
                 f.close()
             self.seq_info = parts
         except NameError:
-            print('请检查数据格式的长度！')
+            print(item[1] + ': 请检查数据格式的长度！')
         except Exception as e:
             print(e)
         finally:
             return self.seq_info
 
+    def get_lysaght_bundle_cz_info(self):
+        try:
+            with open(self.file_with_path) as f:
+                lines = f.readlines()
+                item = lines[0].split(',')
+
+                self.seq_info = [int(item[4]),item[0][0]]
+
+        except NameError:
+            print('请检查数据文件是否正确！')
+        except Exception as e:
+            print(e)
+        finally:
+            f.close()
+            return self.seq_info
 
 if __name__ == '__main__':
     # csv_f = CsvFile('E:/Zanweb/Bradbury_Import_Test/in_test/BSCN.csv')
