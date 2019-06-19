@@ -55,7 +55,7 @@ class _Call:
 
 
 class _Entity(_Call):
-    """Base class for _common group codes for entities."""
+    """zBase class for _common group codes for entities."""
 
     def __init__(self, color=None, extrusion=None, layer='0',
                  lineType=None, lineTypeScale=None, lineWeight=None,
@@ -90,7 +90,7 @@ class _Entity(_Call):
 
 
 class _Entities:
-    """Base class to deal with composed objects."""
+    """zBase class to deal with composed objects."""
 
     def __dxf__(self):
         return []
@@ -100,7 +100,7 @@ class _Entities:
 
 
 class _Collection(_Call):
-    """Base class to expose entities methods to main object."""
+    """zBase class to expose entities methods to main object."""
 
     def __init__(self, entities=None):
         self.entities = copy.copy(entities or [])

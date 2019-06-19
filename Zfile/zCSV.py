@@ -1,7 +1,8 @@
 import csv
 import re
 
-from LysaghtPurlin.Part import Hole, Part
+# from LysaghtPurlin.Part import Hole, Part
+from LysaghtPurlin import Part
 
 
 class CsvFile:
@@ -17,6 +18,59 @@ class CsvFile:
                 handle.writelines(data[to_be_deleted + 1:])
                 # handle.readline(0)
                 handle.close()
+
+    def get_oracle_data(self):
+        try:
+            with open(self.file_with_path) as f:
+                f_csv = csv.DictReader(f)
+                for row in f_csv:
+                    info_line = {}
+                    if str(row['Sort Complete']).strip(' ') != 'Y':
+                        info_line['ORG'] = row['ORG'].strip(' ')
+                        info_line['Order Num'] = int(row['Order Num'])
+                        info_line['Item Cat'] = row['Item Cat'].strip(' ')
+                        info_line['Batch Id'] = int(row['Batch Id'])
+                        info_line['Sort Id'] = int(row['Sort Id'])
+                        info_line['Seq'] = int(row['Seq'])
+                        info_line['Dept'] = row['Dept'].strip(' ')
+                        info_line['Res'] = row['Res'].strip(' ')
+                        info_line['Res Desc'] = row['Res Desc'].strip(' ')
+                        info_line['Raw Material'] = row['Raw Material'].strip(' ')
+                        if row['Coil Width']:
+                            info_line['Coil Width'] = int(row['Coil Width'])
+                        else:
+                            info_line['Coil Width'] = row['Coil Width'].strip(' ')
+                        info_line['Coil Color'] = row['Coil Color'].strip(' ')
+                        info_line['Sort Complete'] = row['Sort Complete'].strip(' ')
+                        info_line['Fa Job'] = row['Fa Job'].strip(' ')
+                        info_line['Fa Item'] = row['Fa Item'].strip(' ')
+                        info_line['Item Desc'] = row['Item Desc'].strip(' ')
+                        info_line['Mark No'] = row['Mark No'].strip(' ')
+                        if row['Prd Width']:
+                            info_line['Prd Width'] = int(row['Prd Width'])
+                        else:
+                            info_line['Prd Width'] = row['Prd Width'].strip(' ')
+                        if row['Stack']:
+                            info_line['Stack'] = int(row['Stack'])
+                        else:
+                            info_line['Stack'] = row['Stack'].strip(' ')
+                        if row['Fa Seq']:
+                            info_line['Fa Seq'] = int(row['Fa Seq'])
+                        else:
+                            info_line['Fa Seq'] = row['Fa Seq'].strip(' ')
+                        if row['Line Seq']:
+                            info_line['Line Seq'] = int(row['Line Seq'])
+                        else:
+                            info_line['Line Seq'] = row['Line Seq'].strip(' ')
+                        info_line['Fa Qty'] = int(row['Fa Qty'])
+                        info_line['Bundle'] = row['Bundle'].strip(' ')
+                        info_line['Unit Length'] = int(row['Unit Length'])
+                        self.seq_info.append(info_line)
+                f.close()
+        except Exception as e:
+            print(e)
+        finally:
+            return self.seq_info
 
     def get_seq_list(self):
         try:
@@ -143,13 +197,14 @@ class CsvFile:
                         raise NameError('数据格式不对')
                     size = str(item[0]).split('*')
                     thick = float(size[len(size) - 1])
-                    part = Part(part_no=str(item[1]), part_length=int(item[2]), part_thickness=thick,
-                                quantity=int(item[3]),
-                                section=str(item[0]), material='')
+                    part = Part.Part(part_no=str(item[1]), part_length=int(item[2]), part_thickness=thick,
+                                     quantity=int(item[3]),
+                                     section=str(item[0]), material='')
                     for i in range(1, len(item) // 5):
                         if item[i * 5] == 'Hole':
-                            hole = Hole(location=item[1 * 5 + 1], x=float(item[i * 5 + 3]), y=float(item[i * 5 + 4]),
-                                        dia=float(item[i * 5 + 2]))
+                            hole = Part.Hole(location=item[1 * 5 + 1], x=float(item[i * 5 + 3]),
+                                             y=float(item[i * 5 + 4]),
+                                             dia=float(item[i * 5 + 2]))
                             part.add_hole(hole)
                     parts.append(part)
                 f.close()
@@ -167,7 +222,7 @@ class CsvFile:
                 lines = f.readlines()
                 item = lines[0].split(',')
 
-                self.seq_info = [int(item[4]),item[0][0]]
+                self.seq_info = [int(item[4]), item[0][0]]
 
         except NameError:
             print('请检查数据文件是否正确！')
@@ -176,6 +231,26 @@ class CsvFile:
         finally:
             f.close()
             return self.seq_info
+
+    def write_slitting_list(self, dict_list):
+        try:
+            with open(self.file_with_path, 'w', newline='') as f:
+                csv_write = csv.writer(f)
+                for dic in dict_list:
+                    if dic:
+                        csv_write.writerow([dic['Item'], dic['Fa Qty'], dic['Prd Width'], dic['Unit Length']])
+                f.close()
+
+                return True
+        except NameError:
+            print('请检查数据文件是否正确！')
+            return False
+        except Exception as e:
+            print(e)
+            return False
+        finally:
+            f.close()
+
 
 if __name__ == '__main__':
     # csv_f = CsvFile('E:/Zanweb/Bradbury_Import_Test/in_test/BSCN.csv')

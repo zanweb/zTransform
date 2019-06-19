@@ -58,7 +58,7 @@ class DBUnit:
     def write(self, sql, param, iscommit=True):
         try:
             cursor = self.connection.cursor()
-            print(sql)
+            # print(sql)
             n = cursor.executemany(sql, param)
             if iscommit:
                 self.connection.commit()
@@ -84,8 +84,10 @@ if __name__ == '__main__':
     # db = DBUnit('sa', 'zanweb5186', '127.0.0.1\zanwebsql', 'MFGMISCSSQL')
     # db = DBUnit('zyq', 'zyq123', 'stlsojsvr04', 'MFGMISCSSQL')  # 不使用默认端口
     # rs = db.read("SELECT * FROM tblPlan")
-    db = DBUnit('zyq', 'zyq123', 'stlsojsvr04', 'DFactory')  # 不使用默认端口
-    rs = db.read("SELECT * FROM OracleData")
+    db = DBUnit('zyq', 'zyq123', 'zanweb\STLSOJSVR04', 'DFactory')  # 不使用默认端口
+    # db = DBUnit('zyq', 'zyq123', 'stlsojsvr04', 'DFactory')  # 不使用默认端口
+
+    rs = db.read("SELECT * FROM [OracleData]")
 
     for row in rs:
         print(row)

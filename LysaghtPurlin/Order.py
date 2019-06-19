@@ -1,7 +1,7 @@
 __author__ = "zanweb <zanweb@163.com>"
 
-from Base.base import String
-from .Batch import Batch
+from zBase.zbase import String
+from LysaghtPurlin import Batch
 from Zfile.zText import TextFile
 
 
@@ -17,7 +17,7 @@ class Order(object):
         self.batches = []
 
     def add_batch(self, batch):
-        if not isinstance(batch, Batch):
+        if not isinstance(batch, Batch.Batch):
             raise TypeError('You must import a Batch type!')
         self.batches.append(batch)
 

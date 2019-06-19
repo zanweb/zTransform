@@ -1,22 +1,25 @@
 __author__ = "zanweb <zanweb@163.com>"
 
-import math
 # from operator import attrgetter
 import operator
 from itertools import groupby
 from operator import attrgetter
 
-from Base.base import String, Integer, Float
-from Base.constant import *
+import math
+
 # from DTRGen.TransformFunctions import get_lysaght_real_dia
 from DTRGen import TransformFunctions
+# from zBase.base import String, Integer, Float
+# from zBase.base import String, Integer, Float
+from zBase import zbase
+from zBase.constant import *
 
 
 class Hole(object):
-    location = String('location')
-    x = Float('x')
-    y = Float('y')
-    dia = Float('dia')
+    location = zbase.String('location')
+    x = zbase.Float('x')
+    y = zbase.Float('y')
+    dia = zbase.Float('dia')
 
     def __init__(self, location='', x=0.0, y=0.0, dia=0.0):
         self.location = location
@@ -29,15 +32,15 @@ class Hole(object):
 
 
 class DTRHole(Hole):
-    x_reference = Integer('x_reference')
-    y_reference = Integer('y_reference')
-    gauge = Float('gauge')
-    group_type = String('type')
+    x_reference = zbase.Integer('x_reference')
+    y_reference = zbase.Integer('y_reference')
+    gauge = zbase.Float('gauge')
+    group_type = zbase.String('type')
 
-    group_x = Float('group_x')
-    group_y = Float('group_y')
-    group_x_reference = Integer('group_x_reference')
-    group_y_reference = Integer('group_y_reference')
+    group_x = zbase.Float('group_x')
+    group_y = zbase.Float('group_y')
+    group_x_reference = zbase.Integer('group_x_reference')
+    group_y_reference = zbase.Integer('group_y_reference')
 
     def __init__(self, dia=0.0, x=0.0, y=0.0, x_reference=0, y_reference=0, location='', gauge=0.0,
                  group_type='', group_x=0.0,
@@ -65,12 +68,12 @@ class DTRHole(Hole):
 
 class Part(object):
     """ Lysaght Part """
-    part_no = String('part_no')
-    part_length = Integer('part_length')
-    part_thickness = Float('part_thickness')
-    quantity = Integer('quantity')
-    section = String('section')
-    material = String('material')
+    part_no = zbase.String('part_no')
+    part_length = zbase.Integer('part_length')
+    part_thickness = zbase.Float('part_thickness')
+    quantity = zbase.Integer('quantity')
+    section = zbase.String('section')
+    material = zbase.String('material')
 
     def __init__(self, part_no, part_length, part_thickness, quantity, section, material):
         self.material = material
@@ -114,8 +117,8 @@ class Part(object):
                 if one_group[0].y == - one_group[1].y:
                     dtr_hole.gauge = math.fabs(one_group[1].y) * 2
                 else:
-                    dtr_hole.gauge = math.fabs(one_group[1].y-one_group[0].y)
-                    dtr_hole.group_y = one_group[1].y-dtr_hole.gauge/2
+                    dtr_hole.gauge = math.fabs(one_group[1].y - one_group[0].y)
+                    dtr_hole.group_y = one_group[1].y - dtr_hole.gauge / 2
                 is_normal_gauge = TransformFunctions.get_dtr_tool_id(tool_list, dtr_hole.dia, dtr_hole.gauge)
                 if is_normal_gauge == -1:
                     dtr_hole = self.single_dtr_hole(one_group[0])
@@ -138,7 +141,6 @@ class Part(object):
         dtr_hole.group_y_reference = CENTER_P
         dtr_hole.gauge = 0.0
         return dtr_hole
-
 
     def group_holes_by_y(self):
         for dia_index, dia_group in groupby(self.holes, key=attrgetter('dia')):

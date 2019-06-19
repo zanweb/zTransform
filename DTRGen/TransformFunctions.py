@@ -1,15 +1,19 @@
 __author__ = "zanweb <zanweb@163.com>"
 
-import time
-
+# from DBbase import dbunit, genSQL
 from DTRGen.Order import *
 from DTRGen.Part import *
-from LysaghtPurlin.Batch import Batch
-from LysaghtPurlin.Bundle import Bundle
-from LysaghtPurlin.Order import Order
+from LysaghtPurlin import Batch
+from LysaghtPurlin import Bundle
+from LysaghtPurlin import Order
+# from LysaghtPurlin.Batch import Batch
+# from LysaghtPurlin.Bundle import Bundle
+# from LysaghtPurlin.Order import Order
 # from LysaghtPurlin import Order
 from Zfile import zCSV, zFBase
 
+
+# from pprint import pprint
 
 def lysaght_to_dtr(orders, file_path):
     mm_inch = 25.4
@@ -22,8 +26,9 @@ def lysaght_to_dtr(orders, file_path):
             for part in bundle.parts:
                 orders.product_code = 'CEES'
                 part.material = 'C00000'
-                order_item = CutItem(order_number=orders.order_no, bundle=bundle.bundle_no,part_number=part.part_no,
-                                     quantity=part.quantity, length=float(part.part_length)/mm_inch, material=part.material,
+                order_item = CutItem(order_number=orders.order_no, bundle=bundle.bundle_no, part_number=part.part_no,
+                                     quantity=part.quantity, length=float(part.part_length) / mm_inch,
+                                     material=part.material,
                                      product_code=orders.product_code, part_option='R', item_id=part.part_no,
                                      action='C')
                 order_list.append(order_item)
@@ -34,9 +39,9 @@ def lysaght_to_dtr(orders, file_path):
                         tool_num = get_dtr_tool_id(tool_list, dtr_hole.dia, dtr_hole.gauge)
                         if tool_num > 0:
                             part_item = Part(part_name=part.part_no, tool_number=tool_num,
-                                             x_offset=dtr_hole.group_x/mm_inch,
+                                             x_offset=dtr_hole.group_x / mm_inch,
                                              x_reference=dtr_hole.group_x_reference, permanent=True,
-                                             y_offset=dtr_hole.group_y/mm_inch,
+                                             y_offset=dtr_hole.group_y / mm_inch,
                                              y_reference=dtr_hole.group_y_reference)
                             part_list.append(part_item)
                         else:
@@ -46,9 +51,10 @@ def lysaght_to_dtr(orders, file_path):
                     else:
                         tool_num = get_dtr_tool_id(tool_list, dtr_hole.dia, dtr_hole.gauge)
                         if tool_num > 0:
-                            part_item = Part(part_name=part.part_no, tool_number=tool_num, x_offset=dtr_hole.x/mm_inch,
+                            part_item = Part(part_name=part.part_no, tool_number=tool_num,
+                                             x_offset=dtr_hole.x / mm_inch,
                                              x_reference=dtr_hole.x_reference, permanent=True,
-                                             y_offset=dtr_hole.y/mm_inch,
+                                             y_offset=dtr_hole.y / mm_inch,
                                              y_reference=dtr_hole.y_reference)
                             part_list.append(part_item)
                         else:
@@ -59,7 +65,7 @@ def lysaght_to_dtr(orders, file_path):
     # print(order_list)
     # print(part_list)
     # file_path += 'D' + time.strftime('%y%m%d', time.localtime()) + '0'  # str(random.randint(0, 9))
-    file_path += 'D' + '0'*7
+    file_path += 'D' + '0' * 7
     # print(file_path)
     order_list.save_as(file_path + '.ORD')
     part_list.save_as(file_path + '.PRT')
@@ -106,15 +112,15 @@ def read_data_from_lysaght_engine(file_path):
         for one_item in punch_files_list:
             punch_files.append(file_path + one_item + '.csv')
         for order_file in order_files:
-            order = Order('', '', '')
+            order = Order.Order('', '', '')
             one_order = order.get_order_no_from_lysaght_txt(order_file)
-            batch = Batch(176590)
+            batch = Batch.Batch(176590)
             # bundle = Bundle(7)
             for punch_file in punch_files:
                 punch = zCSV.CsvFile(punch_file)
                 punches = punch.get_lysaght_punch()
                 bundle_info = punch.get_lysaght_bundle_cz_info()
-                bundle = Bundle(bundle_info[0])
+                bundle = Bundle.Bundle(bundle_info[0])
                 for one_part in punches:
                     one_part.change_dia_no_to_real_dia(lysaght_dia_list)
                     one_part.sort_holes()
@@ -131,10 +137,15 @@ def read_data_from_lysaght_engine(file_path):
 
 
 if __name__ == '__main__':
+    # test03
+    # oracle_data_import('zyq', 'zyq123', 'zanweb\stlsojsvr04', 'DFactory', '../testfiles/1000002.csv')
+
+    # test02
     tool_dtr = get_dtr_tools('../DTRTools.csv')
     print(tool_dtr)
     tool_id = get_dtr_tool_id(tool_dtr, 16.0, 230.0)
-
     print(tool_id)
-    # lysaght_orders = Order()
+
+    # test01
+    #   lysaght_orders = Order()
     # lysaght_to_dtr(lysaght_orders, file_path=None)
