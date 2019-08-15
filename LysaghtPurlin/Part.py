@@ -1,11 +1,10 @@
 __author__ = "zanweb <zanweb@163.com>"
 
+import math
 # from operator import attrgetter
 import operator
 from itertools import groupby
 from operator import attrgetter
-
-import math
 
 # from DTRGen.TransformFunctions import get_lysaght_real_dia
 from DTRGen import TransformFunctions
@@ -98,6 +97,7 @@ class Part(object):
 
     def convert_to_dtr_holes(self):
         # self.dtr_holes = []
+        double_list = []
         tool_list = TransformFunctions.get_dtr_tools('./DTRTools.csv')
         for one_group in self.holes_group_y:
             # print('one_group len -->{0}'.format(len(one_group)))
@@ -115,12 +115,28 @@ class Part(object):
                 dtr_hole.group_x_reference = LEADING_EDGE
                 dtr_hole.group_y_reference = CENTER_P
                 if one_group[0].y == - one_group[1].y:
+                    # x轴对称 ------------
                     dtr_hole.gauge = math.fabs(one_group[1].y) * 2
                 else:
+                    # x轴偏心 ------------
                     dtr_hole.gauge = math.fabs(one_group[1].y - one_group[0].y)
                     dtr_hole.group_y = one_group[1].y - dtr_hole.gauge / 2
-                is_normal_gauge = TransformFunctions.get_dtr_tool_id(tool_list, dtr_hole.dia, dtr_hole.gauge)
+
+                # y为负数时
+                if dtr_hole.group_y < 0:
+                    group_y = math.fabs(dtr_hole.group_y)
+                    dtr_hole.group_y_reference = CENTER_N
+                else:
+                    group_y = dtr_hole.group_y
+                # dtr_hole.group_y = group_y
+
+                is_normal_gauge = TransformFunctions.get_dtr_tool_id(tool_list, dtr_hole.dia, dtr_hole.gauge,
+                                                                     dtr_hole.group_y)
                 if is_normal_gauge == -1:
+                    t_double = {'Dia':dtr_hole.dia, 'Gauge': dtr_hole.gauge, 'Diff':dtr_hole.group_y}
+                    double_list.append(t_double)
+                    # 如果不是常规间距，按单孔处理 -------------------
+
                     dtr_hole = self.single_dtr_hole(one_group[0])
                     self.dtr_holes.append(dtr_hole)
                     dtr_hole = self.single_dtr_hole(one_group[1])
@@ -129,6 +145,12 @@ class Part(object):
 
                 self.dtr_holes.append(dtr_hole)
 
+            if len(one_group) > 2:
+                for i in range(0, len(one_group)):
+                    dtr_hole = self.single_dtr_hole(one_group[i])
+                    self.dtr_holes.append(dtr_hole)
+        return double_list
+
     def single_dtr_hole(self, one_of_group):
         dtr_hole = DTRHole()
         dtr_hole.__dict__ = one_of_group.__dict__
@@ -136,10 +158,15 @@ class Part(object):
         dtr_hole.x_reference = LEADING_EDGE
         dtr_hole.y_reference = CENTER_P
         dtr_hole.group_x = 0.0
-        dtr_hole.group_y = 0.0
+        dtr_hole.group_y = one_of_group.y
         dtr_hole.group_x_reference = LEADING_EDGE
         dtr_hole.group_y_reference = CENTER_P
         dtr_hole.gauge = 0.0
+        if one_of_group.y < 0:
+            dtr_hole.y_reference = CENTER_N
+            dtr_hole.group_y_reference = CENTER_N
+            dtr_hole.group_y = math.fabs(one_of_group.y)
+            dtr_hole.y = math.fabs(one_of_group.y)
         return dtr_hole
 
     def group_holes_by_y(self):
@@ -181,7 +208,9 @@ if __name__ == '__main__':
     # from operator import attrgetter
     # from itertools import groupby
 
-    holes_dtr = test().holes
+    holes_dtr = test().dtr_holes
+    for hole in holes_dtr:
+        print(hole)
     # for index_x in holes_dtr:
     #     print('{0}'.format(index_x))
     # print('---------------')

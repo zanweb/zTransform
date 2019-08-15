@@ -85,7 +85,18 @@ class OracleData_SQL:
                 # print(i)
                 tmp_param += params_name[i] + '=' + params_type[i] + ' AND '
             self.sql += tmp_param[0:-5]
+
+            self.sql += ' ORDER BY [Unit Length] DESC'
         return self.sql
+
+    def select_sql_in_auto(self, tuple_auto):
+        sql = 'SELECT *, convert(int, dbo.GET_NUMBER2([Bundle])) as BundleNo FROM [dbo].[OracleData] WHERE [AutoNo] IN '
+        tmp_sql = ''
+        for index in range(len(tuple_auto)):
+            tmp_sql += '%d ,'
+        sql += '(' + tmp_sql[0:-1] + ')'
+        sql += ' ORDER BY BundleNo'
+        return sql
 
     def update_sql_head(self, update_fields, update_values, params_name=None, params_type=None):
         r_sql = 'UPDATE [dbo].[OracleData] SET '

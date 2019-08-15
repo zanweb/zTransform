@@ -152,6 +152,16 @@ class LysaghtDTRData(DataFactory):
         return temp
 
 
+class ButlerDTRDate(DataFactory):
+    def get_data(self):
+        temp = NcRead()
+        return temp
+
+    def set_data(self):
+        temp = DTRWrite()
+        return temp
+
+
 if __name__ == "__main__":
     hole_name = {}
 

@@ -1,4 +1,4 @@
-import sys
+import sys, os
 import time
 from itertools import groupby
 from operator import itemgetter
@@ -9,9 +9,11 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QTreeWidgetItem, QTreeWid
     QMessageBox
 
 from DBbase import dbFunctions
-from Zfile import zCSV
+from Zfile import zCSV, zFBase
 from zSplitting import Ui_zSplitting
 from zSplitting_login_code import LoginDialog
+
+from DTRGen.TransformFunctions import gen_butler_order_cut_list
 
 
 class z_splitting(QMainWindow):
@@ -36,6 +38,7 @@ class z_splitting(QMainWindow):
         self.work_center = None
 
         self.list_make = []
+        self.out_folder = ''
 
     def setup_default_ui(self):
         self.ui.radio_button_trim.setChecked(True)
@@ -110,7 +113,16 @@ class z_splitting(QMainWindow):
 
     def slitting_tree_widget_ui(self):
         self.ui.tree_widget.headerItem().setText(0, '---材料---订单---编号---')
+        self.ui.tree_widget.headerItem().setText(1, 'Sort Id')
+        self.ui.tree_widget.headerItem().setText(2, 'Item')
+        self.ui.tree_widget.headerItem().setText(3, 'Fa Qty')
+        self.ui.tree_widget.headerItem().setText(4, 'Prd Width')
+        self.ui.tree_widget.headerItem().setText(5, 'Unit Length')
+        self.ui.tree_widget.width = 850
+        self.ui.tree_widget.setColumnWidth(0, 300)
 
+    def c_z_tree_widget_ui(self):
+        self.ui.tree_widget.headerItem().setText(0, '---SO---Batch---Coil---编号---')
         self.ui.tree_widget.headerItem().setText(1, 'Sort Id')
         self.ui.tree_widget.headerItem().setText(2, 'Item')
         self.ui.tree_widget.headerItem().setText(3, 'Fa Qty')
@@ -122,22 +134,23 @@ class z_splitting(QMainWindow):
     def get_multi_product_data(self, org, catalog, work_center):
         rs_result_multi_product = []
 
-        if work_center == 'Slitting':
-            show_fields = ['[Raw Material]', '[Order Num]',
-                           "CASE WHEN [ORG] = 'LKQ' THEN [Mark No] ELSE [Fa Item]  END AS Item",
-                           '[Fa Qty]', '[Fa Job]', '[Sort Id]', '[Sort Complete]', '[AutoNo]', '[Prd Width]',
-                           '[Unit Length]']
-            params_name = [r"[Sort Complete]", '[ORG]', '[Item Cat]', '[Group]']
-            params_type = ['%s', '%s', '%s', '%s']
-            params = (' ', org, catalog, self.user_group)
+        show_fields = ['[Raw Material]', '[Order Num]',
+                       "CASE WHEN [ORG] = 'LKQ' THEN [Mark No] ELSE LEFT([Fa Item],7)  END AS Item",
+                       '[Fa Qty]', '[Fa Job]', '[Sort Id]', '[Sort Complete]', '[AutoNo]', '[Prd Width]',
+                       '[Unit Length]', '[Batch Id]']
+        params_name = [r"[Sort Complete]", '[ORG]', '[Item Cat]', '[Group]']
+        params_type = ['%s', '%s', '%s', '%s']
+        params = (' ', org, catalog, self.user_group)
 
-            rs = dbFunctions.oracle_data_read(self.user, self.pass_word, self.server, self.database, show_fields,
-                                              params_name, params_type, params)
+        rs = dbFunctions.oracle_data_read(self.user, self.pass_word, self.server, self.database, show_fields,
+                                          params_name, params_type, params)
+
+        if work_center == 'Slitting':
             # pprint(rs)
             rs_by_material = sorted(rs, key=itemgetter('Raw Material', 'Order Num'))
-            for mat, group_mat in groupby(rs_by_material, key=itemgetter('Raw Material')):
+            for mat, group_batch in groupby(rs_by_material, key=itemgetter('Raw Material')):
                 mate = []
-                for order, group_order in groupby(group_mat, key=itemgetter('Order Num')):
+                for order, group_order in groupby(group_batch, key=itemgetter('Order Num')):
                     l_dic = []
                     for each in group_order:
                         dic = {}
@@ -152,6 +165,28 @@ class z_splitting(QMainWindow):
                 rs_result_multi_product.append((mat, mate, {}))
 
             # pprint(rs_result)
+        else:
+            if work_center == 'DTR':
+                rs_by_material = sorted(rs, key=itemgetter('Batch Id', 'Raw Material'))
+                for order_num, group_order in groupby(rs_by_material, key=itemgetter('Order Num')):
+                    so = []
+                    for batch_num, group_batch in groupby(group_order, key=itemgetter('Batch Id')):
+                        batch = []
+                        for material_num, group_material in groupby(group_batch, key=itemgetter('Raw Material')):
+                            l_dic = []
+                            for each in group_material:
+                                dic = {}
+                                for item in each.items():
+                                    key, value = item
+                                    if value:
+                                        dic[key] = str(value).strip(' ')
+                                    else:
+                                        dic[key] = ''
+                                l_dic.append(dic)
+                            batch.append((str(material_num), [], l_dic))
+                        so.append((str(batch_num), batch, {}))
+                    rs_result_multi_product.append((order_num, so, {}))
+
         return rs_result_multi_product
 
     @pyqtSlot()
@@ -168,13 +203,16 @@ class z_splitting(QMainWindow):
         if self.root:
             self.root = None
             self.ui.tree_widget.clear()
-        self.slitting_tree_widget_ui()
+        if self.work_center == 'Slitting':
+            self.slitting_tree_widget_ui()
+        else:
+            self.c_z_tree_widget_ui()
         self.root = QTreeWidgetItem(self.ui.tree_widget)
         self.root.setText(0, '未计划')
         # self.ui.tree_widget.addTopLevelItem(self.root)
 
         self.add_item(self.root, data)
-        self.ui.tree_widget.expandAll()
+        # self.ui.tree_widget.expandAll()
 
     @pyqtSlot()
     def on_push_button_get_clicked(self):
@@ -208,6 +246,74 @@ class z_splitting(QMainWindow):
     def on_push_button_transform_clicked(self):
         if self.work_center == 'Slitting':
             self.slitting_save_to_csv()
+        if self.work_center == 'DTR':
+            # 如果是Butler的NC文件
+            if self.org == 'SJG':
+                # 获取关键字段
+                list_auto = []
+                for dic in self.list_make:
+                    list_auto.append(dic['AutoNo'])
+                # 获取制作列表的构件名
+                list_make_files = []
+                for dic in self.list_make:
+                    list_make_files.append(dic['Item'][0:7])
+                # 获取NC文件夹
+                nc_folder = QFileDialog.getExistingDirectory(None, '请指定NC文件目录：')
+                # 检查NC文件是否存在
+                # 获取存在的文件名列表和不存在的文件名列表
+                exit_files, no_files = self.check_nc_files_exite(list_make_files, nc_folder)
+                if no_files:
+                    str_nofiles = ''
+                    for no_file in no_files:
+                        str_nofiles += str(no_file) + '\n'
+                    QMessageBox.warning(self, 'NC文件', 'NC文件缺失警告！\n' + str_nofiles, QMessageBox.Ok)
+                    print(str(no_files))
+                else:
+                    if exit_files:
+                        QMessageBox.information(self, 'NC文件', 'NC文件齐全,开始转换。', QMessageBox.Ok)
+                        # 指定输出文件夹
+                        self.out_folder = QFileDialog.getExistingDirectory(self, '获取转换后的文件夹:')
+                        # 获取制作清单数据结构
+                        list_auto_int = [int(x) for x in list_auto]
+                        # print(list_auto_int)
+                        tuple_auto = tuple(list_auto_int)
+                        read_return = dbFunctions.oracle_data_read_in_auto(self.user, self.pass_word, self.server,
+                                                                           self.database, tuple_auto)
+                        # print(read_return)
+                        # NC文件转DTR
+                        try:
+                            cut_list, no_pattern_list, parts = gen_butler_order_cut_list(read_return, nc_folder)
+
+                            if no_pattern_list:
+                                str_show = ''
+                                for no_pattern in no_pattern_list:
+                                    str_show += str(no_pattern) + '\n'
+                                QMessageBox.warning(self, '警告', '有未定义的孔位\n' + str_show, QMessageBox.Ok)
+                                return 1
+                            print(cut_list, parts)
+                            cut_list_file = 'D' + '0'*7 + '.ORD'
+                            cut_list_file_path = os.path.join(self.out_folder, cut_list_file)
+                            cut_list.save_as(cut_list_file_path)
+                            parts_file = 'D' + '0'*7 + '.PRT'
+                            parts_file_path = os.path.join(self.out_folder, parts_file)
+                            parts.save_as(parts_file_path)
+                            QMessageBox.information(self, '完成', '已经完成！', QMessageBox.Ok)
+                        except Exception as e:
+                            print(e)
+                    else:
+                        QMessageBox.warning(self, 'NC文件', '目录内没有NC文件！', QMessageBox.Ok)
+
+    def check_nc_files_exite(self, list_make_files, nc_folder):
+        list_exit_files = []
+        list_no_files = []
+        list_nc_files = zFBase.get_indicate_ext_file(nc_folder, 'nc1')
+        if list_nc_files:
+            for file in list_make_files:
+                if file in list_nc_files:
+                    list_exit_files.append(file)
+                else:
+                    list_no_files.append(file)
+        return list_exit_files, list_no_files
 
     def slitting_save_to_csv(self):
         file_with_path = QFileDialog.getExistingDirectory(None, '请指定目标文件目录:')
@@ -247,7 +353,7 @@ class z_splitting(QMainWindow):
             parent.setFlags(parent.flags() | Qt.ItemIsTristate | Qt.ItemIsUserCheckable)
         for text, children, infos in element:
             item = QTreeWidgetItem()
-            item.setText(0, text)
+            item.setText(0, str(text))
             item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
             item.setCheckState(0, Qt.Unchecked)
             parent.addChild(item)

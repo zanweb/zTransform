@@ -161,7 +161,8 @@ class CsvFile:
                 f_csv = csv.DictReader(f)
 
                 for row in f_csv:
-                    info_line = {'Dia': float(row['Dia']), 'Gauge': float(row['Gauge']), 'ToolID': int(row['ToolID'])}
+                    info_line = {'Dia': float(row['Dia']), 'Gauge': float(row['Gauge']), 'ToolID': int(row['ToolID']),
+                                 'Diff': float(row['Diff'])}
                     #
                     self.seq_info.append(info_line)
                 f.close()

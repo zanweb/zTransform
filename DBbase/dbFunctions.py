@@ -33,6 +33,13 @@ def oracle_data_read(user, passwd, host, database, show_fields, params_name, par
     return read_return
 
 
+def oracle_data_read_in_auto(user, passwd, host, database, tuple_auto):
+    db = dbunit.DBUnit(user, passwd, host, database)
+    sql = genSQL.OracleData_SQL().select_sql_in_auto(tuple_auto)
+    read_return = db.read(sql, tuple_auto)
+    return read_return
+
+
 def user_info_read(user, passwd, host, database, show_fields, params_name, params_type, params):
     db = dbunit.DBUnit(user, passwd, host, database)
     sql = genSQL.User_SQL().select_sql_head(show_fields, params_name, params_type)

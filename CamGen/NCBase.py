@@ -1,5 +1,5 @@
-import re
 import os
+import re
 
 bloc = ['ST',  # Beginning of piece description
         'EN',  # End of piece description
@@ -65,7 +65,7 @@ class Hole:  # bloc BO
     def __init__(self):
         self.plane = ''  # plane o=> top flange, v=>front web, u=>bottom flange, h=>behind web
         self.reference = ''
-        # reference o => Dimension rference top edge,
+        # reference o => Dimension reference top edge,
         # '' => previous dimensions reference,
         # s => dimensions reference axis,
         # u => dimensions reference bottom edge
@@ -417,13 +417,20 @@ def has_hole_nc(file_with_path):
 
 
 if __name__ == '__main__':
+    from pprint import pprint
+
     # file_with_path = "E:/Zanweb/BMM test file/爱仕达11#NC文件/" + "L125.nc1"
-    file_with_path = "D:\Work\\NC\HQ44894.nc1"
+    file_with_path = "E:/Desktop/BYD重庆璧山5#&6#/1900660801-2212-007C 璧山5# 2.5mm厚C墙筋1~13轴/C墙筋-NC FILES 2.5mm/WQ17000.nc1"
     if is_exist_nc(file_with_path):
         print('OK')
         nc = Nc(file_with_path)
         nc_data = nc.file_data
         nc_info = nc.file_information()
-        print(nc_info.ak[0].plane)
+        print(nc_info.header.code_profile, '-- profile_high --> ', re.findall(r'\d+\.?\d*', nc_info.header.profile)[0],
+              ' -- flange_width--> ', nc_info.header.flange_width, ' -- thickness -->',
+              re.findall(r'\d+\.?\d*', nc_info.header.profile)[1])
+        pprint(nc_info.holes[0].plane)
+        for hole in nc_info.holes:
+            print(hole, hole.plane, hole.reference, hole.x, hole.y, hole.diameter)
     else:
         print('No')
