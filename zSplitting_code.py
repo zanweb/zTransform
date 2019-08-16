@@ -1,4 +1,5 @@
-import sys, os
+import os
+import sys
 import time
 from itertools import groupby
 from operator import itemgetter
@@ -9,11 +10,10 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QTreeWidgetItem, QTreeWid
     QMessageBox
 
 from DBbase import dbFunctions
+from DTRGen.TransformFunctions import gen_butler_order_cut_list
 from Zfile import zCSV, zFBase
 from zSplitting import Ui_zSplitting
 from zSplitting_login_code import LoginDialog
-
-from DTRGen.TransformFunctions import gen_butler_order_cut_list
 
 
 class z_splitting(QMainWindow):
@@ -291,10 +291,10 @@ class z_splitting(QMainWindow):
                                 QMessageBox.warning(self, '警告', '有未定义的孔位\n' + str_show, QMessageBox.Ok)
                                 return 1
                             print(cut_list, parts)
-                            cut_list_file = 'D' + '0'*7 + '.ORD'
+                            cut_list_file = 'D' + '0' * 7 + '.ORD'
                             cut_list_file_path = os.path.join(self.out_folder, cut_list_file)
                             cut_list.save_as(cut_list_file_path)
-                            parts_file = 'D' + '0'*7 + '.PRT'
+                            parts_file = 'D' + '0' * 7 + '.PRT'
                             parts_file_path = os.path.join(self.out_folder, parts_file)
                             parts.save_as(parts_file_path)
                             QMessageBox.information(self, '完成', '已经完成！', QMessageBox.Ok)
@@ -302,6 +302,22 @@ class z_splitting(QMainWindow):
                             print(e)
                     else:
                         QMessageBox.warning(self, 'NC文件', '目录内没有NC文件！', QMessageBox.Ok)
+
+    @pyqtSlot()
+    def on_push_button_complete_clicked(self):
+        ok = QMessageBox.question(self, '数据库数据信息', '所选内容将在数据库标注为完工，是否进行？', QMessageBox.Yes, QMessageBox.No)
+        if ok == QMessageBox.Yes:
+            if self.list_make:
+                fin = self.update_oracle_date_complete(self.list_make)
+                if not fin:
+                    QMessageBox.information(self, '数据库更新信息', '数据库更新完成！', QMessageBox.Ok)
+                else:
+                    QMessageBox.warning(self, '数据库更新警告', '数据库更新问题！\n 请联系相关人员！', QMessageBox.Ok)
+            else:
+                QMessageBox.information(self, '无数据警告', '没有数据！\n 请选择数据后再操作！', QMessageBox.Ok)
+                return
+        else:
+            return
 
     def check_nc_files_exite(self, list_make_files, nc_folder):
         list_exit_files = []
@@ -323,11 +339,11 @@ class z_splitting(QMainWindow):
         ok = csv_save.write_slitting_list(self.list_make)
         if ok:
             QMessageBox.information(self, '保存文件信息', '文件已保存！\n' + file_with_path, QMessageBox.Ok)
-            fin = self.update_oracle_date_complete(self.list_make)
-            if not fin:
-                QMessageBox.information(self, '数据库更新信息', '数据库更新完成！', QMessageBox.Ok)
-            else:
-                QMessageBox.warning(self, '数据库更新警告', '数据库更新问题！\n 请联系相关人员！', QMessageBox.Ok)
+            # fin = self.update_oracle_date_complete(self.list_make)
+            # if not fin:
+            #     QMessageBox.information(self, '数据库更新信息', '数据库更新完成！', QMessageBox.Ok)
+            # else:
+            #     QMessageBox.warning(self, '数据库更新警告', '数据库更新问题！\n 请联系相关人员！', QMessageBox.Ok)
         else:
             QMessageBox.warning(self, '保存文件', '文件未保存！\n 请联系相关人员！', QMessageBox.Ok)
 

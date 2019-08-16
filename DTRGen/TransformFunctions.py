@@ -3,20 +3,20 @@ from functools import reduce
 __author__ = "zanweb <zanweb@163.com>"
 
 # import os
-
+# from LysaghtPurlin.Batch import Batch
+# from LysaghtPurlin.Bundle import Bundle
+# from LysaghtPurlin.Order import Order
+# from LysaghtPurlin import Order
 # from LysaghtPurlin import Part
+# from DBbase import dbunit, genSQL
+
 import LysaghtPurlin.Part as lpart
 from CamGen.NCBase import *
-# from DBbase import dbunit, genSQL
 from DTRGen.Order import *
 from DTRGen.Part import *
 from LysaghtPurlin import Batch
 from LysaghtPurlin import Bundle
 from LysaghtPurlin import Order
-# from LysaghtPurlin.Batch import Batch
-# from LysaghtPurlin.Bundle import Bundle
-# from LysaghtPurlin.Order import Order
-# from LysaghtPurlin import Order
 from Zfile import zCSV, zFBase
 from zBase.constant import MM_INCH, CENTER_N, CENTER_P
 

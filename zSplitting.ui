@@ -219,6 +219,19 @@
      <string>转换数据</string>
     </property>
    </widget>
+   <widget class="QPushButton" name="push_button_complete">
+    <property name="geometry">
+     <rect>
+      <x>390</x>
+      <y>690</y>
+      <width>75</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>完工</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">

@@ -76,6 +76,9 @@ class Ui_zSplitting(object):
         self.push_button_transform = QtWidgets.QPushButton(self.centralwidget)
         self.push_button_transform.setGeometry(QtCore.QRect(280, 690, 75, 23))
         self.push_button_transform.setObjectName("push_button_transform")
+        self.push_button_complete = QtWidgets.QPushButton(self.centralwidget)
+        self.push_button_complete.setGeometry(QtCore.QRect(390, 690, 75, 23))
+        self.push_button_complete.setObjectName("push_button_complete")
         zSplitting.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(zSplitting)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 1121, 23))
@@ -105,5 +108,6 @@ class Ui_zSplitting(object):
         self.radio_button_trim.setText(_translate("zSplitting", "Trim"))
         self.label.setText(_translate("zSplitting", "WorkCenter:"))
         self.push_button_transform.setText(_translate("zSplitting", "转换数据"))
+        self.push_button_complete.setText(_translate("zSplitting", "完工"))
         self.tool_bar.setWindowTitle(_translate("zSplitting", "toolBar"))
 
