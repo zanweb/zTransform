@@ -337,7 +337,7 @@ def get_nc_plane_holes(nc_holes):
     for single_hole in nc_holes:
         # print(single_hole.plane)
         # print(single_hole.reference)
-        # 处理 NC 文件数据偏差
+        # 处理 NC 文件数据偏差###
         single_hole.x = float(round(single_hole.x))
         single_hole.y = float(round(single_hole.y))
 
