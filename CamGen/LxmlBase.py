@@ -172,7 +172,7 @@ class XmlGen:
         for single_hole in nc_holes:
             # print(single_hole.plane)
             # print(single_hole.reference)
-            # 处理NC偏差
+            # 处理NC偏差#
             single_hole.x = round(single_hole.x)
             # single_hole.y = round(single_hole.y)
             if single_hole.plane == 'o' and single_hole.reference == 's' and single_hole.hole_type == '':
