@@ -338,8 +338,8 @@ def get_nc_plane_holes(nc_holes):
         # print(single_hole.plane)
         # print(single_hole.reference)
         # 处理 NC 文件数据偏差
-        single_hole.x = round(single_hole.x)
-        single_hole.y = round(single_hole.y)
+        single_hole.x = float(round(single_hole.x))
+        single_hole.y = float(round(single_hole.y))
 
         if single_hole.plane == 'o' and single_hole.reference == 's' and single_hole.hole_type == '':
             o_holes.append(single_hole)
