@@ -278,7 +278,7 @@ def gen_butler_part_to_lysaght(nc_info):
                 if v_hole.reference == 'o':
                     v_hole_y = profile_height / 2 - round(v_hole.y)
                 elif v_hole.reference == 'u':
-                    v_hole_y = profile_height / 2 - round(v_hole.y)
+                    v_hole_y = -(profile_height / 2 - round(v_hole.y))
                 elif v_hole.reference == 's':
                     # v_hole_y = round(v_hole.y)
                     v_hole_y = profile_height / 2 - round(v_hole.y)
@@ -292,7 +292,7 @@ def gen_butler_part_to_lysaght(nc_info):
                 if h_hole.reference == 'o':
                     h_hole_y = profile_height / 2 - round(h_hole.y)
                 elif h_hole.reference == 'u':
-                    h_hole_y = profile_height / 2 - round(h_hole.y)
+                    h_hole_y = -(profile_height / 2 - round(h_hole.y))
                 elif h_hole.reference == 's':
                     # h_hole_y = round(h_hole.y)
                     h_hole_y = profile_height / 2 - round(h_hole.y)

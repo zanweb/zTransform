@@ -78,7 +78,7 @@ class XmlGen:
 
     def add_bottom_side_holes(self, holes):
         for single_hole in holes:
-            if single_hole.diameter == 14:
+            if (single_hole.diameter == 14) or (single_hole.diameter == 16):
                 hole = Hole()
                 hole.x = single_hole.x
                 hole.y = single_hole.y
