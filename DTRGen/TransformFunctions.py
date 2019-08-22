@@ -323,7 +323,7 @@ def gen_butler_part_to_lysaght(nc_info):
                     u_hole_y = -(flange_width / 2 + profile_height / 2 - 2 * web_thickness)
                 else:
                     u_hole_y = 0.0
-                u_hole_y = - u_hole_y
+                # u_hole_y = - u_hole_y
                 part.add_hole(lpart.Hole('IF', u_hole.x, float(round(u_hole_y)), float(round(u_hole.diameter))))
     return part
 
