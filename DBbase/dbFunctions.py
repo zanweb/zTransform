@@ -4,7 +4,8 @@ from DBbase import dbunit, genSQL
 from Zfile import zCSV
 
 
-def oracle_data_import(user, passwd, host, database, user_group, file_with_path):
+def oracle_data_import(user, passwd, host, database,
+                       user_group, file_with_path):
     oracle_file = zCSV.CsvFile(file_with_path)
     oracle_file.del_lines_begin(8)
     print(oracle_file)
@@ -23,9 +24,11 @@ def oracle_data_import(user, passwd, host, database, user_group, file_with_path)
     return insert_return
 
 
-def oracle_data_read(user, passwd, host, database, show_fields, params_name, params_type, params):
+def oracle_data_read(user, passwd, host, database,
+                     show_fields, params_name, params_type, params):
     db = dbunit.DBUnit(user, passwd, host, database)
-    sql = genSQL.OracleData_SQL().select_sql_head(show_fields, params_name, params_type)
+    sql = genSQL.OracleData_SQL().select_sql_head(
+        show_fields, params_name, params_type)
     # pprint(sql)
     read_return = db.read(sql, params)
     # if read_return:
@@ -40,7 +43,8 @@ def oracle_data_read_in_auto(user, passwd, host, database, tuple_auto):
     return read_return
 
 
-def user_info_read(user, passwd, host, database, show_fields, params_name, params_type, params):
+def user_info_read(user, passwd, host, database, show_fields,
+                   params_name, params_type, params):
     db = dbunit.DBUnit(user, passwd, host, database)
     sql = genSQL.User_SQL().select_sql_head(show_fields, params_name, params_type)
     # pprint(sql)
@@ -54,7 +58,8 @@ def oracle_data_update(user, passwd, host, database, update_fields, update_value
                        option=None):
     db = dbunit.DBUnit(user, passwd, host, database)
     if not option:
-        sql = genSQL.OracleData_SQL().update_sql_head(update_fields, update_values, params_name, params_type)
+        sql = genSQL.OracleData_SQL().update_sql_head(
+            update_fields, update_values, params_name, params_type)
         # write_return = sql
         write_return = db.write(sql, params)
     return write_return
@@ -66,7 +71,7 @@ if __name__ == '__main__':
     #                        option=None):
     user = 'zyqsh'
     passwd = 'zyqsh123'
-    host = 'zanweb\stlsojsvr04'
+    host = r'zanweb\stlsojsvr04'
     database = 'DFactory'
     update_fields = ['[Sort Complete]']
     update_values = ['Y']
@@ -91,7 +96,7 @@ if __name__ == '__main__':
     #
     # user_info_read(user, passwd, host, database, show_fields, params_name, params_type, params)
 
-    # test02 ----- oracle_data_import (user, passwd, host, database, file_with_path): -----------------------
+    # test02 ----- oracle_data_import (user, passwd, host, database, file_with
     # from operator import itemgetter
     # show_fields = ['[Raw Material]', '[Order Num]', "CASE WHEN [ORG] = 'LKQ' THEN [Mark No] ELSE [Fa Item]  END AS Item",
     #                '[Fa Qty]', '[Fa Job]', '[Sort Id]', '[Sort Complete]']
@@ -107,7 +112,7 @@ if __name__ == '__main__':
     # rs_by_material = sorted(rs, key=itemgetter('Raw Material', 'Order Num'))
     # pprint(rs_by_material)
 
-    # test01----oracle_data_import(user, passwd, host, database, file_with_path):-----------------------------------
+    # test01----oracle_data_import(user, passwd, host, database, file_with_pat
     # oracle_data_import('zyqsh', 'zyqsh123', 'zanweb\stlsojsvr04', 'DFactory', 'sh', 'E:/Desktop/100000.CSV')
 
     #

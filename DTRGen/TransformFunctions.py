@@ -35,7 +35,8 @@ def lysaght_to_dtr(orders, file_path):
                 orders.product_code = 'CEES'
                 part.material = 'C00000'
                 order_item = CutItem(order_number=orders.order_no, bundle=bundle.bundle_no, part_number=part.part_no,
-                                     quantity=part.quantity, length=float(part.part_length) / mm_inch,
+                                     quantity=part.quantity, length=float(
+                                         part.part_length) / mm_inch,
                                      material=part.material,
                                      product_code=orders.product_code, part_option='R', item_id=part.part_no,
                                      action='C')
@@ -44,7 +45,8 @@ def lysaght_to_dtr(orders, file_path):
                 for dtr_hole in part.dtr_holes:
                     # print('dtr_hole.group_type-->{0}'.format(dtr_hole.group_type))
                     if dtr_hole.group_type == 'double hole':
-                        tool_num = get_dtr_tool_id(tool_list, dtr_hole.dia, dtr_hole.gauge, dtr_hole.group_y)
+                        tool_num = get_dtr_tool_id(
+                            tool_list, dtr_hole.dia, dtr_hole.gauge, dtr_hole.group_y)
                         if tool_num > 0:
                             part_item = Part(part_name=part.part_no, tool_number=tool_num,
                                              x_offset=dtr_hole.group_x / mm_inch,
@@ -53,12 +55,13 @@ def lysaght_to_dtr(orders, file_path):
                                              y_reference=dtr_hole.group_y_reference)
                             part_list.append(part_item)
                         else:
-                            print('This type of double tool_id is not defined! dia={0} * gauge={0}'.format(
+                            print('This type of double tool_id is not defined! dia={0} * gauge={1}'.format(
                                 dtr_hole.dia,
                                 dtr_hole.gauge))
                             return 0
                     else:
-                        tool_num = get_dtr_tool_id(tool_list, dtr_hole.dia, dtr_hole.gauge, dtr_hole.group_y)
+                        tool_num = get_dtr_tool_id(
+                            tool_list, dtr_hole.dia, dtr_hole.gauge, dtr_hole.group_y)
                         if tool_num > 0:
                             part_item = Part(part_name=part.part_no, tool_number=tool_num,
                                              x_offset=dtr_hole.x / mm_inch,
@@ -67,14 +70,15 @@ def lysaght_to_dtr(orders, file_path):
                                              y_reference=dtr_hole.y_reference)
                             part_list.append(part_item)
                         else:
-                            print('This type of single tool_id is not defined! dia={0} * gauge={0}'.format(
+                            print('This type of single tool_id is not defined! dia={0} * gauge={1}'.format(
                                 dtr_hole.dia,
                                 dtr_hole.gauge))
                             # print(part_list)
                             return 0
     # print(order_list)
     # print(part_list)
-    # file_path += 'D' + time.strftime('%y%m%d', time.localtime()) + '0'  # str(random.randint(0, 9))
+    # file_path += 'D' + time.strftime('%y%m%d', time.localtime()) + '0'  #
+    # str(random.randint(0, 9))
     file_path += 'D' + '0' * 7
     # print(file_path)
     order_list.save_as(file_path + '.ORD')
@@ -156,6 +160,7 @@ def gen_butler_order_cut_list(cut_list, nc_folder):
     part_list = Parts()
     # part_list = []
     no_pattern_list = []
+    part_number_list = []   # 避免零件重复
     for cut_part in cut_list:
         order_number = str(cut_part['Order Num'])
         batch_number = str(cut_part['Batch Id'])
@@ -176,7 +181,7 @@ def gen_butler_order_cut_list(cut_list, nc_folder):
         return_list.append(cut_item)
         file_name = part_number + '.nc1'
         nc_file_path = os.path.join(nc_folder, file_name)
-        if is_exist_nc(nc_file_path):
+        if is_exist_nc(nc_file_path) and (part_number not in part_number_list):
             nc = Nc(nc_file_path)
             nc_data = nc.file_data
             nc_inf = nc.file_information()
@@ -187,10 +192,15 @@ def gen_butler_order_cut_list(cut_list, nc_folder):
 
             # 检查pattern
             no_pattern_list += double_list
-            no_pattern_list = check_patterns(tool_list, part.dtr_holes, no_pattern_list)
-            no_pattern_list = [dict(t) for t in {tuple(d.items()) for d in no_pattern_list}]  # 字典列表去重
+            no_pattern_list = check_patterns(
+                tool_list, part.dtr_holes, no_pattern_list)
+            no_pattern_list = [
+                dict(t) for t in {
+                    tuple(
+                        d.items()) for d in no_pattern_list}]  # 字典列表去重
             # no_pattern_list = sorted(no_pattern_list, key=lambda e: (
-            # e.__getitem__('Dia'), e.__getitem__('Gauge'), e.__getitem__('Diff')), reverse=True)
+            # e.__getitem__('Dia'), e.__getitem__('Gauge'),
+            # e.__getitem__('Diff')), reverse=True)
             if no_pattern_list:
                 # print('There are no pattern list:', no_pattern_list)
                 continue
@@ -203,7 +213,8 @@ def gen_butler_order_cut_list(cut_list, nc_folder):
                 group_y_r = dtr_hole.group_y_reference
 
                 if dtr_hole.group_type == 'double hole':  # 对孔---------------
-                    tool_num = get_dtr_tool_id(tool_list, dtr_hole.dia, dtr_hole.gauge, dtr_hole.group_y)
+                    tool_num = get_dtr_tool_id(
+                        tool_list, dtr_hole.dia, dtr_hole.gauge, dtr_hole.group_y)
                     if tool_num > 0:
                         # part_item = Part(part_name=part.part_no, tool_number=tool_num,
                         #                  x_offset=dtr_hole.group_x / mm_inch,
@@ -225,7 +236,8 @@ def gen_butler_order_cut_list(cut_list, nc_folder):
                 else:  # 单孔------------------------------
                     if group_y_r == CENTER_N:
                         group_y = - group_y
-                    tool_num = get_dtr_tool_id(tool_list, dtr_hole.dia, dtr_hole.gauge, group_y)
+                    tool_num = get_dtr_tool_id(
+                        tool_list, dtr_hole.dia, dtr_hole.gauge, group_y)
                     if tool_num > 0:
                         # part_item = Part(part_name=part.part_no, tool_number=tool_num,
                         #                  x_offset=dtr_hole.x / mm_inch,
@@ -242,6 +254,9 @@ def gen_butler_order_cut_list(cut_list, nc_folder):
                         print('This type of single tool_id is not defined, dia=', dia, ' gauge=',
                               gauge, ' group_y=', group_y, ' group_y_r=', group_y_r, ' at part=', part.part_no)
                         return 0
+
+            part_number_list.append(part_number)
+
     # print('Type of part list: ', (type(part_list)))
     if not part_list:
         part_list = None
@@ -272,33 +287,48 @@ def gen_butler_part_to_lysaght(nc_info):
     # print(type(part))
     if nc_info.holes:
         plan_holes = get_nc_plane_holes(nc_info.holes)
-        # 处理腹板 v--正面， h--反面
+        # 处理腹板 v--正面， h--反面, 图纸下部为o基准
         if plan_holes[2]:  # v
             for v_hole in plan_holes[2]:
                 if v_hole.reference == 'o':
-                    v_hole_y = profile_height / 2 - round(v_hole.y)
-                elif v_hole.reference == 'u':
+                    # v_hole_y = profile_height / 2 - round(v_hole.y)
                     v_hole_y = -(profile_height / 2 - round(v_hole.y))
+                elif v_hole.reference == 'u':
+                    # v_hole_y = -(profile_height / 2 - round(v_hole.y))
+                    v_hole_y = profile_height / 2 - round(v_hole.y)
                 elif v_hole.reference == 's':
                     # v_hole_y = round(v_hole.y)
-                    v_hole_y = profile_height / 2 - round(v_hole.y)
+                    # v_hole_y = profile_height / 2 - round(v_hole.y)
+                    v_hole_y = -(profile_height / 2 - round(v_hole.y))
                 else:
                     v_hole_y = 0.0
-                hole_v = lpart.Hole('WEB', v_hole.x, float(round(v_hole_y)), float(round(v_hole.diameter)))
+                hole_v = lpart.Hole(
+                    'WEB', v_hole.x, float(
+                        round(v_hole_y)), float(
+                        round(
+                            v_hole.diameter)))
                 part.add_hole(hole_v)
 
         if plan_holes[3]:  # h
             for h_hole in plan_holes[3]:
                 if h_hole.reference == 'o':
-                    h_hole_y = profile_height / 2 - round(h_hole.y)
-                elif h_hole.reference == 'u':
+                    # h_hole_y = profile_height / 2 - round(h_hole.y)
                     h_hole_y = -(profile_height / 2 - round(h_hole.y))
+                elif h_hole.reference == 'u':
+                    # h_hole_y = -(profile_height / 2 - round(h_hole.y))
+                    h_hole_y = profile_height / 2 - round(h_hole.y)
                 elif h_hole.reference == 's':
                     # h_hole_y = round(h_hole.y)
-                    h_hole_y = profile_height / 2 - round(h_hole.y)
+                    # h_hole_y = profile_height / 2 - round(h_hole.y)
+                    h_hole_y = -(profile_height / 2 - round(h_hole.y))
                 else:
                     h_hole_y = 0.0
-                part.add_hole(lpart.Hole('WEB', h_hole.x, float(round(h_hole_y)), float(round(h_hole.diameter))))
+                part.add_hole(
+                    lpart.Hole(
+                        'WEB', h_hole.x, float(
+                            round(h_hole_y)), float(
+                            round(
+                                h_hole.diameter))))
 
         # 处理上翼缘 o--上
         if plan_holes[0]:  # o   ---算法未确定
@@ -311,20 +341,33 @@ def gen_butler_part_to_lysaght(nc_info):
                     o_hole_y = flange_width / 2 + profile_height / 2 - 2 * web_thickness
                 else:
                     o_hole_y = 0.0
-                part.add_hole(lpart.Hole('OF', o_hole.x, float(round(o_hole_y)), float(round(o_hole.diameter))))
+                part.add_hole(
+                    lpart.Hole(
+                        'OF', o_hole.x, float(
+                            round(o_hole_y)), float(
+                            round(
+                                o_hole.diameter))))
         # 处理下翼缘 u--下
         if plan_holes[1]:  # u   ---算法未确定
             for u_hole in plan_holes[1]:
                 if u_hole.reference == 'o':
-                    u_hole_y = -(flange_width - round(u_hole.y) + profile_height / 2 - 2 * web_thickness)
+                    u_hole_y = -(flange_width - round(u_hole.y) +
+                                 profile_height / 2 - 2 * web_thickness)
                 elif u_hole.reference == 'u':
-                    u_hole_y = -(round(u_hole.y) + profile_height / 2 - 2 * web_thickness)
+                    u_hole_y = -(round(u_hole.y) +
+                                 profile_height / 2 - 2 * web_thickness)
                 elif u_hole.reference == 's':
-                    u_hole_y = -(flange_width / 2 + profile_height / 2 - 2 * web_thickness)
+                    u_hole_y = -(flange_width / 2 +
+                                 profile_height / 2 - 2 * web_thickness)
                 else:
                     u_hole_y = 0.0
                 # u_hole_y = - u_hole_y
-                part.add_hole(lpart.Hole('IF', u_hole.x, float(round(u_hole_y)), float(round(u_hole.diameter))))
+                part.add_hole(
+                    lpart.Hole(
+                        'IF', u_hole.x, float(
+                            round(u_hole_y)), float(
+                            round(
+                                u_hole.diameter))))
     return part
 
 
@@ -366,6 +409,12 @@ def get_nc_plane_holes(nc_holes):
         if single_hole.plane == 'h' and single_hole.reference == 's' and single_hole.hole_type == '':
             h_holes.append(single_hole)
 
+    # 避免孔重复
+    o_holes = list(set(o_holes))
+    u_holes = list(set(u_holes))
+    v_holes = list(set(v_holes))
+    h_holes = list(set(h_holes))
+
     plane_holes.append(o_holes)
     plane_holes.append(u_holes)
     plane_holes.append(v_holes)
@@ -380,15 +429,19 @@ def check_patterns(tool_list, dtr_holes, no_pattern_list_re):
         group_y = dtr_hole.group_y
         if dtr_hole.group_y_reference == CENTER_N:
             group_y = -group_y
-        tool_num = get_dtr_tool_id(tool_list, dtr_hole.dia, dtr_hole.gauge, group_y)
+        tool_num = get_dtr_tool_id(
+            tool_list, dtr_hole.dia, dtr_hole.gauge, group_y)
         if tool_num < 0:
-            temp = {'dia': dtr_hole.dia, 'gauge': dtr_hole.gauge, 'diff': group_y}
+            temp = {
+                'dia': dtr_hole.dia,
+                'gauge': dtr_hole.gauge,
+                'diff': group_y}
             no_pattern_list_re.append(temp)
     return no_pattern_list_re
 
 
 def list_dict_duplicate_removal(data_list):
-    run_function = lambda x, y: x if y in x else x + [y]
+    def run_function(x, y): return x if y in x else x + [y]
     return reduce(run_function, [[], ] + data_list)
 
 
