@@ -316,6 +316,7 @@ class z_splitting(QMainWindow):
                 for dic in self.list_make:
                     list_make_files.append(dic['Item'])
                 list_make_files = list(set(list_make_files))    # 零件去重
+                print(list_make_files)
 
     @pyqtSlot()
     def on_push_button_complete_clicked(self):

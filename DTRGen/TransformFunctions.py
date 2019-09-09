@@ -36,7 +36,7 @@ def lysaght_to_dtr(orders, file_path):
                 part.material = 'C00000'
                 order_item = CutItem(order_number=orders.order_no, bundle=bundle.bundle_no, part_number=part.part_no,
                                      quantity=part.quantity, length=float(
-                                         part.part_length) / mm_inch,
+                        part.part_length) / mm_inch,
                                      material=part.material,
                                      product_code=orders.product_code, part_option='R', item_id=part.part_no,
                                      action='C')
@@ -160,7 +160,7 @@ def gen_butler_order_cut_list(cut_list, nc_folder):
     part_list = Parts()
     # part_list = []
     no_pattern_list = []
-    part_number_list = []   # 避免零件重复
+    part_number_list = []  # 避免零件重复
     for cut_part in cut_list:
         order_number = str(cut_part['Order Num'])
         batch_number = str(cut_part['Batch Id'])
@@ -410,10 +410,10 @@ def get_nc_plane_holes(nc_holes):
             h_holes.append(single_hole)
 
     # 避免孔重复
-    o_holes = list(set(o_holes))
-    u_holes = list(set(u_holes))
-    v_holes = list(set(v_holes))
-    h_holes = list(set(h_holes))
+    o_holes = delete_double_holes(o_holes)
+    u_holes = delete_double_holes(u_holes)
+    v_holes = delete_double_holes(v_holes)
+    h_holes = delete_double_holes(h_holes)
 
     plane_holes.append(o_holes)
     plane_holes.append(u_holes)
@@ -422,6 +422,17 @@ def get_nc_plane_holes(nc_holes):
 
     # print(o_holes)
     return plane_holes
+
+
+def delete_double_holes(holes):
+    new_holes = []
+    hole_attrs = []
+    for hole in holes:
+        hole_a = (hole.plane, hole.reference, hole.x, hole.y, hole.diameter)
+        if hole_a not in hole_attrs:
+            hole_attrs.append(hole_a)
+            new_holes.append(hole)
+    return new_holes
 
 
 def check_patterns(tool_list, dtr_holes, no_pattern_list_re):
@@ -442,6 +453,7 @@ def check_patterns(tool_list, dtr_holes, no_pattern_list_re):
 
 def list_dict_duplicate_removal(data_list):
     def run_function(x, y): return x if y in x else x + [y]
+
     return reduce(run_function, [[], ] + data_list)
 
 
