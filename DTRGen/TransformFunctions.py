@@ -53,9 +53,10 @@ def lysaght_form_oracle_to_dtr(cut_list, parts):
     # 生成零件清单
     for part in parts:
         part.change_dia_no_to_real_dia(lysaght_dia_list)
+        part.special_change()
         part.sort_holes()
         part.group_holes_by_y()
-        part.convert_to_dtr_holes()
+        # part.convert_to_dtr_holes()
         double_list = part.convert_to_dtr_holes()
 
         # 检查pattern

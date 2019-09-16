@@ -336,6 +336,18 @@ class Part(object):
         finally:
             return
 
+    def special_change(self):
+        try:
+            for one_hole in self.holes:
+                if (one_hole.dia == 1622) and (one_hole.y == 0):
+                    one_hole.dia = 18.0
+                if (one_hole.dia == 1622) and (one_hole.y != 0):
+                    one_hole.dia = 1822.0
+                    one_hole.x = one_hole.x + 37.5
+        except Exception as e:
+            print(e)
+        finally:
+            return
 
 def test():
     part = Part('abc123', 8265, 2.4, 21, 'C200190', '')
