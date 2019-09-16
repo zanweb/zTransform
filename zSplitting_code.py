@@ -10,7 +10,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QTreeWidgetItem, QTreeWid
     QMessageBox
 
 from DBbase import dbFunctions
-from DTRGen.TransformFunctions import gen_butler_order_cut_list
+from DTRGen.TransformFunctions import gen_butler_order_cut_list, lysaght_form_oracle_to_dtr
 from Zfile import zCSV, zFBase
 from zSplitting import Ui_zSplitting
 from zSplitting_login_code import LoginDialog
@@ -304,9 +304,9 @@ class z_splitting(QMainWindow):
                         QMessageBox.warning(self, 'NC文件', '目录内没有NC文件！', QMessageBox.Ok)
 
             if self.org == 'LKQ':
-                '''
-                    处理LKQ格式清单
-                '''
+                # '''
+                # TODO: 处理LKQ格式清单
+                # '''
                 # 获取关键字段
                 list_auto = []
                 for dic in self.list_make:
@@ -317,6 +317,50 @@ class z_splitting(QMainWindow):
                     list_make_files.append(dic['Item'])
                 list_make_files = list(set(list_make_files))    # 零件去重
                 print(list_make_files)
+            # 从csv的文件夹中读取
+                all_parts = []  # 所有csv文件中的parts（lyasght）
+                csv_folder = QFileDialog.getExistingDirectory(None, '请指定csv文件目录：')
+                csv_files = zFBase.get_indicate_ext_file(csv_folder, 'csv')
+                for csv in csv_files:
+                    csv_file_path = csv_folder + '/' + str(csv) + '.csv'
+                    csv_file = zCSV.CsvFile(csv_file_path)
+                    csv_parts = csv_file.get_lysaght_punch()
+                    all_parts.extend(csv_parts)
+                    all_parts_no = [no.part_no for no in all_parts]
+                print(all_parts_no)
+                miss_parts = list(set(list_make_files).difference(set(all_parts_no)))
+                if miss_parts:
+                    QMessageBox.warning(self,'工程数据缺失', '缺失如下零件csv数据, 请补充数据！！！\n' + str(miss_parts), QMessageBox.Ok)
+                    return 0
+
+                # 获取清单数据
+                QMessageBox.information(self, '工程数据文件', '工程数据文件齐全,开始转换。', QMessageBox.Ok)
+                # 指定输出文件夹
+                self.out_folder = QFileDialog.getExistingDirectory(self, '获取转换后的文件夹:')
+                # 获取制作清单数据结构
+                list_auto_int = [int(x) for x in list_auto]
+                # print(list_auto_int)
+                tuple_auto = tuple(list_auto_int)
+                read_return = dbFunctions.oracle_data_read_in_auto(self.user, self.pass_word, self.server,
+                                                                   self.database, tuple_auto)
+                try:
+                    cut_list, no_pattern_list, parts = lysaght_form_oracle_to_dtr(read_return, all_parts)
+                    if no_pattern_list:
+                        str_show = ''
+                        for no_pattern in no_pattern_list:
+                            str_show += str(no_pattern) + '\n'
+                        QMessageBox.warning(self, '警告', '有未定义的孔位\n' + str_show, QMessageBox.Ok)
+                        return 1
+                    print(cut_list, parts)
+                    cut_list_file = 'D' + '0' * 7 + '.ORD'
+                    cut_list_file_path = os.path.join(self.out_folder, cut_list_file)
+                    cut_list.save_as(cut_list_file_path)
+                    parts_file = 'D' + '0' * 7 + '.PRT'
+                    parts_file_path = os.path.join(self.out_folder, parts_file)
+                    parts.save_as(parts_file_path)
+                    QMessageBox.information(self, '完成', '已经完成！', QMessageBox.Ok)
+                except Exception as e:
+                    print(e)
 
     @pyqtSlot()
     def on_push_button_complete_clicked(self):

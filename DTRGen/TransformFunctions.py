@@ -22,6 +22,109 @@ from zBase.constant import MM_INCH, CENTER_N, CENTER_P
 
 
 # from pprint import pprint
+def lysaght_form_oracle_to_dtr(cut_list, parts):
+    mm_inch = 25.4
+    tool_list = get_dtr_tools('./DTRTools.csv')
+    lysaght_dia_list = get_lysaght_dias('./LysaghtHoleDia.csv')
+
+    return_list = CutList()
+    part_list = Parts()
+    # part_list = []
+    no_pattern_list = []
+    # 生成制作清单
+    for cut_part in cut_list:
+        order_number = str(cut_part['Order Num'])
+        batch_number = str(cut_part['Batch Id'])
+        bundle = int(re.sub(r'\D', '', cut_part['Bundle']))
+        quantity = cut_part['Fa Qty']
+        length = cut_part['Unit Length']
+        material = cut_part['Raw Material'].strip()
+        product_code = cut_part['Item Cat'].strip()
+        part_number = cut_part['Mark No'].strip()  # 来实零件号取Mark No
+        part_option = 'R'
+        item_id = part_number
+        action = 'C'
+        cut_item = CutItem(order_number=batch_number, bundle=bundle, part_number=part_number,
+                           quantity=quantity, length=length / MM_INCH,
+                           material=material,
+                           product_code=product_code, part_option=part_option, item_id=item_id,
+                           action=action)
+        return_list.append(cut_item)
+    # 生成零件清单
+    for part in parts:
+        part.change_dia_no_to_real_dia(lysaght_dia_list)
+        part.sort_holes()
+        part.group_holes_by_y()
+        part.convert_to_dtr_holes()
+        double_list = part.convert_to_dtr_holes()
+
+        # 检查pattern
+        no_pattern_list += double_list
+        no_pattern_list = check_patterns(
+            tool_list, part.dtr_holes, no_pattern_list)
+        no_pattern_list = [
+            dict(t) for t in {
+                tuple(
+                    d.items()) for d in no_pattern_list}]  # 字典列表去重
+        # no_pattern_list = sorted(no_pattern_list, key=lambda e: (
+        # e.__getitem__('Dia'), e.__getitem__('Gauge'),
+        # e.__getitem__('Diff')), reverse=True)
+        if no_pattern_list:
+            # print('There are no pattern list:', no_pattern_list)
+            continue
+
+        for dtr_hole in part.dtr_holes:
+            # print('dtr_hole.group_type-->{0}'.format(dtr_hole.group_type))inf
+            dia = dtr_hole.dia
+            gauge = dtr_hole.gauge
+            group_y = dtr_hole.group_y
+            group_y_r = dtr_hole.group_y_reference
+
+            if dtr_hole.group_type == 'double hole':  # 对孔---------------
+                tool_num = get_dtr_tool_id(
+                    tool_list, dtr_hole.dia, dtr_hole.gauge, dtr_hole.group_y)
+                if tool_num > 0:
+                    # part_item = Part(part_name=part.part_no, tool_number=tool_num,
+                    #                  x_offset=dtr_hole.group_x / mm_inch,
+                    #                  x_reference=dtr_hole.group_x_reference, permanent=True,
+                    #                  y_offset=dtr_hole.group_y / mm_inch,
+                    #                  y_reference=dtr_hole.group_y_reference)
+
+                    part_item = Part(part_name=part.part_no, tool_number=tool_num,
+                                     x_offset=dtr_hole.group_x / mm_inch,
+                                     x_reference=dtr_hole.group_x_reference, permanent=True,
+                                     y_offset=0.0,
+                                     y_reference=CENTER_P)
+
+                    part_list.append(part_item)
+                else:
+                    print('This type of double tool_id is not defined, dia=', dia, ' gauge=',
+                          gauge, ' group_y=', group_y, ' group_y_r=', group_y_r, ' at part=', part.part_no)
+                    return 0
+            else:  # 单孔------------------------------
+                if group_y_r == CENTER_N:
+                    group_y = - group_y
+                tool_num = get_dtr_tool_id(
+                    tool_list, dtr_hole.dia, dtr_hole.gauge, group_y)
+                if tool_num > 0:
+                    # part_item = Part(part_name=part.part_no, tool_number=tool_num,
+                    #                  x_offset=dtr_hole.x / mm_inch,
+                    #                  x_reference=dtr_hole.x_reference, permanent=True,
+                    #                  y_offset=dtr_hole.y / mm_inch,
+                    #                  y_reference=dtr_hole.y_reference)
+                    part_item = Part(part_name=part.part_no, tool_number=tool_num,
+                                     x_offset=dtr_hole.x / mm_inch,
+                                     x_reference=dtr_hole.x_reference, permanent=True,
+                                     y_offset=0.0,
+                                     y_reference=CENTER_P)
+                    part_list.append(part_item)
+                else:
+                    print('This type of single tool_id is not defined, dia=', dia, ' gauge=',
+                          gauge, ' group_y=', group_y, ' group_y_r=', group_y_r, ' at part=', part.part_no)
+                    return 0
+
+    return return_list, no_pattern_list, part_list
+
 
 def lysaght_to_dtr(orders, file_path):
     mm_inch = 25.4
