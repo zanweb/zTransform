@@ -10,7 +10,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QTreeWidgetItem, QTreeWid
     QMessageBox
 
 from DBbase import dbFunctions
-from DTRGen.TransformFunctions import gen_butler_order_cut_list, lysaght_form_oracle_to_dtr
+from DTRGen.TransformFunctions import gen_butler_order_cut_list, lysaght_from_oracle_to_dtr
 from Zfile import zCSV, zFBase
 from zSplitting import Ui_zSplitting
 from zSplitting_login_code import LoginDialog
@@ -319,6 +319,7 @@ class z_splitting(QMainWindow):
                 print(list_make_files)
             # 从csv的文件夹中读取
                 all_parts = []  # 所有csv文件中的parts（lyasght）
+                all_parts_no = []
                 csv_folder = QFileDialog.getExistingDirectory(None, '请指定csv文件目录：')
                 csv_files = zFBase.get_indicate_ext_file(csv_folder, 'csv')
                 for csv in csv_files:
@@ -344,7 +345,7 @@ class z_splitting(QMainWindow):
                 read_return = dbFunctions.oracle_data_read_in_auto(self.user, self.pass_word, self.server,
                                                                    self.database, tuple_auto)
                 try:
-                    cut_list, no_pattern_list, parts = lysaght_form_oracle_to_dtr(read_return, all_parts)
+                    cut_list, no_pattern_list, parts = lysaght_from_oracle_to_dtr(read_return, all_parts)
                     if no_pattern_list:
                         str_show = ''
                         for no_pattern in no_pattern_list:

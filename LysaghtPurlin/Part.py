@@ -277,7 +277,7 @@ class Part(object):
 
         combins_holes = [c for c in combinations(group_holes, 2)]
         for combins_hole in combins_holes:
-            if (combins_hole[0].y <= 0) != (combins_hole[1].y <= 0):  # y轴相反+-
+            if (combins_hole[0].y <= 0) != (combins_hole[1].y <= 0):  # y轴是否有x轴对称的孔，y值相反+-
                 # 判断是否有预定义
                 dia =combins_hole[0].dia
                 gauge = math.fabs(combins_hole[0].y-combins_hole[1].y)
@@ -339,6 +339,8 @@ class Part(object):
     def special_change(self):
         try:
             for one_hole in self.holes:
+                # lysaght的数据数据需要将y轴上下翻转下, DTR的Rgt不改的话
+                one_hole.y = -one_hole.y
                 # if (one_hole.dia == 1622) and (one_hole.y == 0):
                 #     one_hole.dia = 18.0
                 # if (one_hole.dia == 1622) and (one_hole.y != 0):

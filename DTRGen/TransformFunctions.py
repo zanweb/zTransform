@@ -22,7 +22,7 @@ from zBase.constant import MM_INCH, CENTER_N, CENTER_P
 
 
 # from pprint import pprint
-def lysaght_form_oracle_to_dtr(cut_list, parts):
+def lysaght_from_oracle_to_dtr(cut_list, parts):
     mm_inch = 25.4
     tool_list = get_dtr_tools('./DTRTools.csv')
     lysaght_dia_list = get_lysaght_dias('./LysaghtHoleDia.csv')
