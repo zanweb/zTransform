@@ -344,8 +344,13 @@ class z_splitting(QMainWindow):
                 tuple_auto = tuple(list_auto_int)
                 read_return = dbFunctions.oracle_data_read_in_auto(self.user, self.pass_word, self.server,
                                                                    self.database, tuple_auto)
+                all_parts_make = []
+                for part in all_parts:
+                    if part.part_no in list_make_files:
+                        all_parts_make.append(part)
+
                 try:
-                    cut_list, no_pattern_list, parts = lysaght_from_oracle_to_dtr(read_return, all_parts)
+                    cut_list, no_pattern_list, parts = lysaght_from_oracle_to_dtr(read_return, all_parts_make)
                     if no_pattern_list:
                         str_show = ''
                         for no_pattern in no_pattern_list:
