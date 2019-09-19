@@ -34,10 +34,8 @@ def lysaght_from_oracle_to_dtr(cut_list, parts):
     no_pattern_list = []
     # 生成制作清单
     cut_list_sorted_mark = sorted(cut_list, key=itemgetter('Mark No'))
-
-    cut_list_sorted_bundle = sorted(cut_list_sorted_mark, key=itemgetter('Bundle'))
-
-    cut_list_sorted = sorted(cut_list_sorted_bundle, key=itemgetter('Unit Length'), reverse=True)
+    cut_list_sorted_length = sorted(cut_list_sorted_mark, key=itemgetter('Unit Length'), reverse=True)
+    cut_list_sorted = sorted(cut_list_sorted_length, key=itemgetter('Bundle'))
 
     for cut_part in cut_list_sorted:
         print(cut_part)
