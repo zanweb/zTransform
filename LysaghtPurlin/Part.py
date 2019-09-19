@@ -277,11 +277,12 @@ class Part(object):
 
         combins_holes = [c for c in combinations(group_holes, 2)]
         for combins_hole in combins_holes:
-            if (combins_hole[0].y <= 0) != (combins_hole[1].y <= 0):  # y轴是否有x轴对称的孔，y值相反+-
+            if ((combins_hole[0].y < 0) != (combins_hole[1].y < 0)) and (
+                    combins_hole[0].y != 0) and (combins_hole[1].y != 0):  # y轴是否有x轴对称的孔，y值相反+-
                 # 判断是否有预定义
-                dia =combins_hole[0].dia
-                gauge = math.fabs(combins_hole[0].y-combins_hole[1].y)
-                group_y = combins_hole[1].y-gauge/2
+                dia = combins_hole[0].dia
+                gauge = math.fabs(combins_hole[0].y - combins_hole[1].y)
+                group_y = combins_hole[1].y - gauge / 2
                 is_normal_gauge = TransformFunctions.get_dtr_tool_id(tool_list, dia, gauge,
                                                                      group_y)
                 if is_normal_gauge > 0:
@@ -293,7 +294,8 @@ class Part(object):
                     return self.more_web_dtr_holes_iter(
                         tool_list, new_group_holes, dtr_holes, undefined_holes)
                 else:
-                    undefined_hole = {'Dia':dia, 'Gauge':gauge, 'Diff':group_y}
+                    undefined_hole = {
+                        'Dia': dia, 'Gauge': gauge, 'Diff': group_y}
                     undefined_holes.append(undefined_hole)
                     new_group_holes = list(
                         set(group_holes).difference(set(list(combins_hole))))
@@ -352,6 +354,7 @@ class Part(object):
             print(e)
         finally:
             return
+
 
 def test():
     part = Part('abc123', 8265, 2.4, 21, 'C200190', '')

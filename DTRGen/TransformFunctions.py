@@ -1,4 +1,5 @@
 from functools import reduce
+import operator
 
 __author__ = "zanweb <zanweb@163.com>"
 
@@ -32,7 +33,12 @@ def lysaght_from_oracle_to_dtr(cut_list, parts):
     # part_list = []
     no_pattern_list = []
     # 生成制作清单
-    for cut_part in cut_list:
+
+    cut_list_sorted = sorted(cut_list, key=operator.itemgetter('Unit Length'), reverse=True)
+    # cut_list_sorted = sorted(cut_list_sorted_length, key=operator.itemgetter('Mark No'))
+
+    for cut_part in cut_list_sorted:
+        print(cut_part)
         order_number = str(cut_part['Order Num'])
         batch_number = str(cut_part['Batch Id'])
         bundle = int(re.sub(r'\D', '', cut_part['Bundle']))
