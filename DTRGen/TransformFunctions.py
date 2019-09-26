@@ -553,11 +553,12 @@ def check_patterns(tool_list, dtr_holes, no_pattern_list_re):
         tool_num = get_dtr_tool_id(
             tool_list, dtr_hole.dia, dtr_hole.gauge, group_y)
         if tool_num < 0:
-            temp = {
-                'dia': dtr_hole.dia,
-                'gauge': dtr_hole.gauge,
-                'diff': group_y}
-            no_pattern_list_re.append(temp)
+            if dtr_hole.gauge >= 70:
+                temp = {
+                    'dia': dtr_hole.dia,
+                    'gauge': dtr_hole.gauge,
+                    'diff': group_y}
+                no_pattern_list_re.append(temp)
     return no_pattern_list_re
 
 

@@ -295,13 +295,15 @@ class Part(object):
                     return self.more_web_dtr_holes_iter(
                         tool_list, new_group_holes, dtr_holes, undefined_holes)
                 else:
-                    undefined_hole = {
-                        'Dia': dia, 'Gauge': gauge, 'Diff': group_y}
-                    undefined_holes.append(undefined_hole)
+                    if gauge >= 70:
+                        undefined_hole = {
+                            'Dia': dia, 'Gauge': gauge, 'Diff': group_y}
+                        undefined_holes.append(undefined_hole)
                     new_group_holes = list(
                         set(group_holes).difference(set(list(combins_hole))))
                     return self.more_web_dtr_holes_iter(
                         tool_list, new_group_holes, dtr_holes, undefined_holes)
+
         return self.more_web_dtr_holes_iter(
             tool_list, new_group_holes, dtr_holes, undefined_holes)
 
