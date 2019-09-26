@@ -203,11 +203,12 @@ class Part(object):
             is_normal_gauge = TransformFunctions.get_dtr_tool_id(tool_list, dtr_hole.dia, dtr_hole.gauge,
                                                                  dtr_hole.group_y)
             if is_normal_gauge == -1:
-                t_double = {
-                    'Dia': dtr_hole.dia,
-                    'Gauge': dtr_hole.gauge,
-                    'Diff': dtr_hole.group_y}
-                undefined_holes.append(t_double)
+                if dtr_hole.gauge >= 70:
+                    t_double = {
+                        'Dia': dtr_hole.dia,
+                        'Gauge': dtr_hole.gauge,
+                        'Diff': dtr_hole.group_y}
+                    undefined_holes.append(t_double)
                 # 如果不是常规间距，按单孔处理 -------------------
                 dtr_hole = self.single_dtr_hole(one_group[0])
                 dtr_holes.append(dtr_hole)
