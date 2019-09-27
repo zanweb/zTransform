@@ -209,12 +209,14 @@ class Part(object):
                         'Gauge': dtr_hole.gauge,
                         'Diff': dtr_hole.group_y}
                     undefined_holes.append(t_double)
-                # 如果不是常规间距，按单孔处理 -------------------
-                dtr_hole = self.single_dtr_hole(one_group[0])
+                else:
+                    # 如果不是常规间距，按单孔处理 -------------------
+                    dtr_hole = self.single_dtr_hole(one_group[0])
+                    dtr_holes.append(dtr_hole)
+                    dtr_hole = self.single_dtr_hole(one_group[1])
+                    dtr_holes.append(dtr_hole)
+            else:
                 dtr_holes.append(dtr_hole)
-                dtr_hole = self.single_dtr_hole(one_group[1])
-                dtr_holes.append(dtr_hole)
-            dtr_holes.append(dtr_hole)
         return dtr_holes, undefined_holes
 
     def more_dtr_holes(self, tool_list, one_group):
