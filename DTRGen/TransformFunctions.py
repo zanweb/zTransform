@@ -1,5 +1,5 @@
 from functools import reduce
-from  operator import itemgetter
+from operator import itemgetter
 
 __author__ = "zanweb <zanweb@163.com>"
 
@@ -23,14 +23,208 @@ from zBase.constant import MM_INCH, CENTER_N, CENTER_P
 
 
 # from pprint import pprint
-def lysaght_from_oracle_to_dtr(cut_list, parts):
-    mm_inch = 25.4
+def gen_dtr_cut_list(cut_list, org='LKQ'):
+    """
+    生成切割清单
+    :param org: 所属组织
+    :param cut_list: oracle中的清单
+    :return: DTR切割清单
+    """
+    return_list = CutList()
+    if org == 'LKQ':
+        cut_list_sorted_mark = sorted(cut_list, key=itemgetter('Mark No'))
+    else:
+        cut_list_sorted_mark = sorted(cut_list, key=itemgetter('Fa Item'))
+    cut_list_sorted_length = sorted(cut_list_sorted_mark, key=itemgetter('Unit Length'), reverse=True)
+    cut_list_sorted = sorted(cut_list_sorted_length, key=itemgetter('Bundle'))
+
+    for cut_part in cut_list_sorted:
+        # print(cut_part)
+        order_number = str(cut_part['Order Num'])
+        batch_number = str(cut_part['Batch Id'])
+        bundle = int(re.sub(r'\D', '', cut_part['Bundle']))
+        quantity = cut_part['Fa Qty']
+        length = cut_part['Unit Length']
+        material = cut_part['Raw Material'].strip()
+        product_code = cut_part['Item Cat'].strip()
+        if org == 'LKQ':
+            part_number = cut_part['Mark No'].strip()  # 来实零件号取Mark No
+        else:
+            part_number = cut_part['Fa Item'][0:7]  # 来实零件号取Mark No
+        part_option = 'R'
+        item_id = part_number
+        action = 'C'
+        cut_item = CutItem(order_number=batch_number, bundle=bundle, part_number=part_number,
+                           quantity=quantity, length=length / MM_INCH,
+                           material=material,
+                           product_code=product_code, part_option=part_option, item_id=item_id,
+                           action=action)
+        return_list.append(cut_item)
+    return return_list
+
+
+def prepare_lysaght_holes(parts, lysaght_dia_list):
+    """
+    lysaght-csv中孔预处理
+    :param parts: lysaght的part清单
+    :param lysaght_dia_list: lysaght-csv 中的孔代号列表
+    :return:
+    """
+    for part in parts:
+        part.change_dia_no_to_real_dia(lysaght_dia_list)
+        part.special_change()
+    return parts
+
+
+def check_dtr_undefined_holes(parts, tool_list):
+    """
+    检查lysaght-parts中的未定义孔
+    :param parts:  lysaght的零件列表
+    :param tool_list: DTR孔的列表
+    :return: 返回未定义孔列表
+    """
+    no_pattern_list = []
+    for part in parts:
+        part.sort_holes()
+        part.group_holes_by_y()
+        # part.convert_to_dtr_holes()
+        double_list = part.convert_to_dtr_holes(tool_list)
+
+        # 检查pattern
+        no_pattern_list += double_list
+        no_pattern_list += part.check_tool_id(tool_list)
+        no_pattern_list = [
+            dict(t) for t in {
+                tuple(
+                    d.items()) for d in no_pattern_list}]  # 字典列表去重
+        if no_pattern_list:
+            # print('There are no pattern list:', no_pattern_list)
+            continue
+    return no_pattern_list
+
+
+def gen_dtr_pattern_list(parts, tool_list):
+    """
+    lysaght-parts转DTR孔
+    :param parts: lysaght-part
+    :param tool_list: DTR孔列表
+    :return: 转换号的DTR-pattern列表
+    """
+    part_list = Parts()
+    for part in parts:
+        part.sort_holes()
+        part.group_holes_by_y()
+        # part.convert_to_dtr_holes()
+        double_list = part.convert_to_dtr_holes(tool_list)
+        pattern = part.convert_to_dtr_pattern(tool_list)
+        part_list.append(pattern)
+    return part_list
+
+
+def lysaght_csv_from_oracle_to_dtr(cut_list, parts):
+    """
+    转换lysaght-csv项目到DTR列表
+    :param cut_list: Oracle清单
+    :param parts: lysaght-csv零件
+    :return: DTR切割清单，DTR未定义孔， DTR-pattern清单
+    """
+    tool_list = get_dtr_tools('./DTRTools.csv')
+    lysaght_dia_list = get_lysaght_dias('./LysaghtHoleDia.csv')
+
+    return_list = CutList()
+    part_list = Parts()
+    no_pattern_list = []
+
+    # 生成制作清单
+    return_list = gen_dtr_cut_list(cut_list, org='LKQ')
+
+    # 生成零件清单
+    # 1. 转换到实际孔径，检查零件中未定义的孔
+    parts_checked = prepare_lysaght_holes(parts, lysaght_dia_list)
+    no_pattern_list = check_dtr_undefined_holes(parts_checked, tool_list)
+    if no_pattern_list:
+        # 1.1 如果有未定义的孔
+        return return_list, no_pattern_list, part_list
+    else:
+        # 1.2 如果没有未定义的孔
+        part_list = gen_dtr_pattern_list(parts_checked, tool_list)
+
+    return return_list, no_pattern_list, part_list
+
+
+def convert_nc_from_oracle_to_dtr(cut_list, nc_folder, org='LKQ'):
+    """
+    lysaght-nc项目转换导入DTR列表
+    :param org: 组织名
+    :param cut_list: lysaght-oracle获取的清单
+    :param nc_folder: nc文件夹
+    :return: DTR切割清单，DTR未定义孔， DTR-pattern清单
+    """
     tool_list = get_dtr_tools('./DTRTools.csv')
     lysaght_dia_list = get_lysaght_dias('./LysaghtHoleDia.csv')
 
     return_list = CutList()
     part_list = Parts()
     # part_list = []
+    no_pattern_list = []
+    part_number_list = []  # 避免零件重复
+    # 生成制作清单
+    if org == 'LKQ':
+        return_list = gen_dtr_cut_list(cut_list, org='LKQ')
+    else:
+        return_list = gen_dtr_cut_list(cut_list, org)
+
+    # 生成零件清单
+    if org == 'LKQ':
+        parts = convert_nc_files_to_lysaght_parts(cut_list, nc_folder, org='LKQ')
+    else:
+        parts = convert_nc_files_to_lysaght_parts(cut_list, nc_folder, org)
+    # 1. 转换到实际孔径，检查零件中未定义的孔
+    parts_checked = prepare_lysaght_holes(parts, lysaght_dia_list)
+    no_pattern_list = check_dtr_undefined_holes(parts_checked, tool_list)
+    if no_pattern_list:
+        # 1.1 如果有未定义的孔
+        return return_list, no_pattern_list, part_list
+    else:
+        # 1.2 如果没有未定义的孔
+        part_list = gen_dtr_pattern_list(parts_checked, tool_list)
+
+    return return_list, no_pattern_list, part_list
+
+
+def convert_nc_files_to_lysaght_parts(cut_list, nc_folder, org='LKQ'):
+    """
+    将nc文件组转化未Lasght-part
+    :param cut_list: oracle提取的清单
+    :param nc_folder: nc文件所在文件夹
+    :param org: 组织类型
+    :return: 返回lysaght-parts
+    """
+    nc_files = []
+    lysaght_parts = []
+    for cut_part in cut_list:
+        if org == 'LKQ':
+            part_number = cut_part['Mark No'].strip() + '.nc1'  # 来实零件号取Mark No
+        else:
+            part_number = cut_part['Fa Item'][0:7] + '.nc1'  # butler零件号取'Fa Item'
+        nc_files.append(part_number)
+    for file_name in nc_files:
+        nc_file_path = os.path.join(nc_folder, file_name)
+        nc = Nc(nc_file_path)
+        nc_data = nc.file_data
+        nc_inf = nc.file_information()
+        part = gen_nc_part_to_lysaght(nc_inf)
+        lysaght_parts.append(part)
+    return lysaght_parts
+
+
+def lysaght_from_oracle_to_dtr_org(cut_list, parts):
+    # mm_inch = 25.4
+    tool_list = get_dtr_tools('./DTRTools.csv')
+    lysaght_dia_list = get_lysaght_dias('./LysaghtHoleDia.csv')
+
+    return_list = CutList()
+    part_list = Parts()
     no_pattern_list = []
     # 生成制作清单
     cut_list_sorted_mark = sorted(cut_list, key=itemgetter('Mark No'))
@@ -63,7 +257,7 @@ def lysaght_from_oracle_to_dtr(cut_list, parts):
         part.sort_holes()
         part.group_holes_by_y()
         # part.convert_to_dtr_holes()
-        double_list = part.convert_to_dtr_holes()
+        double_list = part.convert_to_dtr_holes(tool_list)
 
         # 检查pattern
         no_pattern_list += double_list
@@ -98,7 +292,7 @@ def lysaght_from_oracle_to_dtr(cut_list, parts):
                     #                  y_reference=dtr_hole.group_y_reference)
 
                     part_item = Part(part_name=part.part_no, tool_number=tool_num,
-                                     x_offset=dtr_hole.group_x / mm_inch,
+                                     x_offset=dtr_hole.group_x / MM_INCH,
                                      x_reference=dtr_hole.group_x_reference, permanent=True,
                                      y_offset=0.0,
                                      y_reference=CENTER_P)
@@ -120,7 +314,7 @@ def lysaght_from_oracle_to_dtr(cut_list, parts):
                     #                  y_offset=dtr_hole.y / mm_inch,
                     #                  y_reference=dtr_hole.y_reference)
                     part_item = Part(part_name=part.part_no, tool_number=tool_num,
-                                     x_offset=dtr_hole.x / mm_inch,
+                                     x_offset=dtr_hole.x / MM_INCH,
                                      x_reference=dtr_hole.x_reference, permanent=True,
                                      y_offset=0.0,
                                      y_reference=CENTER_P)
@@ -225,6 +419,7 @@ def get_lysaght_real_dia(dia_list, dia_no):
 
 
 def read_data_from_lysaght_engine(file_path):
+    tool_list = get_dtr_tools('./DTRTools.csv')
     orders = []
     try:
         lysaght_dia_list = get_lysaght_dias('./LysaghtHoleDia.csv')
@@ -251,7 +446,7 @@ def read_data_from_lysaght_engine(file_path):
                     one_part.change_dia_no_to_real_dia(lysaght_dia_list)
                     one_part.sort_holes()
                     one_part.group_holes_by_y()
-                    one_part.convert_to_dtr_holes()
+                    one_part.convert_to_dtr_holes(tool_list)
                     bundle.add_part(one_part)
                 batch.add_bundle(bundle)
             order.add_batch(batch)
@@ -263,7 +458,7 @@ def read_data_from_lysaght_engine(file_path):
 
 
 def gen_butler_order_cut_list(cut_list, nc_folder):
-    mm_inch = 25.4
+    # mm_inch = 25.4
     tool_list = get_dtr_tools('./DTRTools.csv')
 
     return_list = CutList()
@@ -295,10 +490,10 @@ def gen_butler_order_cut_list(cut_list, nc_folder):
             nc = Nc(nc_file_path)
             nc_data = nc.file_data
             nc_inf = nc.file_information()
-            part = gen_butler_part_to_lysaght(nc_inf)
+            part = gen_nc_part_to_lysaght(nc_inf)
             part.sort_holes()
             part.group_holes_by_y()
-            double_list = part.convert_to_dtr_holes()
+            double_list = part.convert_to_dtr_holes(tool_list)
 
             # 检查pattern
             no_pattern_list += double_list
@@ -333,7 +528,7 @@ def gen_butler_order_cut_list(cut_list, nc_folder):
                         #                  y_reference=dtr_hole.group_y_reference)
 
                         part_item = Part(part_name=part.part_no, tool_number=tool_num,
-                                         x_offset=dtr_hole.group_x / mm_inch,
+                                         x_offset=dtr_hole.group_x / MM_INCH,
                                          x_reference=dtr_hole.group_x_reference, permanent=True,
                                          y_offset=0.0,
                                          y_reference=CENTER_P)
@@ -355,7 +550,7 @@ def gen_butler_order_cut_list(cut_list, nc_folder):
                         #                  y_offset=dtr_hole.y / mm_inch,
                         #                  y_reference=dtr_hole.y_reference)
                         part_item = Part(part_name=part.part_no, tool_number=tool_num,
-                                         x_offset=dtr_hole.x / mm_inch,
+                                         x_offset=dtr_hole.x / MM_INCH,
                                          x_reference=dtr_hole.x_reference, permanent=True,
                                          y_offset=0.0,
                                          y_reference=CENTER_P)
@@ -373,7 +568,7 @@ def gen_butler_order_cut_list(cut_list, nc_folder):
     return return_list, no_pattern_list, part_list
 
 
-def gen_butler_part_to_lysaght(nc_info):
+def gen_nc_part_to_lysaght(nc_info):
     if nc_info.header.code_profile == 'C':
         # 判断反转
         pass
@@ -494,6 +689,18 @@ def get_nc_plane_holes(nc_holes):
         single_hole.x = float(round(single_hole.x))
         single_hole.y = float(round(single_hole.y))
 
+        # 处理长圆孔及花孔
+        if single_hole.special == 'l':
+            diameter = single_hole.diameter
+            width = single_hole.width
+            x = single_hole.x
+            single_hole.x = x + width / 2
+            # 花孔 6*25 长圆孔作花孔处理
+            if (diameter == 6) and (width == 19):
+                single_hole.diameter = 7777
+            else:
+                single_hole.diameter = diameter * 100 + (diameter + width)
+
         if single_hole.plane == 'o' and single_hole.reference == 's' and single_hole.hole_type == '':
             o_holes.append(single_hole)
         if single_hole.plane == 'o' and single_hole.reference == 'o' and single_hole.hole_type == '':
@@ -545,13 +752,13 @@ def delete_double_holes(holes):
     return new_holes
 
 
-def check_patterns(tool_list, dtr_holes, no_pattern_list_re):
+def check_patterns(tool_id_list, dtr_holes, no_pattern_list_re):
     for dtr_hole in dtr_holes:
         group_y = dtr_hole.group_y
         if dtr_hole.group_y_reference == CENTER_N:
             group_y = -group_y
         tool_num = get_dtr_tool_id(
-            tool_list, dtr_hole.dia, dtr_hole.gauge, group_y)
+            tool_id_list, dtr_hole.dia, dtr_hole.gauge, group_y)
         if tool_num < 0:
             if dtr_hole.gauge >= 70:
                 temp = {

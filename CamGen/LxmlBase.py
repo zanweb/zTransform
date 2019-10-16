@@ -1,5 +1,7 @@
-from lxml import etree
 import re
+
+from PyQt5.QtWidgets import QMessageBox
+from lxml import etree
 
 
 class Head:
@@ -36,6 +38,8 @@ class XmlGen:
         # o-plane no holes or has 8 diameter holes---False, o-plane on drive side
         # o-plane only 14 diameter holes -- True, o-plane on operate side
 
+        self.undefined_holes = []
+
     def set_hole_name(self, hole_name):
         for hole in hole_name:
             if hole['HoleType'] == 'TopFlange_14':
@@ -69,12 +73,14 @@ class XmlGen:
                 hole.y = single_hole.y
                 hole.type = self.flange_hole_top_14
                 self.holes.append(hole)
-            if single_hole.diameter == 8:
+            elif single_hole.diameter == 8:
                 hole = Hole()
                 hole.x = single_hole.x
                 hole.y = single_hole.y
                 hole.type = self.flange_hole_top_8
                 self.holes.append(hole)
+            else:
+                self.undefined_holes.append(single_hole)
 
     def add_bottom_side_holes(self, holes):
         for single_hole in holes:
@@ -84,6 +90,8 @@ class XmlGen:
                 hole.y = single_hole.y
                 hole.type = self.flange_hole_bottom_16
                 self.holes.append(hole)
+            else:
+                self.undefined_holes.append(single_hole)
 
     def add_web_holes(self, holes):
         pre_hole_x = 0.0
@@ -105,7 +113,10 @@ class XmlGen:
                 self.holes.append(hole)
                 pre_hole_x = hole.x
             # 腹板腰圆孔处理
-            if single_hole.diameter == 13.5:
+            elif (single_hole.diameter == 13.5) or (single_hole.special == 'l'):
+                if single_hole.special == 'l':
+                    # nc 中标准长圆孔处理
+                    single_hole.x = single_hole.x + single_hole.width
                 if single_hole.x == pre_hole_x or single_hole.x == (pre_hole_x + 75):
                     continue
                 hole.x = single_hole.x + 37.5
@@ -114,6 +125,8 @@ class XmlGen:
                 self.holes.append(hole)
                 pre_hole_x = hole.x - 37.5
                 pre_hole_y = single_hole.y
+            else:
+                self.undefined_holes.append(single_hole)
 
     def creat_element(self, element_name):
         return etree.Element(element_name)
@@ -162,6 +175,10 @@ class XmlGen:
             self.add_top_side_holes(plane_holes[1])
             self.add_bottom_side_holes(plane_holes[0])
             self.add_web_holes(plane_holes[2])
+
+        # 判断是否有未定义的孔：
+        if self.undefined_holes:
+            QMessageBox(self, '警告', self.header.part_name + '有未定义的孔\n' + self.undefined_holes)
 
     def get_plane_holes(self, nc_holes):
         plane_holes = []

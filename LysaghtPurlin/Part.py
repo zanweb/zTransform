@@ -8,6 +8,7 @@ from operator import attrgetter
 
 # from DTRGen.TransformFunctions import get_lysaght_real_dia
 from DTRGen import TransformFunctions
+from DTRGen.Part import Part as DPart, Parts as DParts
 # from zBase.base import String, Integer, Float
 # from zBase.base import String, Integer, Float
 from zBase import zbase
@@ -28,7 +29,7 @@ class Hole(object):
 
     def __str__(self):
         return str(self.location) + ',' + str(self.x) + \
-            ',' + str(self.y) + ',' + str(self.dia)
+               ',' + str(self.y) + ',' + str(self.dia)
 
 
 class DTRHole(Hole):
@@ -97,7 +98,7 @@ class Part(object):
         compare = operator.attrgetter('dia', 'x', 'y')
         self.holes.sort(key=compare, reverse=False)
 
-    def convert_to_dtr_holes(self):
+    def convert_to_dtr_holes(self, tool_list):
         # self.dtr_holes = []
         double_list = []
         tool_list = TransformFunctions.get_dtr_tools('./DTRTools.csv')
@@ -360,8 +361,78 @@ class Part(object):
         finally:
             return
 
+    def check_tool_id(self, tool_list):
+        """
+        检查未定义工具号的孔
+        :param tool_list:
+        :return: 字典{'dia', 'gauge', 'diff'} 的列表
+        """
+        no_pattern_list_re = []
+        for dtr_hole in self.dtr_holes:
+            group_y = dtr_hole.group_y
+            if dtr_hole.group_y_reference == CENTER_N:
+                group_y = -group_y
+            tool_num = TransformFunctions.get_dtr_tool_id(
+                tool_list, dtr_hole.dia, dtr_hole.gauge, group_y)
+            if tool_num < 0:
+                if dtr_hole.gauge >= 70:
+                    temp = {
+                        'dia': dtr_hole.dia,
+                        'gauge': dtr_hole.gauge,
+                        'diff': group_y}
+                    no_pattern_list_re.append(temp)
+        return no_pattern_list_re
+
+    def convert_to_dtr_pattern(self, tool_list):
+        """
+        转化为DTR的pattern字符串
+        :param tool_list:
+        :return: pattern字符串列表， 合并 part_list.parts.extend(part_listN.parts
+        """
+        part_list = DParts()
+        for dtr_hole in self.dtr_holes:
+            # print('dtr_hole.group_type-->{0}'.format(dtr_hole.group_type))inf
+            dia = float(dtr_hole.dia)
+            gauge = dtr_hole.gauge
+            group_y = dtr_hole.group_y
+            group_y_r = dtr_hole.group_y_reference
+
+            if dtr_hole.group_type == 'double hole':  # 对孔---------------
+                tool_num = TransformFunctions.get_dtr_tool_id(
+                    tool_list, dtr_hole.dia, dtr_hole.gauge, dtr_hole.group_y)
+                if tool_num > 0:
+                    part_item = DPart(part_name=self.part_no, tool_number=tool_num,
+                                      x_offset=dtr_hole.group_x / MM_INCH,
+                                      x_reference=dtr_hole.group_x_reference, permanent=True,
+                                      y_offset=0.0,
+                                      y_reference=CENTER_P)
+
+                    part_list.append(part_item)
+                else:
+                    print('This type of double tool_id is not defined, dia=', dia, ' gauge=',
+                          gauge, ' group_y=', group_y, ' group_y_r=', group_y_r, ' at part=', self.part_no)
+                    return 0
+            else:  # 单孔------------------------------
+                if group_y_r == CENTER_N:
+                    group_y = - group_y
+                tool_num = TransformFunctions.get_dtr_tool_id(
+                    tool_list, dtr_hole.dia, dtr_hole.gauge, group_y)
+                if tool_num > 0:
+                    part_item = DPart(part_name=self.part_no, tool_number=tool_num,
+                                      x_offset=dtr_hole.x / MM_INCH,
+                                      x_reference=dtr_hole.x_reference, permanent=True,
+                                      y_offset=0.0,
+                                      y_reference=CENTER_P)
+                    part_list.append(part_item)
+                else:
+                    print('This type of single tool_id is not defined, dia=', dia, ' gauge=',
+                          gauge, ' group_y=', group_y, ' group_y_r=', group_y_r, ' at part=', self.part_no)
+                    return 0
+        return part_list
+
 
 def test():
+    tool_list = TransformFunctions.get_dtr_tools('./DTRTools.csv')
     part = Part('abc123', 8265, 2.4, 21, 'C200190', '')
     part.add_hole(Hole('OF', 35.0, 158.0, 8.0))
     part.add_hole(Hole('OF', 635.0, 158.0, 8.0))
@@ -376,7 +447,7 @@ def test():
     part.add_hole(Hole('IF', 7000.0, -158.0, 14.0))
     part.sort_holes()
     part.group_holes_by_y()
-    part.convert_to_dtr_holes()
+    part.convert_to_dtr_holes(tool_list)
     return part
 
 

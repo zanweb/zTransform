@@ -581,6 +581,7 @@ class CutList:
     def __init__(self):
         # self.cut_list = [UNITES]
         self.cut_list = []
+        self.file_name = ''
 
     def __str__(self):
         return '\n'.join(str(x) for x in self.cut_list)

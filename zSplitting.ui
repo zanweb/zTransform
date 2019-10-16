@@ -14,223 +14,232 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QWidget" name="horizontalLayoutWidget">
+   <widget class="QWidget" name="">
     <property name="geometry">
      <rect>
       <x>0</x>
-      <y>80</y>
-      <width>1111</width>
-      <height>571</height>
+      <y>0</y>
+      <width>1121</width>
+      <height>741</height>
      </rect>
     </property>
-    <layout class="QHBoxLayout" name="horizontalLayout">
+    <layout class="QVBoxLayout" name="verticalLayout">
      <item>
-      <widget class="QTreeWidget" name="tree_widget">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Maximum" vsizetype="Expanding">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="minimumSize">
-        <size>
-         <width>800</width>
-         <height>0</height>
-        </size>
-       </property>
-       <property name="baseSize">
-        <size>
-         <width>500</width>
-         <height>0</height>
-        </size>
-       </property>
-       <column>
-        <property name="text">
-         <string notr="true">1</string>
-        </property>
-       </column>
-      </widget>
+      <layout class="QHBoxLayout" name="horizontalLayout_7">
+       <item>
+        <widget class="QGroupBox" name="group_box_org">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>50</height>
+          </size>
+         </property>
+         <property name="baseSize">
+          <size>
+           <width>50</width>
+           <height>50</height>
+          </size>
+         </property>
+         <property name="title">
+          <string>ORG</string>
+         </property>
+         <widget class="QWidget" name="">
+          <property name="geometry">
+           <rect>
+            <x>20</x>
+            <y>30</y>
+            <width>90</width>
+            <height>18</height>
+           </rect>
+          </property>
+          <layout class="QHBoxLayout" name="horizontalLayout_4">
+           <item>
+            <widget class="QCheckBox" name="check_box_sjg">
+             <property name="text">
+              <string>SJG</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QCheckBox" name="check_box_lkq">
+             <property name="text">
+              <string>LKQ</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="group_box_catlog">
+         <property name="title">
+          <string>Catlog</string>
+         </property>
+         <widget class="QWidget" name="">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>30</y>
+            <width>155</width>
+            <height>18</height>
+           </rect>
+          </property>
+          <layout class="QHBoxLayout" name="horizontalLayout_5">
+           <item>
+            <widget class="QRadioButton" name="radio_button_zees">
+             <property name="text">
+              <string>Zees</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QRadioButton" name="radio_button_cees">
+             <property name="text">
+              <string>Cees</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QRadioButton" name="radio_button_trim">
+             <property name="text">
+              <string>Trim</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="group_box_data_source">
+         <property name="title">
+          <string>Data Source</string>
+         </property>
+         <widget class="QWidget" name="">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>30</y>
+            <width>186</width>
+            <height>18</height>
+           </rect>
+          </property>
+          <layout class="QHBoxLayout" name="horizontalLayout_6">
+           <item>
+            <widget class="QRadioButton" name="radio_button_nc">
+             <property name="text">
+              <string>NC</string>
+             </property>
+             <property name="checked">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QRadioButton" name="radio_button_csv">
+             <property name="text">
+              <string>CSV LYSGHT</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </widget>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_3">
+         <item>
+          <widget class="QLabel" name="label">
+           <property name="text">
+            <string>WorkCenter:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="combo_box_workcenter"/>
+         </item>
+        </layout>
+       </item>
+      </layout>
      </item>
      <item>
-      <widget class="QTreeView" name="tree_view">
-       <property name="enabled">
-        <bool>true</bool>
-       </property>
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-      </widget>
+      <layout class="QHBoxLayout" name="horizontalLayout">
+       <item>
+        <widget class="QTreeWidget" name="tree_widget">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Maximum" vsizetype="Minimum">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>800</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="baseSize">
+          <size>
+           <width>500</width>
+           <height>0</height>
+          </size>
+         </property>
+         <column>
+          <property name="text">
+           <string notr="true">1</string>
+          </property>
+         </column>
+        </widget>
+       </item>
+       <item>
+        <widget class="QTreeView" name="tree_view">
+         <property name="enabled">
+          <bool>true</bool>
+         </property>
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout_2">
+       <item>
+        <widget class="QPushButton" name="push_button_load">
+         <property name="text">
+          <string>加载数据</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="push_button_get">
+         <property name="text">
+          <string>获取数据</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="push_button_transform">
+         <property name="text">
+          <string>转换数据</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="push_button_complete">
+         <property name="text">
+          <string>完工</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </item>
     </layout>
-   </widget>
-   <widget class="QPushButton" name="push_button_load">
-    <property name="geometry">
-     <rect>
-      <x>50</x>
-      <y>690</y>
-      <width>75</width>
-      <height>23</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>加载数据</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="push_button_get">
-    <property name="geometry">
-     <rect>
-      <x>170</x>
-      <y>690</y>
-      <width>75</width>
-      <height>23</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>获取数据</string>
-    </property>
-   </widget>
-   <widget class="QGroupBox" name="group_box_org">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>10</y>
-      <width>271</width>
-      <height>61</height>
-     </rect>
-    </property>
-    <property name="title">
-     <string>ORG</string>
-    </property>
-    <widget class="QCheckBox" name="check_box_sjg">
-     <property name="geometry">
-      <rect>
-       <x>20</x>
-       <y>30</y>
-       <width>71</width>
-       <height>16</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>SJG</string>
-     </property>
-    </widget>
-    <widget class="QCheckBox" name="check_box_lkq">
-     <property name="geometry">
-      <rect>
-       <x>140</x>
-       <y>30</y>
-       <width>71</width>
-       <height>16</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>LKQ</string>
-     </property>
-    </widget>
-   </widget>
-   <widget class="QGroupBox" name="group_box_catlog">
-    <property name="geometry">
-     <rect>
-      <x>280</x>
-      <y>10</y>
-      <width>251</width>
-      <height>61</height>
-     </rect>
-    </property>
-    <property name="title">
-     <string>Catlog</string>
-    </property>
-    <widget class="QRadioButton" name="radio_button_zees">
-     <property name="geometry">
-      <rect>
-       <x>10</x>
-       <y>30</y>
-       <width>89</width>
-       <height>16</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>Zees</string>
-     </property>
-    </widget>
-    <widget class="QRadioButton" name="radio_button_cees">
-     <property name="geometry">
-      <rect>
-       <x>90</x>
-       <y>30</y>
-       <width>89</width>
-       <height>16</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>Cees</string>
-     </property>
-    </widget>
-    <widget class="QRadioButton" name="radio_button_trim">
-     <property name="geometry">
-      <rect>
-       <x>170</x>
-       <y>30</y>
-       <width>89</width>
-       <height>16</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>Trim</string>
-     </property>
-    </widget>
-   </widget>
-   <widget class="QComboBox" name="combo_box_workcenter">
-    <property name="geometry">
-     <rect>
-      <x>630</x>
-      <y>30</y>
-      <width>201</width>
-      <height>22</height>
-     </rect>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label">
-    <property name="geometry">
-     <rect>
-      <x>550</x>
-      <y>30</y>
-      <width>71</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>WorkCenter:</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="push_button_transform">
-    <property name="geometry">
-     <rect>
-      <x>280</x>
-      <y>690</y>
-      <width>75</width>
-      <height>23</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>转换数据</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="push_button_complete">
-    <property name="geometry">
-     <rect>
-      <x>390</x>
-      <y>690</y>
-      <width>75</width>
-      <height>23</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>完工</string>
-    </property>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
