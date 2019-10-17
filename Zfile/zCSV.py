@@ -198,7 +198,7 @@ class CsvFile:
                         raise NameError('数据格式不对')
                     size = str(item[0]).split('*')
                     thick = float(size[len(size) - 1])
-                    part = Part.Part(part_no=str(item[1]), part_length=int(item[2]), part_thickness=thick,
+                    part = Part.Part(part_no=str(item[1]).upper(), part_length=int(item[2]), part_thickness=thick,
                                      quantity=int(item[3]),
                                      section=str(item[0]), material='')
                     for i in range(1, len(item) // 5):
