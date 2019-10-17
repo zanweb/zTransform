@@ -112,10 +112,10 @@ def gen_dtr_pattern_list(parts, tool_list):
     """
     part_list = Parts()
     for part in parts:
-        part.sort_holes()
-        part.group_holes_by_y()
+        # part.sort_holes()
+        # part.group_holes_by_y()
         # part.convert_to_dtr_holes()
-        double_list = part.convert_to_dtr_holes(tool_list)
+        # double_list = part.convert_to_dtr_holes(tool_list)
         pattern = part.convert_to_dtr_pattern(tool_list)
         part_list.append(pattern)
     return part_list
@@ -176,18 +176,19 @@ def convert_nc_from_oracle_to_dtr(cut_list, nc_folder, org='LKQ'):
 
     # 生成零件清单
     if org == 'LKQ':
-        parts = convert_nc_files_to_lysaght_parts(cut_list, nc_folder, org='LKQ')
+        # 1. 转换到实际孔径，检查零件中未定义的孔
+        parts_checked = convert_nc_files_to_lysaght_parts(cut_list, nc_folder, org='LKQ')
+        parts = prepare_lysaght_holes(parts_checked, lysaght_dia_list)
     else:
         parts = convert_nc_files_to_lysaght_parts(cut_list, nc_folder, org)
-    # 1. 转换到实际孔径，检查零件中未定义的孔
-    parts_checked = prepare_lysaght_holes(parts, lysaght_dia_list)
-    no_pattern_list = check_dtr_undefined_holes(parts_checked, tool_list)
+
+    no_pattern_list = check_dtr_undefined_holes(parts, tool_list)
     if no_pattern_list:
         # 1.1 如果有未定义的孔
         return return_list, no_pattern_list, part_list
     else:
         # 1.2 如果没有未定义的孔
-        part_list = gen_dtr_pattern_list(parts_checked, tool_list)
+        part_list = gen_dtr_pattern_list(parts, tool_list)
 
     return return_list, no_pattern_list, part_list
 
@@ -208,6 +209,11 @@ def convert_nc_files_to_lysaght_parts(cut_list, nc_folder, org='LKQ'):
         else:
             part_number = cut_part['Fa Item'][0:7] + '.nc1'  # butler零件号取'Fa Item'
         nc_files.append(part_number)
+    # 去重
+    nc_files.sort()
+    nc_files = list_dict_duplicate_removal(nc_files)
+    print(nc_files)
+
     for file_name in nc_files:
         nc_file_path = os.path.join(nc_folder, file_name)
         nc = Nc(nc_file_path)

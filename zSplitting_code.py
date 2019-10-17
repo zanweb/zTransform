@@ -10,7 +10,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QTreeWidgetItem, QTreeWid
     QMessageBox
 
 from DBbase import dbFunctions
-from DTRGen.TransformFunctions import lysaght_csv_from_oracle_to_dtr, convert_nc_files_to_lysaght_parts
+from DTRGen.TransformFunctions import lysaght_csv_from_oracle_to_dtr, convert_nc_from_oracle_to_dtr
 from Zfile import zCSV, zFBase
 from zSplitting import Ui_zSplitting
 from zSplitting_login_code import LoginDialog
@@ -256,6 +256,7 @@ class z_splitting(QMainWindow):
 
     @pyqtSlot()
     def on_push_button_transform_clicked(self):
+        self.get_data_source()
         if self.work_center == 'Slitting':
             self.slitting_save_to_csv()
         if self.work_center == 'DTR':
@@ -394,7 +395,7 @@ class z_splitting(QMainWindow):
                 # print(read_return)
                 # NC文件转DTR
                 try:
-                    cut_list, no_pattern_list, parts = convert_nc_files_to_lysaght_parts(read_return, self.nc_folder)
+                    cut_list, no_pattern_list, parts = convert_nc_from_oracle_to_dtr(read_return, self.nc_folder, self.org)
 
                     self.save_dtr_files(cut_list, no_pattern_list, parts)
                 except Exception as e:

@@ -278,9 +278,10 @@ class Part(object):
             dtr_hole = self.single_dtr_hole(new_group_holes[0])
             dtr_holes.append(dtr_hole)
             return dtr_holes, undefined_holes
-
+        undefined_combins = []
         combins_holes = [c for c in combinations(group_holes, 2)]
         for combins_hole in combins_holes:
+            # y轴是否有x轴对称的孔，y值相反+-
             if ((combins_hole[0].y < 0) != (combins_hole[1].y < 0)) and (
                     combins_hole[0].y != 0) and (combins_hole[1].y != 0):  # y轴是否有x轴对称的孔，y值相反+-
                 # 判断是否有预定义
@@ -298,10 +299,18 @@ class Part(object):
                     return self.more_web_dtr_holes_iter(
                         tool_list, new_group_holes, dtr_holes, undefined_holes)
                 else:
-                    if gauge >= 70:
-                        undefined_hole = {
-                            'Dia': dia, 'Gauge': gauge, 'Diff': group_y}
-                        undefined_holes.append(undefined_hole)
+                    undefined_combins.append(combins_hole)
+
+        if undefined_combins:
+            normal_gauge_combins = []
+            for combins_hole in undefined_combins:
+                dia = combins_hole[0].dia
+                gauge = math.fabs(combins_hole[0].y - combins_hole[1].y)
+                group_y = combins_hole[1].y - gauge / 2
+                if gauge in [75, 100, 110, 120]:
+                    undefined_hole = {
+                        'Dia': dia, 'Gauge': gauge, 'Diff': group_y}
+                    undefined_holes.append(undefined_hole)
                     new_group_holes = list(
                         set(group_holes).difference(set(list(combins_hole))))
                     return self.more_web_dtr_holes_iter(
@@ -375,12 +384,12 @@ class Part(object):
             tool_num = TransformFunctions.get_dtr_tool_id(
                 tool_list, dtr_hole.dia, dtr_hole.gauge, group_y)
             if tool_num < 0:
-                if dtr_hole.gauge >= 70:
-                    temp = {
-                        'dia': dtr_hole.dia,
-                        'gauge': dtr_hole.gauge,
-                        'diff': group_y}
-                    no_pattern_list_re.append(temp)
+                # if dtr_hole.gauge >= 70:
+                temp = {
+                    'dia': dtr_hole.dia,
+                    'gauge': dtr_hole.gauge,
+                    'diff': group_y}
+                no_pattern_list_re.append(temp)
         return no_pattern_list_re
 
     def convert_to_dtr_pattern(self, tool_list):
@@ -389,6 +398,7 @@ class Part(object):
         :param tool_list:
         :return: pattern字符串列表， 合并 part_list.parts.extend(part_listN.parts
         """
+        undefinde_holes = []
         part_list = DParts()
         for dtr_hole in self.dtr_holes:
             # print('dtr_hole.group_type-->{0}'.format(dtr_hole.group_type))inf
@@ -409,9 +419,12 @@ class Part(object):
 
                     part_list.append(part_item)
                 else:
-                    print('This type of double tool_id is not defined, dia=', dia, ' gauge=',
-                          gauge, ' group_y=', group_y, ' group_y_r=', group_y_r, ' at part=', self.part_no)
-                    return 0
+                    temp = {
+                        'dia': dtr_hole.dia,
+                        'gauge': dtr_hole.gauge,
+                        'diff': group_y}
+                    undefinde_holes.append(temp)
+
             else:  # 单孔------------------------------
                 if group_y_r == CENTER_N:
                     group_y = - group_y
@@ -425,9 +438,11 @@ class Part(object):
                                       y_reference=CENTER_P)
                     part_list.append(part_item)
                 else:
-                    print('This type of single tool_id is not defined, dia=', dia, ' gauge=',
-                          gauge, ' group_y=', group_y, ' group_y_r=', group_y_r, ' at part=', self.part_no)
-                    return 0
+                    temp = {
+                        'dia': dtr_hole.dia,
+                        'gauge': dtr_hole.gauge,
+                        'diff': group_y}
+                    undefinde_holes.append(temp)
         return part_list
 
 
