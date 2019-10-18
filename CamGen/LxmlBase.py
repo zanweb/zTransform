@@ -131,13 +131,11 @@ class XmlGen:
                 self.undefined_holes.append(single_hole)
 
     def add_web_holes(self, holes):
-        # print(holes)
         holes_group_y = []
 
         # 腹板孔按x坐标分组
         for x_index, x_group in groupby(holes, key=attrgetter('x')):
             holes_group_y.append(list(x_group))
-            print(x_group)
         # 腹板孔处理
         pre_group_x = 0.0
         for group in holes_group_y:
@@ -168,8 +166,6 @@ class XmlGen:
                 hole.type = self.web_hole_khsx4
                 self.holes.append(hole)
                 pre_group_x = group[0].x
-                # pre_group_x = hole.x - 37.5
-                # pre_hole_y = group[0].y
             else:
                 self.undefined_holes.append(group[0])
 
