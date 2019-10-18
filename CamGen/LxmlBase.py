@@ -1,4 +1,6 @@
 import re
+from itertools import groupby
+from operator import attrgetter
 
 from PyQt5.QtWidgets import QMessageBox
 from lxml import etree
@@ -93,7 +95,7 @@ class XmlGen:
             else:
                 self.undefined_holes.append(single_hole)
 
-    def add_web_holes(self, holes):
+    def add_web_holes_org(self, holes):
         pre_hole_x = 0.0
         pre_hole_y = 0.0
         for single_hole in holes:
@@ -116,8 +118,8 @@ class XmlGen:
             elif (single_hole.diameter == 13.5) or (single_hole.special == 'l'):
                 if single_hole.special == 'l':
                     # nc 中标准长圆孔处理
-                    single_hole.x = single_hole.x + single_hole.width
-                if single_hole.x == pre_hole_x or single_hole.x == (pre_hole_x + 75):
+                    single_hole.x = single_hole.x + single_hole.width / 2
+                if (single_hole.x == pre_hole_x) or (single_hole.x == (pre_hole_x + 75)):
                     continue
                 hole.x = single_hole.x + 37.5
                 hole.y = 0.0
@@ -127,6 +129,49 @@ class XmlGen:
                 pre_hole_y = single_hole.y
             else:
                 self.undefined_holes.append(single_hole)
+
+    def add_web_holes(self, holes):
+        # print(holes)
+        holes_group_y = []
+
+        # 腹板孔按x坐标分组
+        for x_index, x_group in groupby(holes, key=attrgetter('x')):
+            holes_group_y.append(list(x_group))
+            print(x_group)
+        # 腹板孔处理
+        pre_group_x = 0.0
+        for group in holes_group_y:
+            hole = Hole()
+            # 腹板16孔处理 2018/11/03 加入腹板16孔径的兼容
+            if (group[0].diameter == 14) or (group[0].diameter == 16):
+                if group[0].x == pre_group_x:
+                    continue
+                hole.x = group[0].x
+                hole.y = 0.0
+                hole.type = self.web_hole_D
+                self.holes.append(hole)
+                hole = Hole()
+                hole.x = group[0].x
+                hole.y = 0.0
+                hole.type = self.web_hole_O
+                self.holes.append(hole)
+                pre_group_x = hole.x
+            # 腹板腰圆孔处理
+            elif (group[0].diameter == 13.5) or (group[0].special == 'l'):
+                if group[0].special == 'l':
+                    # nc 中标准长圆孔处理
+                    group[0].x = group[0].x + group[0].width / 2
+                if (group[0].x == pre_group_x) or (abs(group[0].x - (pre_group_x + 75)) <= 1):
+                    continue
+                hole.x = group[0].x + 37.5
+                hole.y = 0.0
+                hole.type = self.web_hole_khsx4
+                self.holes.append(hole)
+                pre_group_x = group[0].x
+                # pre_group_x = hole.x - 37.5
+                # pre_hole_y = group[0].y
+            else:
+                self.undefined_holes.append(group[0])
 
     def creat_element(self, element_name):
         return etree.Element(element_name)
