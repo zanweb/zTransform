@@ -1,16 +1,16 @@
-from functools import reduce
-from operator import itemgetter
+#!/usr/bin/python3
+# -*- coding: utf-8 -*-
+# @Time     :   2019/10/25 9:22
+# @Author   :   ZANWEB
+# @File     :   TransformFunctions.py in zTransform
+# @IDE      :   PyCharm
+
+
+import os
 import re
 
-__author__ = "zanweb <zanweb@163.com>"
-
-# import os
-# from LysaghtPurlin.Batch import Batch
-# from LysaghtPurlin.Bundle import Bundle
-# from LysaghtPurlin.Order import Order
-# from LysaghtPurlin import Order
-# from LysaghtPurlin import Part
-# from DBbase import dbunit, genSQL
+from functools import reduce
+from operator import itemgetter
 
 import LysaghtPurlin.Part as lpart
 from DTRGen.Order import *
@@ -22,7 +22,6 @@ from Zfile import zCSV, zFBase
 from zBase.constant import MM_INCH, CENTER_N, CENTER_P
 
 
-# from pprint import pprint
 def gen_dtr_cut_list(cut_list, org='LKQ'):
     """
     生成切割清单
@@ -696,7 +695,6 @@ def nc_file_z_bend(nc_aks):
 if __name__ == '__main__':
     # test06
     from CamGen.NCBase import *
-    from pprint import pprint
 
     file_with_path = "E:\Desktop\BSS_z_to_DTR/SV10939.nc1"
     # file_with_path = "E:\Desktop\Cees\\1903982\\1901368801A(GIRT)-NCFiles/WG03500.nc1"
