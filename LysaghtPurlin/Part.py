@@ -98,10 +98,46 @@ class Part(object):
         compare = operator.attrgetter('dia', 'x', 'y')
         self.holes.sort(key=compare, reverse=False)
 
+    def check_y_offset_crash(self):
+        hole_group_y = []
+        # is_crash = False
+        # 按x分组
+        for x_index, x_group in groupby(self.holes, key=attrgetter('x')):
+            hole_group_y.append(list(x_group))
+        # 计算每组孔y-offset
+        for holes in hole_group_y:
+            combins_hole = [c for c in combinations(holes, 2)]
+            if ((combins_hole[0].y < 0) != (combins_hole[1].y < 0)) and (
+                    combins_hole[0].y != 0) and (combins_hole[1].y != 0):  # y值相反+-
+                if abs(combins_hole[0].y - combins_hole[1].y) <= 70:
+                    return True
+        return False
+
+    def convert_to_dtr_pattern_with_single_tools(self, tool_list):
+        undefinde_holes = []
+        part_list = []
+        for hole in self.holes:
+            tool_num = TransformFunctions.get_dtr_single_tool_id(
+                tool_list, hole.dia)
+            if tool_num > 0:
+                part_item = DPart(part_name=self.part_no, tool_number=tool_num,
+                                  x_offset=hole.x / MM_INCH,
+                                  x_reference=hole.x_reference, permanent=True,
+                                  y_offset=hole.y,
+                                  y_reference=hole.y_reference)
+
+                part_list.append(part_item)
+            else:
+                temp = {
+                    'dia': hole.dia
+                }
+                undefinde_holes.append(temp)
+        return part_list
+
     def convert_to_dtr_holes(self, tool_list):
         # self.dtr_holes = []
         double_list = []
-        tool_list = TransformFunctions.get_dtr_tools('./DTRTools.csv')
+        # tool_list = TransformFunctions.get_dtr_tools('./DTRTools.csv')
         for one_group in self.holes_group_y:
             # print('one_group len -->{0}'.format(len(one_group)))
             dtr_hole = DTRHole()
@@ -154,7 +190,6 @@ class Part(object):
 
             if len(one_group) > 2:
                 # TODO: 判断是否有成组的孔
-
                 dtr_double_holes, undefined_double_holes = self.more_dtr_holes(
                     tool_list, one_group)
                 self.dtr_holes.extend(dtr_double_holes)

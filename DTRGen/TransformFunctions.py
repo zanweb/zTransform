@@ -12,7 +12,6 @@ __author__ = "zanweb <zanweb@163.com>"
 # from DBbase import dbunit, genSQL
 
 import LysaghtPurlin.Part as lpart
-from CamGen.NCBase import *
 from DTRGen.Order import *
 from DTRGen.Part import *
 from LysaghtPurlin import Batch
@@ -74,6 +73,22 @@ def prepare_lysaght_holes(parts, lysaght_dia_list):
         part.change_dia_no_to_real_dia(lysaght_dia_list)
         part.special_change()
     return parts
+
+
+def check_lysaght_parts_crash(parts):
+    crash_parts = []
+    for part in parts:
+        is_crash = part.check_y_offset_crash()
+        if is_crash:
+            crash_parts.append(part.part_no)
+    return crash_parts
+
+
+def get_dtr_single_tool_id(tool_list, dia):
+    for tool in tool_list:
+        if tool['Dia'] == dia:
+            return tool['ToolID']
+    return -1
 
 
 def check_dtr_undefined_holes(parts, tool_list):
@@ -222,177 +237,6 @@ def convert_nc_files_to_lysaght_parts(cut_list, nc_folder, org='LKQ'):
         part = gen_nc_part_to_lysaght(nc_inf)
         lysaght_parts.append(part)
     return lysaght_parts
-
-
-def lysaght_from_oracle_to_dtr_org(cut_list, parts):
-    # mm_inch = 25.4
-    tool_list = get_dtr_tools('./DTRTools.csv')
-    lysaght_dia_list = get_lysaght_dias('./LysaghtHoleDia.csv')
-
-    return_list = CutList()
-    part_list = Parts()
-    no_pattern_list = []
-    # 生成制作清单
-    cut_list_sorted_mark = sorted(cut_list, key=itemgetter('Mark No'))
-    cut_list_sorted_length = sorted(cut_list_sorted_mark, key=itemgetter('Unit Length'), reverse=True)
-    cut_list_sorted = sorted(cut_list_sorted_length, key=itemgetter('Bundle'))
-
-    for cut_part in cut_list_sorted:
-        print(cut_part)
-        order_number = str(cut_part['Order Num'])
-        batch_number = str(cut_part['Batch Id'])
-        bundle = int(re.sub(r'\D', '', cut_part['Bundle']))
-        quantity = cut_part['Fa Qty']
-        length = cut_part['Unit Length']
-        material = cut_part['Raw Material'].strip()
-        product_code = cut_part['Item Cat'].strip()
-        part_number = cut_part['Mark No'].strip()  # 来实零件号取Mark No
-        part_option = 'R'
-        item_id = part_number
-        action = 'C'
-        cut_item = CutItem(order_number=batch_number, bundle=bundle, part_number=part_number,
-                           quantity=quantity, length=length / MM_INCH,
-                           material=material,
-                           product_code=product_code, part_option=part_option, item_id=item_id,
-                           action=action)
-        return_list.append(cut_item)
-    # 生成零件清单
-    for part in parts:
-        part.change_dia_no_to_real_dia(lysaght_dia_list)
-        part.special_change()
-        part.sort_holes()
-        part.group_holes_by_y()
-        # part.convert_to_dtr_holes()
-        double_list = part.convert_to_dtr_holes(tool_list)
-
-        # 检查pattern
-        no_pattern_list += double_list
-        no_pattern_list = check_patterns(
-            tool_list, part.dtr_holes, no_pattern_list)
-        no_pattern_list = [
-            dict(t) for t in {
-                tuple(
-                    d.items()) for d in no_pattern_list}]  # 字典列表去重
-        # no_pattern_list = sorted(no_pattern_list, key=lambda e: (
-        # e.__getitem__('Dia'), e.__getitem__('Gauge'),
-        # e.__getitem__('Diff')), reverse=True)
-        if no_pattern_list:
-            # print('There are no pattern list:', no_pattern_list)
-            continue
-
-        for dtr_hole in part.dtr_holes:
-            # print('dtr_hole.group_type-->{0}'.format(dtr_hole.group_type))inf
-            dia = dtr_hole.dia
-            gauge = dtr_hole.gauge
-            group_y = dtr_hole.group_y
-            group_y_r = dtr_hole.group_y_reference
-
-            if dtr_hole.group_type == 'double hole':  # 对孔---------------
-                tool_num = get_dtr_tool_id(
-                    tool_list, dtr_hole.dia, dtr_hole.gauge, dtr_hole.group_y)
-                if tool_num > 0:
-                    # part_item = Part(part_name=part.part_no, tool_number=tool_num,
-                    #                  x_offset=dtr_hole.group_x / mm_inch,
-                    #                  x_reference=dtr_hole.group_x_reference, permanent=True,
-                    #                  y_offset=dtr_hole.group_y / mm_inch,
-                    #                  y_reference=dtr_hole.group_y_reference)
-
-                    part_item = Part(part_name=part.part_no, tool_number=tool_num,
-                                     x_offset=dtr_hole.group_x / MM_INCH,
-                                     x_reference=dtr_hole.group_x_reference, permanent=True,
-                                     y_offset=0.0,
-                                     y_reference=CENTER_P)
-
-                    part_list.append(part_item)
-                else:
-                    print('This type of double tool_id is not defined, dia=', dia, ' gauge=',
-                          gauge, ' group_y=', group_y, ' group_y_r=', group_y_r, ' at part=', part.part_no)
-                    return 0
-            else:  # 单孔------------------------------
-                if group_y_r == CENTER_N:
-                    group_y = - group_y
-                tool_num = get_dtr_tool_id(
-                    tool_list, dtr_hole.dia, dtr_hole.gauge, group_y)
-                if tool_num > 0:
-                    # part_item = Part(part_name=part.part_no, tool_number=tool_num,
-                    #                  x_offset=dtr_hole.x / mm_inch,
-                    #                  x_reference=dtr_hole.x_reference, permanent=True,
-                    #                  y_offset=dtr_hole.y / mm_inch,
-                    #                  y_reference=dtr_hole.y_reference)
-                    part_item = Part(part_name=part.part_no, tool_number=tool_num,
-                                     x_offset=dtr_hole.x / MM_INCH,
-                                     x_reference=dtr_hole.x_reference, permanent=True,
-                                     y_offset=0.0,
-                                     y_reference=CENTER_P)
-                    part_list.append(part_item)
-                else:
-                    print('This type of single tool_id is not defined, dia=', dia, ' gauge=',
-                          gauge, ' group_y=', group_y, ' group_y_r=', group_y_r, ' at part=', part.part_no)
-                    return 0
-
-    return return_list, no_pattern_list, part_list
-
-
-def lysaght_to_dtr(orders, file_path):
-    mm_inch = 25.4
-    tool_list = get_dtr_tools('./DTRTools.csv')
-
-    order_list = CutList()
-    part_list = Parts()
-    for batch in orders.batches:
-        for bundle in batch.bundles:
-            for part in bundle.parts:
-                orders.product_code = 'CEES'
-                part.material = 'C00000'
-                order_item = CutItem(order_number=orders.order_no, bundle=bundle.bundle_no, part_number=part.part_no,
-                                     quantity=part.quantity, length=float(
-                        part.part_length) / mm_inch,
-                                     material=part.material,
-                                     product_code=orders.product_code, part_option='R', item_id=part.part_no,
-                                     action='C')
-                order_list.append(order_item)
-                # print(part.dtr_holes)
-                for dtr_hole in part.dtr_holes:
-                    # print('dtr_hole.group_type-->{0}'.format(dtr_hole.group_type))
-                    if dtr_hole.group_type == 'double hole':
-                        tool_num = get_dtr_tool_id(
-                            tool_list, dtr_hole.dia, dtr_hole.gauge, dtr_hole.group_y)
-                        if tool_num > 0:
-                            part_item = Part(part_name=part.part_no, tool_number=tool_num,
-                                             x_offset=dtr_hole.group_x / mm_inch,
-                                             x_reference=dtr_hole.group_x_reference, permanent=True,
-                                             y_offset=dtr_hole.group_y / mm_inch,
-                                             y_reference=dtr_hole.group_y_reference)
-                            part_list.append(part_item)
-                        else:
-                            print('This type of double tool_id is not defined! dia={0} * gauge={1}'.format(
-                                dtr_hole.dia,
-                                dtr_hole.gauge))
-                            return 0
-                    else:
-                        tool_num = get_dtr_tool_id(
-                            tool_list, dtr_hole.dia, dtr_hole.gauge, dtr_hole.group_y)
-                        if tool_num > 0:
-                            part_item = Part(part_name=part.part_no, tool_number=tool_num,
-                                             x_offset=dtr_hole.x / mm_inch,
-                                             x_reference=dtr_hole.x_reference, permanent=True,
-                                             y_offset=dtr_hole.y / mm_inch,
-                                             y_reference=dtr_hole.y_reference)
-                            part_list.append(part_item)
-                        else:
-                            print('This type of single tool_id is not defined! dia={0} * gauge={1}'.format(
-                                dtr_hole.dia,
-                                dtr_hole.gauge))
-                            # print(part_list)
-                            return 0
-    # print(order_list)
-    # print(part_list)
-    # file_path += 'D' + time.strftime('%y%m%d', time.localtime()) + '0'  #
-    # str(random.randint(0, 9))
-    file_path += 'D' + '0' * 7
-    # print(file_path)
-    order_list.save_as(file_path + '.ORD')
-    part_list.save_as(file_path + '.PRT')
 
 
 def get_dtr_tools(file_with_path):
@@ -575,22 +419,33 @@ def gen_butler_order_cut_list(cut_list, nc_folder):
 
 
 def gen_nc_part_to_lysaght(nc_info):
+    bend_down_far_side = 0
     if nc_info.header.code_profile == 'C':
         # 判断反转
-        pass
+        bend_down_far_side = 0
+        # DTR C檩条产品出来，开口向下
+        # NC 默认开口向上
+        # 远端和近端无需翻转
     if nc_info.header.code_profile == 'SO':
-        pass
+        # 判断上弯还是下弯
+        bend_down_far_side = nc_file_z_bend(nc_info.ak)
+        # 0 --> 远端下弯， -1 --> 远端上弯，
+        # DTR Z檩条产品出来是远端上弯
+        # DTR 如果NC远端下弯，远端和近端无需翻转
+        # DTR 如果NC远端上弯，远端和近端需要翻转
     # 获取web宽, flange宽, web厚度
-    flange_width = nc_info.header.flange_width
-    web_thickness = nc_info.header.web_thickness
-    profile_height = nc_info.header.profile_height
-    pro_file = re.findall(r'\d+\.?\d*', nc_info.header.profile)
-    if len(pro_file) == 2:
-        profile_height = float(pro_file[0])  # nc_info.header.profile_height  #
-        web_thickness = float(pro_file[1])  # nc_info.header.web_thickness  #
-    if len(pro_file) == 3:
-        profile_height = float(pro_file[0])  # nc_info.header.profile_height  #
-        web_thickness = float(pro_file[2])  # nc_info.header.web_thickness  #
+    # flange_width = nc_info.header.flange_width
+    # web_thickness = nc_info.header.web_thickness
+    # profile_height = nc_info.header.profile_height
+    # pro_file = re.findall(r'\d+\.?\d*', nc_info.header.profile)
+    # if len(pro_file) == 2:
+    #     profile_height = float(pro_file[0])  # nc_info.header.profile_height  #
+    #     web_thickness = float(pro_file[1])  # nc_info.header.web_thickness  #
+    # if len(pro_file) == 3:
+    #     profile_height = float(pro_file[0])  # nc_info.header.profile_height  #
+    #     web_thickness = float(pro_file[2])  # nc_info.header.web_thickness  #
+
+    profile_height, flange_width, web_thickness = nc_file_header_profile(nc_info.header)
 
     # print(profile_height, flange_width)
     part = lpart.Part(nc_info.header.drawing, int(nc_info.header.length), web_thickness,
@@ -602,17 +457,17 @@ def gen_nc_part_to_lysaght(nc_info):
         if plan_holes[2]:  # v
             for v_hole in plan_holes[2]:
                 if v_hole.reference == 'o':
-                    # v_hole_y = profile_height / 2 - round(v_hole.y)
                     v_hole_y = -(profile_height / 2 - round(v_hole.y))
                 elif v_hole.reference == 'u':
                     v_hole_y = -(profile_height / 2 - round(v_hole.y))
-                    # v_hole_y = profile_height / 2 - round(v_hole.y)
                 elif v_hole.reference == 's':
-                    # v_hole_y = round(v_hole.y)
-                    # v_hole_y = profile_height / 2 - round(v_hole.y)
                     v_hole_y = -(profile_height / 2 - round(v_hole.y))
                 else:
                     v_hole_y = 0.0
+
+                if bend_down_far_side == -1:
+                    v_hole_y = - v_hole_y
+
                 hole_v = lpart.Hole(
                     'WEB', v_hole.x, float(
                         round(v_hole_y)), float(
@@ -623,17 +478,17 @@ def gen_nc_part_to_lysaght(nc_info):
         if plan_holes[3]:  # h
             for h_hole in plan_holes[3]:
                 if h_hole.reference == 'o':
-                    # h_hole_y = profile_height / 2 - round(h_hole.y)
                     h_hole_y = -(profile_height / 2 - round(h_hole.y))
                 elif h_hole.reference == 'u':
                     h_hole_y = -(profile_height / 2 - round(h_hole.y))
-                    # h_hole_y = profile_height / 2 - round(h_hole.y)
                 elif h_hole.reference == 's':
-                    # h_hole_y = round(h_hole.y)
-                    # h_hole_y = profile_height / 2 - round(h_hole.y)
                     h_hole_y = -(profile_height / 2 - round(h_hole.y))
                 else:
                     h_hole_y = 0.0
+
+                if bend_down_far_side == -1:
+                    h_hole_y = - h_hole_y
+
                 part.add_hole(
                     lpart.Hole(
                         'WEB', h_hole.x, float(
@@ -652,6 +507,10 @@ def gen_nc_part_to_lysaght(nc_info):
                     o_hole_y = flange_width / 2 + profile_height / 2 - 2 * web_thickness
                 else:
                     o_hole_y = 0.0
+
+                if bend_down_far_side == -1:
+                    o_hole_y = - o_hole_y
+
                 part.add_hole(
                     lpart.Hole(
                         'OF', o_hole.x, float(
@@ -672,7 +531,10 @@ def gen_nc_part_to_lysaght(nc_info):
                                  profile_height / 2 - 2 * web_thickness)
                 else:
                     u_hole_y = 0.0
-                # u_hole_y = - u_hole_y
+
+                if bend_down_far_side == -1:
+                    u_hole_y = - u_hole_y
+
                 part.add_hole(
                     lpart.Hole(
                         'IF', u_hole.x, float(
@@ -689,8 +551,9 @@ def get_nc_plane_holes(nc_holes):
     o_holes = []
     h_holes = []
     for single_hole in nc_holes:
-        # print(single_hole.plane)
-        # print(single_hole.reference)
+        # 处理Dia为0的无效孔位
+        if single_hole.diameter == 0:
+            continue
         # 处理 NC 文件数据偏差###
         single_hole.x = float(round(single_hole.x))
         single_hole.y = float(round(single_hole.y))
@@ -781,7 +644,87 @@ def list_dict_duplicate_removal(data_list):
     return reduce(run_function, [[], ] + data_list)
 
 
+def nc_file_header_profile(nc_header):
+    flange_width = nc_header.flange_width
+    web_thickness = nc_header.web_thickness
+    profile_height = nc_header.profile_height
+    profiles = re.findall(r'\d+\.?\d*', nc_header.profile)
+    profiles_num = [float(x) for x in profiles]
+    max_profiles_num = max(profiles_num)
+    min_profiles_num = min(profiles_num)
+    if min_profiles_num < 5:
+        web_thickness = min_profiles_num
+    if max_profiles_num > 150:
+        profile_height = max_profiles_num
+    remain_num = list(set(profiles_num).difference(set([web_thickness, profile_height])))
+    if remain_num:
+        flange_width = max(remain_num)
+    return profile_height, flange_width, web_thickness
+
+
+def nc_file_z_bend(nc_aks):
+    """
+    判断nc远端Bend down 或 Bend up
+    :param nc_aks:
+    :return: 0 -- Bend down
+             -1 -- Bend up
+    """
+    v_aks = []
+    u_aks = []
+    o_aks = []
+    h_aks = []
+    for single_ak in nc_aks:
+        if single_ak.plane == 'v':
+            v_aks.append(single_ak)
+        if single_ak.plane == 'u':
+            u_aks.append(single_ak)
+        if single_ak.plane == 'o':
+            o_aks.append(single_ak)
+        if single_ak.plane == 'h':
+            h_aks.append(single_ak)
+    y_list = []
+    for each_ak in v_aks:
+        y_list.append(each_ak.y)
+    max_y = max(y_list)
+    if max_y < 30:  # Bend down of far side
+        return 0
+    else:  # Bend up of far side
+        return -1
+
+
 if __name__ == '__main__':
+    # test06
+    from CamGen.NCBase import *
+    from pprint import pprint
+
+    file_with_path = "E:\Desktop\BSS_z_to_DTR/SV10939.nc1"
+    # file_with_path = "E:\Desktop\Cees\\1903982\\1901368801A(GIRT)-NCFiles/WG03500.nc1"
+    tool_list = get_dtr_tools('../DTRTools.csv')
+    if is_exist_nc(file_with_path):
+        nc = Nc(file_with_path)
+        nc_data = nc.file_data
+        nc_info = nc.file_information()
+        part = gen_nc_part_to_lysaght(nc_info)
+        part.sort_holes()
+        part.group_holes_by_y()
+        part.convert_to_dtr_holes(tool_list)
+        parrten = part.convert_to_dtr_pattern(tool_list)
+        print(parrten)
+
+    # test05
+    # from CamGen.NCBase import *
+    # from pprint import pprint
+    #
+    # # file_with_path = "E:\Desktop\BSS_z_to_DTR/SV10939.nc1"
+    # file_with_path = "E:\Desktop\Cees\\1903982\\1901368801A(GIRT)-NCFiles/WG03500.nc1"
+    #
+    # if is_exist_nc(file_with_path):
+    #     nc = Nc(file_with_path)
+    #     nc_data = nc.file_data
+    #     nc_info = nc.file_information()
+    #     profile = nc_file_header_profile(nc_info.header)
+    #     print(profile)
+
     # test04
     # from CamGen.NCBase import *
     # from pprint import pprint

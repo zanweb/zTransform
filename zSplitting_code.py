@@ -10,7 +10,8 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QTreeWidgetItem, QTreeWid
     QMessageBox
 
 from DBbase import dbFunctions
-from DTRGen.TransformFunctions import lysaght_csv_from_oracle_to_dtr, convert_nc_from_oracle_to_dtr
+from DTRGen.TransformFunctions import lysaght_csv_from_oracle_to_dtr, convert_nc_from_oracle_to_dtr, \
+    check_lysaght_parts_crash
 from Zfile import zCSV, zFBase
 from zSplitting import Ui_zSplitting
 from zSplitting_login_code import LoginDialog
@@ -395,7 +396,8 @@ class z_splitting(QMainWindow):
                 # print(read_return)
                 # NC文件转DTR
                 try:
-                    cut_list, no_pattern_list, parts = convert_nc_from_oracle_to_dtr(read_return, self.nc_folder, self.org)
+                    cut_list, no_pattern_list, parts = convert_nc_from_oracle_to_dtr(read_return, self.nc_folder,
+                                                                                     self.org)
 
                     self.save_dtr_files(cut_list, no_pattern_list, parts)
                 except Exception as e:
@@ -446,8 +448,14 @@ class z_splitting(QMainWindow):
                 all_parts_make.append(part)
 
         try:
-            cut_list, no_pattern_list, parts = lysaght_csv_from_oracle_to_dtr(read_return, all_parts_make)
-            self.save_dtr_files(cut_list, no_pattern_list, parts)
+            # 检查lysaght-parts是否crash
+            crash_parts = check_lysaght_parts_crash(all_parts_make)
+            if crash_parts:
+                QMessageBox(self, '警告', '下列零件孔位y轴上有碰撞\n' + str(crash_parts))
+                return
+            else:
+                cut_list, no_pattern_list, parts = lysaght_csv_from_oracle_to_dtr(read_return, all_parts_make)
+                self.save_dtr_files(cut_list, no_pattern_list, parts)
         except Exception as e:
             print(e)
 

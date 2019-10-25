@@ -171,6 +171,21 @@ class CsvFile:
         finally:
             return self.seq_info
 
+    def get_single_tool_id(self):
+        try:
+            with open(self.file_with_path) as f:
+                f_csv = csv.DictReader(f)
+
+                for row in f_csv:
+                    info_line = {'Dia': float(row['Dia']), 'ToolID': int(row['ToolID'])}
+                    #
+                    self.seq_info.append(info_line)
+                f.close()
+        except Exception as e:
+            print(e)
+        finally:
+            return self.seq_info
+
     def get_lysaght_dia_no(self):
         try:
             with open(self.file_with_path) as f:
