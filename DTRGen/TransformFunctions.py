@@ -8,6 +8,7 @@
 
 import os
 import re
+from CamGen.NCBase import Nc, is_exist_nc
 
 from functools import reduce
 from operator import itemgetter
@@ -656,7 +657,8 @@ def nc_file_header_profile(nc_header):
         web_thickness = min_profiles_num
     if max_profiles_num > 150:
         profile_height = max_profiles_num
-    remain_num = list(set(profiles_num).difference(set([web_thickness, profile_height])))
+    list_wt_ph = [web_thickness, profile_height]
+    remain_num = list(set(profiles_num).difference(set(list_wt_ph)))
     if remain_num:
         flange_width = max(remain_num)
     return profile_height, flange_width, web_thickness
@@ -694,21 +696,21 @@ def nc_file_z_bend(nc_aks):
 
 if __name__ == '__main__':
     # test06
-    from CamGen.NCBase import *
-
-    file_with_path = "E:\Desktop\BSS_z_to_DTR/SV10939.nc1"
-    # file_with_path = "E:\Desktop\Cees\\1903982\\1901368801A(GIRT)-NCFiles/WG03500.nc1"
-    tool_list = get_dtr_tools('../DTRTools.csv')
-    if is_exist_nc(file_with_path):
-        nc = Nc(file_with_path)
-        nc_data = nc.file_data
-        nc_info = nc.file_information()
-        part = gen_nc_part_to_lysaght(nc_info)
-        part.sort_holes()
-        part.group_holes_by_y()
-        part.convert_to_dtr_holes(tool_list)
-        parrten = part.convert_to_dtr_pattern(tool_list)
-        print(parrten)
+    # from CamGen.NCBase import *
+    #
+    # file_with_path = "E:\Desktop\BSS_z_to_DTR/SV10939.nc1"
+    # # file_with_path = "E:\Desktop\Cees\\1903982\\1901368801A(GIRT)-NCFiles/WG03500.nc1"
+    # tool_list = get_dtr_tools('../DTRTools.csv')
+    # if is_exist_nc(file_with_path):
+    #     nc = Nc(file_with_path)
+    #     nc_data = nc.file_data
+    #     nc_info = nc.file_information()
+    #     part = gen_nc_part_to_lysaght(nc_info)
+    #     part.sort_holes()
+    #     part.group_holes_by_y()
+    #     part.convert_to_dtr_holes(tool_list)
+    #     parrten = part.convert_to_dtr_pattern(tool_list)
+    #     print(parrten)
 
     # test05
     # from CamGen.NCBase import *
