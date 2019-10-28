@@ -473,6 +473,9 @@ class z_splitting(QMainWindow):
         parts_file = 'D' + '0' * 7 + '.PRT'
         parts_file_path = os.path.join(self.out_folder, parts_file)
         parts.save_as(parts_file_path)
+        list_file = os.path.join(self.out_folder, 'cutlist.txt')
+        cut_list.save_list(list_file)
+
         QMessageBox.information(self, '完成', '已经完成！', QMessageBox.Ok)
 
 

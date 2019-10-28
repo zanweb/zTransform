@@ -109,11 +109,12 @@ class Part(object):
             hole_group_y.append(list(x_group))
         # 计算每组孔y-offset
         for holes in hole_group_y:
-            combins_hole = [c for c in combinations(holes, 2)]
-            if ((combins_hole[0].y < 0) != (combins_hole[1].y < 0)) and (
-                    combins_hole[0].y != 0) and (combins_hole[1].y != 0):  # y值相反+-
-                if abs(combins_hole[0].y - combins_hole[1].y) <= 70:
-                    return True
+            combins_holes = [c for c in combinations(holes, 2)]
+            for combins_hole in combins_holes:
+                if ((combins_hole[0].y < 0) != (combins_hole[1].y < 0)) and (
+                        combins_hole[0].y != 0) and (combins_hole[1].y != 0):  # y值相反+-
+                    if abs(combins_hole[0].y - combins_hole[1].y) <= 70:
+                        return True
         return False
 
     def convert_to_dtr_pattern_with_single_tools(self, tool_list):
