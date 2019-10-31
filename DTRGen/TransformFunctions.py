@@ -8,12 +8,12 @@
 
 import os
 import re
-from CamGen.NCBase import Nc, is_exist_nc
-
 from functools import reduce
 from operator import itemgetter
+from itertools import groupby
 
 import LysaghtPurlin.Part as lpart
+from CamGen.NCBase import Nc, is_exist_nc
 from DTRGen.Order import *
 from DTRGen.Part import *
 from LysaghtPurlin import Batch
@@ -22,6 +22,12 @@ from LysaghtPurlin import Order
 from Zfile import zCSV, zFBase
 from zBase.constant import MM_INCH, CENTER_N, CENTER_P
 
+def gen_half_cut_list(cut_list):
+    # 判断半切清单
+    # 先理出1.5m以下的list(auto_no, part_num, length, qty)
+    # 相同材料，半切匹配，无法匹配的再与同材料大于1.5m的匹配，再无法匹配，列清单
+    for raw_index, raw_group in groupby(cut_list, itemgetter('Raw Material')):
+        pass
 
 def gen_dtr_cut_list(cut_list, org='LKQ'):
     """
@@ -150,6 +156,9 @@ def lysaght_csv_from_oracle_to_dtr(cut_list, parts):
     return_list = CutList()
     part_list = Parts()
     no_pattern_list = []
+    # 判断半切清单
+    # 先理出1.5m以下的list(auto_no, part_num, length, qty)
+    # 相同材料，半切匹配，无法匹配的再与同材料大于1.5m的匹配，再无法匹配，列清单
 
     # 生成制作清单
     return_list = gen_dtr_cut_list(cut_list, org='LKQ')
@@ -420,10 +429,15 @@ def gen_butler_order_cut_list(cut_list, nc_folder):
 
 
 def gen_nc_part_to_lysaght(nc_info):
+    """
+    转换nc文件到lysaght-part格式
+    :param nc_info: 从nc文件获取的信息
+    :return: 返回 lysaght-part类
+    """
     bend_down_far_side = 0
     if nc_info.header.code_profile == 'C':
         # 判断反转
-        bend_down_far_side = 0
+        bend_down_far_side = -1
         # DTR C檩条产品出来，开口向下
         # NC 默认开口向上
         # 远端和近端无需翻转
@@ -431,20 +445,9 @@ def gen_nc_part_to_lysaght(nc_info):
         # 判断上弯还是下弯
         bend_down_far_side = nc_file_z_bend(nc_info.ak)
         # 0 --> 远端下弯， -1 --> 远端上弯，
-        # DTR Z檩条产品出来是远端上弯
-        # DTR 如果NC远端下弯，远端和近端无需翻转
-        # DTR 如果NC远端上弯，远端和近端需要翻转
-    # 获取web宽, flange宽, web厚度
-    # flange_width = nc_info.header.flange_width
-    # web_thickness = nc_info.header.web_thickness
-    # profile_height = nc_info.header.profile_height
-    # pro_file = re.findall(r'\d+\.?\d*', nc_info.header.profile)
-    # if len(pro_file) == 2:
-    #     profile_height = float(pro_file[0])  # nc_info.header.profile_height  #
-    #     web_thickness = float(pro_file[1])  # nc_info.header.web_thickness  #
-    # if len(pro_file) == 3:
-    #     profile_height = float(pro_file[0])  # nc_info.header.profile_height  #
-    #     web_thickness = float(pro_file[2])  # nc_info.header.web_thickness  #
+        # DTR Z檩条产品出来是远端下弯
+        # DTR 如果NC远端下弯，远端和近端无需翻转，左右（x轴）翻转***
+        # DTR 如果NC远端上弯，远端和近端无需要翻转，左右无需翻转
 
     profile_height, flange_width, web_thickness = nc_file_header_profile(nc_info.header)
 
@@ -466,8 +469,9 @@ def gen_nc_part_to_lysaght(nc_info):
                 else:
                     v_hole_y = 0.0
 
-                if bend_down_far_side == -1:
-                    v_hole_y = - v_hole_y
+                if bend_down_far_side == 0:
+                    # 左右翻转
+                    v_hole.x = nc_info.header.length - v_hole.x
 
                 hole_v = lpart.Hole(
                     'WEB', v_hole.x, float(
@@ -475,7 +479,7 @@ def gen_nc_part_to_lysaght(nc_info):
                         round(
                             v_hole.diameter)))
                 part.add_hole(hole_v)
-
+        # 处理腹板，h - -反面,
         if plan_holes[3]:  # h
             for h_hole in plan_holes[3]:
                 if h_hole.reference == 'o':
@@ -487,8 +491,9 @@ def gen_nc_part_to_lysaght(nc_info):
                 else:
                     h_hole_y = 0.0
 
-                if bend_down_far_side == -1:
-                    h_hole_y = - h_hole_y
+                if bend_down_far_side == 0:
+                    # 左右翻转
+                    h_hole.x = nc_info.header.length - h_hole.x
 
                 part.add_hole(
                     lpart.Hole(
@@ -496,7 +501,6 @@ def gen_nc_part_to_lysaght(nc_info):
                             round(h_hole_y)), float(
                             round(
                                 h_hole.diameter))))
-
         # 处理上翼缘 o--上
         if plan_holes[0]:  # o   ---算法未确定
             for o_hole in plan_holes[0]:
@@ -509,8 +513,9 @@ def gen_nc_part_to_lysaght(nc_info):
                 else:
                     o_hole_y = 0.0
 
-                if bend_down_far_side == -1:
-                    o_hole_y = - o_hole_y
+                if bend_down_far_side == 0:
+                    # 左右翻转
+                    o_hole.x = nc_info.header.length - o_hole.x
 
                 part.add_hole(
                     lpart.Hole(
@@ -533,8 +538,9 @@ def gen_nc_part_to_lysaght(nc_info):
                 else:
                     u_hole_y = 0.0
 
-                if bend_down_far_side == -1:
-                    u_hole_y = - u_hole_y
+                if bend_down_far_side == 0:
+                    # 左右翻转
+                    u_hole.x = nc_info.header.length - u_hole.x
 
                 part.add_hole(
                     lpart.Hole(

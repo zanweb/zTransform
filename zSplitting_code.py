@@ -38,8 +38,12 @@ class z_splitting(QMainWindow):
         self.org = None
         self.work_center = None
         self.data_source = None
+        self.length_limit = 500
 
+        self.list_make_all = []
         self.list_make = []
+        self.half_cut_list = []
+        self.length_less_list = []
         self.out_folder = ''
         self.nc_folder = ''
         self.csv_folder = ''
@@ -229,7 +233,7 @@ class z_splitting(QMainWindow):
 
     @pyqtSlot()
     def on_push_button_get_clicked(self):
-        self.list_make = []
+        self.list_make_all = []
         item = QTreeWidgetItemIterator(self.ui.tree_widget)
         while item.value():
             tmp = {}
@@ -246,10 +250,21 @@ class z_splitting(QMainWindow):
                     # pprint(tmp)
                     # print(item.value().childCount())
             if tmp:
-                self.list_make.append(tmp)
+                self.list_make_all.append(tmp)
             item = item.__iadd__(1)
-        if self.list_make:
+        if self.list_make_all:
+            for item in self.list_make_all:
+                if int(item['Unit Length']) < self.length_limit:
+                    self.length_less_list.append(item)
+            list_make_auto_no = list(set(x['AutoNo'] for x in self.list_make_all).difference(
+                set(x['AutoNo'] for x in self.length_less_list)))
+            for item in self.list_make_all:
+                if item['AutoNo'] in list_make_auto_no:
+                    self.list_make.append(item)
+
             print(self.list_make)
+            print(self.length_less_list)
+
             QMessageBox.information(self, '获取信息', '已经获取所选数据，请及时处理！', QMessageBox.Ok)
             # self.save_to_csv()
         else:
@@ -475,8 +490,21 @@ class z_splitting(QMainWindow):
         parts.save_as(parts_file_path)
         list_file = os.path.join(self.out_folder, 'cutlist.txt')
         cut_list.save_list(list_file)
+        if self.length_less_list:
+            length_less_file = os.path.join(self.out_folder, 'length_less.txt')
+            self.save_lenght_limit_file(length_less_file)
 
         QMessageBox.information(self, '完成', '已经完成！', QMessageBox.Ok)
+
+    def save_lenght_limit_file(self, file_name):
+        file_context = '      Item,    Length,      Qty'
+        sorted_length_less_list = sorted(self.length_less_list, key=itemgetter('Item'))
+        for item in sorted_length_less_list:
+            file_context += '\n' + item['Item'].rjust(10) + ',' + item['Unit Length'].rjust(10) + ',' + item[
+                'Fa Qty'].rjust(10)
+        list_file = open(file_name, 'w')
+        list_file.write(file_context)
+        list_file.close()
 
 
 if __name__ == '__main__':
