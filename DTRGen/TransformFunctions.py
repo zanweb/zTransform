@@ -194,7 +194,7 @@ def lysaght_csv_from_oracle_to_dtr(cut_list, parts):
     :param parts: lysaght-csv零件
     :return: DTR切割清单，DTR未定义孔， DTR-pattern清单
     """
-    global new_cut_list
+    # global new_cut_list
     tool_list = get_dtr_tools('./DTRTools.csv')
     lysaght_dia_list = get_lysaght_dias('./LysaghtHoleDia.csv')
     tool_list_single = get_dtr_tools_single('./DTRSingleTools.csv')
@@ -230,13 +230,15 @@ def lysaght_csv_from_oracle_to_dtr(cut_list, parts):
     # 生成制作清单
     if parts_crash:
         parts_crash_number = [part.part_no for part in parts_crash]
-        new_cut_list = []
-        # 修改cut_list信息，标识crash
-        for cut_item in cut_list:
-            part_number = cut_item['Mark No'].strip()
-            if part_number in parts_crash_number:
-                cut_item['Item Cat'] = cut_item['Item Cat'].strip() + '_C'
-            new_cut_list.append(cut_item)
+    else:
+        parts_crash_number = []
+    new_cut_list = []
+    # 修改cut_list信息，标识crash
+    for cut_item in cut_list:
+        part_number = cut_item['Mark No'].strip()
+        if part_number in parts_crash_number:
+            cut_item['Item Cat'] = cut_item['Item Cat'].strip() + '_C'
+        new_cut_list.append(cut_item)
     return_list = gen_dtr_cut_list(new_cut_list, org='LKQ')
 
     return return_list, no_pattern_list, part_list
@@ -289,16 +291,18 @@ def convert_nc_from_oracle_to_dtr(cut_list, nc_folder, org='LKQ'):
     # 生成制作清单
     if parts_crash:
         parts_crash_number = [part.part_no for part in parts_crash]
-        new_cut_list = []
-        # 修改cut_list信息，标识crash
-        for cut_item in cut_list:
-            if org == 'LKQ':
-                part_number = cut_item['Mark No'].strip()
-            else:
-                part_number = cut_item['Fa Item'][0:7].strip()
-            if part_number in parts_crash_number:
-                cut_item['Item Cat'] = cut_item['Item Cat'].strip() + '_C'
-            new_cut_list.append(cut_item)
+    else:
+        parts_crash_number = []
+    new_cut_list = []
+    # 修改cut_list信息，标识crash
+    for cut_item in cut_list:
+        if org == 'LKQ':
+            part_number = cut_item['Mark No'].strip()
+        else:
+            part_number = cut_item['Fa Item'][0:7].strip()
+        if part_number in parts_crash_number:
+            cut_item['Item Cat'] = cut_item['Item Cat'].strip() + '_C'
+        new_cut_list.append(cut_item)
     if org == 'LKQ':
         return_list = gen_dtr_cut_list(new_cut_list, org='LKQ')
     else:
