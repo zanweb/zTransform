@@ -10,7 +10,6 @@ import os
 import re
 from functools import reduce
 from operator import itemgetter
-from itertools import groupby
 
 import LysaghtPurlin.Part as lpart
 from CamGen.NCBase import Nc, is_exist_nc
@@ -22,12 +21,14 @@ from LysaghtPurlin import Order
 from Zfile import zCSV, zFBase
 from zBase.constant import MM_INCH, CENTER_N, CENTER_P
 
+
 def gen_half_cut_list(cut_list):
     # 判断半切清单
     # 先理出1.5m以下的list(auto_no, part_num, length, qty)
     # 相同材料，半切匹配，无法匹配的再与同材料大于1.5m的匹配，再无法匹配，列清单
     for raw_index, raw_group in groupby(cut_list, itemgetter('Raw Material')):
         pass
+
 
 def gen_dtr_cut_list(cut_list, org='LKQ'):
     """
@@ -87,15 +88,28 @@ def check_lysaght_parts_crash(parts):
     for part in parts:
         is_crash = part.check_y_offset_crash()
         if is_crash:
-            crash_parts.append(part.part_no)
+            crash_parts.append(part)
     return crash_parts
 
 
 def get_dtr_single_tool_id(tool_list, dia):
+    """
+    获取单孔工具号
+    :param tool_list:单孔工具号列表
+    :param dia: 孔径
+    :return: 返回工具号，未定义的返回-1
+    """
     for tool in tool_list:
         if tool['Dia'] == dia:
             return tool['ToolID']
     return -1
+
+
+def get_dtr_tools_single(file_with_path):
+    csv_f = zCSV.CsvFile(file_with_path)
+    tool_list = csv_f.get_single_tool_id()
+    # print(tool_list)
+    return tool_list
 
 
 def check_dtr_undefined_holes(parts, tool_list):
@@ -125,6 +139,18 @@ def check_dtr_undefined_holes(parts, tool_list):
     return no_pattern_list
 
 
+def check_dtr_undefined_holes_single(parts, tool_list_single):
+    no_pattern_list = []
+    for part in parts:
+        single_list = part.check_tool_id_single(tool_list_single)
+        no_pattern_list += single_list
+        no_pattern_list = [dict(t) for t in {tuple(d.items()) for d in no_pattern_list}]  # 字典列表去重
+        if no_pattern_list:
+            # print('There are no pattern list:', no_pattern_list)
+            continue
+    return no_pattern_list
+
+
 def gen_dtr_pattern_list(parts, tool_list):
     """
     lysaght-parts转DTR孔
@@ -143,6 +169,24 @@ def gen_dtr_pattern_list(parts, tool_list):
     return part_list
 
 
+def gen_dtr_pattern_list_crash(parts, tool_list):
+    """
+    lysaght-parts转DTR孔
+    :param parts: lysaght-part
+    :param tool_list: DTR孔列表
+    :return: 转换号的DTR-pattern列表
+    """
+    part_list = Parts()
+    for part in parts:
+        # part.sort_holes()
+        # part.group_holes_by_y()
+        # part.convert_to_dtr_holes()
+        # double_list = part.convert_to_dtr_holes(tool_list)
+        pattern = part.convert_to_dtr_pattern_crash(tool_list)
+        part_list.append(pattern)
+    return part_list
+
+
 def lysaght_csv_from_oracle_to_dtr(cut_list, parts):
     """
     转换lysaght-csv项目到DTR列表
@@ -150,8 +194,10 @@ def lysaght_csv_from_oracle_to_dtr(cut_list, parts):
     :param parts: lysaght-csv零件
     :return: DTR切割清单，DTR未定义孔， DTR-pattern清单
     """
+    global new_cut_list
     tool_list = get_dtr_tools('./DTRTools.csv')
     lysaght_dia_list = get_lysaght_dias('./LysaghtHoleDia.csv')
+    tool_list_single = get_dtr_tools_single('./DTRSingleTools.csv')
 
     return_list = CutList()
     part_list = Parts()
@@ -160,19 +206,38 @@ def lysaght_csv_from_oracle_to_dtr(cut_list, parts):
     # 先理出1.5m以下的list(auto_no, part_num, length, qty)
     # 相同材料，半切匹配，无法匹配的再与同材料大于1.5m的匹配，再无法匹配，列清单
 
-    # 生成制作清单
-    return_list = gen_dtr_cut_list(cut_list, org='LKQ')
-
     # 生成零件清单
     # 1. 转换到实际孔径，检查零件中未定义的孔
     parts_checked = prepare_lysaght_holes(parts, lysaght_dia_list)
-    no_pattern_list = check_dtr_undefined_holes(parts_checked, tool_list)
+
+    parts_crash = check_lysaght_parts_crash(parts_checked)
+    no_pattern_list = check_dtr_undefined_holes_single(parts_crash, tool_list_single)
+    parts_no_crash = list(set(parts_checked).difference(set(parts_crash)))
+    no_pattern_list += check_dtr_undefined_holes(parts_no_crash, tool_list)
+    # 检查未定义孔径
     if no_pattern_list:
         # 1.1 如果有未定义的孔
         return return_list, no_pattern_list, part_list
     else:
         # 1.2 如果没有未定义的孔
-        part_list = gen_dtr_pattern_list(parts_checked, tool_list)
+        if parts_no_crash:
+            part_list_temp = gen_dtr_pattern_list(parts_no_crash, tool_list)
+            part_list.append(part_list_temp)
+        if parts_crash:
+            part_list_temp = gen_dtr_pattern_list_crash(parts_crash, tool_list_single)
+            part_list.append(part_list_temp)
+
+    # 生成制作清单
+    if parts_crash:
+        parts_crash_number = [part.part_no for part in parts_crash]
+        new_cut_list = []
+        # 修改cut_list信息，标识crash
+        for cut_item in cut_list:
+            part_number = cut_item['Mark No'].strip()
+            if part_number in parts_crash_number:
+                cut_item['Item Cat'] = cut_item['Item Cat'].strip() + '_C'
+            new_cut_list.append(cut_item)
+    return_list = gen_dtr_cut_list(new_cut_list, org='LKQ')
 
     return return_list, no_pattern_list, part_list
 
@@ -185,7 +250,9 @@ def convert_nc_from_oracle_to_dtr(cut_list, nc_folder, org='LKQ'):
     :param nc_folder: nc文件夹
     :return: DTR切割清单，DTR未定义孔， DTR-pattern清单
     """
+    global new_cut_list
     tool_list = get_dtr_tools('./DTRTools.csv')
+    tool_list_single = get_dtr_tools_single('./DTRSingleTools.csv')
     lysaght_dia_list = get_lysaght_dias('./LysaghtHoleDia.csv')
 
     return_list = CutList()
@@ -193,11 +260,6 @@ def convert_nc_from_oracle_to_dtr(cut_list, nc_folder, org='LKQ'):
     # part_list = []
     no_pattern_list = []
     part_number_list = []  # 避免零件重复
-    # 生成制作清单
-    if org == 'LKQ':
-        return_list = gen_dtr_cut_list(cut_list, org='LKQ')
-    else:
-        return_list = gen_dtr_cut_list(cut_list, org)
 
     # 生成零件清单
     if org == 'LKQ':
@@ -207,13 +269,40 @@ def convert_nc_from_oracle_to_dtr(cut_list, nc_folder, org='LKQ'):
     else:
         parts = convert_nc_files_to_lysaght_parts(cut_list, nc_folder, org)
 
-    no_pattern_list = check_dtr_undefined_holes(parts, tool_list)
+    parts_crash = check_lysaght_parts_crash(parts)
+    no_pattern_list = check_dtr_undefined_holes_single(parts_crash, tool_list_single)
+    parts_no_crash = list(set(parts).difference(set(parts_crash)))
+    no_pattern_list += check_dtr_undefined_holes(parts_no_crash, tool_list)
+
     if no_pattern_list:
         # 1.1 如果有未定义的孔
         return return_list, no_pattern_list, part_list
     else:
         # 1.2 如果没有未定义的孔
-        part_list = gen_dtr_pattern_list(parts, tool_list)
+        if parts_no_crash:
+            part_list_temp = gen_dtr_pattern_list(parts_no_crash, tool_list)
+            part_list.append(part_list_temp)
+        if parts_crash:
+            part_list_temp = gen_dtr_pattern_list_crash(parts_crash, tool_list_single)
+            part_list.append(part_list_temp)
+
+    # 生成制作清单
+    if parts_crash:
+        parts_crash_number = [part.part_no for part in parts_crash]
+        new_cut_list = []
+        # 修改cut_list信息，标识crash
+        for cut_item in cut_list:
+            if org == 'LKQ':
+                part_number = cut_item['Mark No'].strip()
+            else:
+                part_number = cut_item['Fa Item'][0:7].strip()
+            if part_number in parts_crash_number:
+                cut_item['Item Cat'] = cut_item['Item Cat'].strip() + '_C'
+            new_cut_list.append(cut_item)
+    if org == 'LKQ':
+        return_list = gen_dtr_cut_list(new_cut_list, org='LKQ')
+    else:
+        return_list = gen_dtr_cut_list(new_cut_list, org)
 
     return return_list, no_pattern_list, part_list
 

@@ -390,6 +390,9 @@ class z_splitting(QMainWindow):
         self.nc_folder = QFileDialog.getExistingDirectory(None, '请指定NC文件目录：')
         # 检查NC文件是否存在
         # 获取存在的文件名列表和不存在的文件名列表
+        no_files = []
+        exit_files = []
+
         exit_files, no_files = self.check_nc_files_exite(list_make_files, self.nc_folder)
         if no_files:
             str_nofiles = ''
@@ -466,7 +469,7 @@ class z_splitting(QMainWindow):
             # 检查lysaght-parts是否crash
             crash_parts = check_lysaght_parts_crash(all_parts_make)
             if crash_parts:
-                QMessageBox(self, '警告', '下列零件孔位y轴上有碰撞\n' + str(crash_parts))
+                QMessageBox(self, '警告', '下列零件孔位y轴上有碰撞\n' + str([part_no for part_no in crash_parts]))
                 return
             else:
                 cut_list, no_pattern_list, parts = lysaght_csv_from_oracle_to_dtr(read_return, all_parts_make)

@@ -431,6 +431,17 @@ class Part(object):
                 no_pattern_list_re.append(temp)
         return no_pattern_list_re
 
+    def check_tool_id_single(self, tool_list_single):
+        no_pattern_list_re = []
+        for hole_single in self.holes:
+            tool_num = TransformFunctions.get_dtr_single_tool_id(tool_list_single, hole_single.dia)
+            if tool_num < 0:
+                temp = {
+                    'dia': hole_single.dia
+                }
+                no_pattern_list_re.append(temp)
+        return no_pattern_list_re
+
     def convert_to_dtr_pattern(self, tool_list):
         """
         转化为DTR的pattern字符串
@@ -484,6 +495,37 @@ class Part(object):
                     undefinde_holes.append(temp)
         return part_list
 
+    def convert_to_dtr_pattern_crash(self, tool_list):
+        """
+        转化为DTR的pattern字符串
+        :param tool_list: 单孔工具号
+        :return: pattern字符串列表， 合并 part_list.parts.extend(part_listN.parts
+        """
+        undefinde_holes = []
+        part_list = DParts()
+        for hole_single in self.holes:
+            tool_num = TransformFunctions.get_dtr_single_tool_id(tool_list, hole_single.dia)
+
+            if tool_num > 0:
+                x_refer = LEADING_EDGE
+                if hole_single.y > 0:
+                    y_refer = CENTER_N
+                else:
+                    y_refer = CENTER_P
+                y_offset = abs(hole_single.y)
+                part_item = DPart(part_name=self.part_no, tool_number=tool_num,
+                                  x_offset=hole_single.x / MM_INCH,
+                                  x_reference=x_refer, permanent=True,
+                                  y_offset=y_offset / MM_INCH,
+                                  y_reference=y_refer)
+
+                part_list.append(part_item)
+            else:
+                temp = {
+                    'dia': hole_single.dia
+                }
+                undefinde_holes.append(temp)
+        return part_list
 
 def test():
     tool_list = TransformFunctions.get_dtr_tools('./DTRTools.csv')
