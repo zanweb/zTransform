@@ -174,7 +174,7 @@ def gen_dtr_pattern_list_crash(parts, tool_list):
     lysaght-parts转DTR孔
     :param parts: lysaght-part
     :param tool_list: DTR孔列表
-    :return: 转换号的DTR-pattern列表
+    :return: 转换号的DTR-pattern列表--
     """
     part_list = Parts()
     for part in parts:
