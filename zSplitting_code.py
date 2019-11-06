@@ -44,6 +44,7 @@ class z_splitting(QMainWindow):
         self.list_make = []
         self.half_cut_list = []
         self.length_less_list = []
+
         self.out_folder = ''
         self.nc_folder = ''
         self.csv_folder = ''
@@ -234,6 +235,10 @@ class z_splitting(QMainWindow):
     @pyqtSlot()
     def on_push_button_get_clicked(self):
         self.list_make_all = []
+        self.length_less_list = []
+        self.list_make = []
+        self.half_cut_list = []
+
         item = QTreeWidgetItemIterator(self.ui.tree_widget)
         while item.value():
             tmp = {}
