@@ -216,12 +216,13 @@ class CsvFile:
                     part = Part.Part(part_no=str(item[1]).upper(), part_length=int(item[2]), part_thickness=thick,
                                      quantity=int(item[3]),
                                      section=str(item[0]), material='')
-                    for i in range(1, len(item) // 5):
-                        if item[i * 5] == 'Hole':
-                            hole = Part.Hole(location=item[1 * 5 + 1], x=float(item[i * 5 + 3]),
-                                             y=float(item[i * 5 + 4]),
-                                             dia=float(item[i * 5 + 2]))
-                            part.add_hole(hole)
+                    if len(item) > 5:
+                        for i in range(1, len(item) // 5):
+                            if item[i * 5] == 'Hole':
+                                hole = Part.Hole(location=item[1 * 5 + 1], x=float(item[i * 5 + 3]),
+                                                 y=float(item[i * 5 + 4]),
+                                                 dia=float(item[i * 5 + 2]))
+                                part.add_hole(hole)
                     parts.append(part)
                 f.close()
             self.seq_info = parts
