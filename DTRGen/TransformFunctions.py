@@ -337,7 +337,7 @@ def convert_nc_files_to_lysaght_parts(cut_list, nc_folder, org='LKQ'):
         nc = Nc(nc_file_path)
         nc_data = nc.file_data
         nc_inf = nc.file_information()
-        part = gen_nc_part_to_lysaght(nc_inf)
+        part = gen_nc_part_to_lysaght(nc_inf, org)
         lysaght_parts.append(part)
     return lysaght_parts
 
@@ -410,7 +410,7 @@ def read_data_from_lysaght_engine(file_path):
         return orders
 
 
-def gen_butler_order_cut_list(cut_list, nc_folder):
+def gen_butler_order_cut_list(cut_list, nc_folder, org='LKQ'):
     # mm_inch = 25.4
     tool_list = get_dtr_tools('./DTRTools.csv')
 
@@ -443,7 +443,7 @@ def gen_butler_order_cut_list(cut_list, nc_folder):
             nc = Nc(nc_file_path)
             nc_data = nc.file_data
             nc_inf = nc.file_information()
-            part = gen_nc_part_to_lysaght(nc_inf)
+            part = gen_nc_part_to_lysaght(nc_inf, org)
             part.sort_holes()
             part.group_holes_by_y()
             double_list = part.convert_to_dtr_holes(tool_list)
@@ -521,9 +521,10 @@ def gen_butler_order_cut_list(cut_list, nc_folder):
     return return_list, no_pattern_list, part_list
 
 
-def gen_nc_part_to_lysaght(nc_info):
+def gen_nc_part_to_lysaght(nc_info, org='LKQ'):
     """
     转换nc文件到lysaght-part格式
+    :param org: 组织结构
     :param nc_info: 从nc文件获取的信息
     :return: 返回 lysaght-part类
     """
@@ -565,6 +566,9 @@ def gen_nc_part_to_lysaght(nc_info):
                 if bend_down_far_side == 0:
                     # 左右翻转
                     v_hole.x = nc_info.header.length - v_hole.x
+                if org == 'SJG':
+                    if v_hole.diameter == 14:
+                        v_hole.diameter = 16
 
                 hole_v = lpart.Hole(
                     'WEB', v_hole.x, float(
@@ -587,7 +591,9 @@ def gen_nc_part_to_lysaght(nc_info):
                 if bend_down_far_side == 0:
                     # 左右翻转
                     h_hole.x = nc_info.header.length - h_hole.x
-
+                if org == 'SJG':
+                    if h_hole.diameter == 14:
+                        h_hole.diameter = 16
                 part.add_hole(
                     lpart.Hole(
                         'WEB', h_hole.x, float(
