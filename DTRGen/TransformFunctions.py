@@ -26,9 +26,12 @@ def gen_half_cut_list(cut_list):
     # 判断半切清单
     # 先理出1.5m以下的list(auto_no, part_num, length, qty)
     # 相同材料，半切匹配，无法匹配的再与同材料大于1.5m的匹配，再无法匹配，列清单
+    half_cut_list = []
     for raw_index, raw_group in groupby(cut_list, itemgetter('Raw Material')):
-        pass
+        half_cut_list.append(list(raw_group))
 
+def core_calculate_for_half_cut(raw_group):
+    long_lenght = []
 
 def gen_dtr_cut_list(cut_list, org='LKQ'):
     """

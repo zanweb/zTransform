@@ -339,19 +339,25 @@ class Part(object):
                         tool_list, new_group_holes, dtr_holes, undefined_holes)
                 else:
                     undefined_combins.append(combins_hole)
-
+                    # # -----------------
+                    # new_group_holes = list(
+                    #     set(group_holes).difference(set(list(combins_hole))))
+                    # return self.more_web_dtr_holes_iter(
+                    #     tool_list, new_group_holes, dtr_holes, undefined_holes)
         if undefined_combins:
             normal_gauge_combins = []
             for combins_hole in undefined_combins:
                 dia = combins_hole[0].dia
                 gauge = math.fabs(combins_hole[0].y - combins_hole[1].y)
                 group_y = combins_hole[1].y - gauge / 2
+
+                undefined_hole = {
+                    'Dia': dia, 'Gauge': gauge, 'Diff': group_y}
+                undefined_holes.append(undefined_hole)
+                new_group_holes = list(
+                    set(group_holes).difference(set(list(combins_hole))))
+
                 if gauge in [75, 100, 110, 120]:
-                    undefined_hole = {
-                        'Dia': dia, 'Gauge': gauge, 'Diff': group_y}
-                    undefined_holes.append(undefined_hole)
-                    new_group_holes = list(
-                        set(group_holes).difference(set(list(combins_hole))))
                     return self.more_web_dtr_holes_iter(
                         tool_list, new_group_holes, dtr_holes, undefined_holes)
 
