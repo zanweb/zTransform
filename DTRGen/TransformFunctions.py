@@ -30,8 +30,41 @@ def gen_half_cut_list(cut_list):
     for raw_index, raw_group in groupby(cut_list, itemgetter('Raw Material')):
         half_cut_list.append(list(raw_group))
 
+
 def core_calculate_for_half_cut(raw_group):
-    long_lenght = []
+    normal = []             # 普通件
+    half_cut_long = []      # 长件
+    half_cut_short = []     # 短件
+    # 按长度分
+    for raw in raw_group:
+        if raw['Unit Length'] >= 1500:
+            normal.append(raw)
+        elif raw['Unit Length'] >= 1000:
+            half_cut_long.append(raw)
+        else:
+            half_cut_short.append(raw)
+
+    # 计算长件及短件的数量
+    qty_cut_long = 0
+    qty_cut_short = 0
+    if half_cut_long:
+        for cut_long in half_cut_long:
+            qty_cut_long += int(cut_long['Fa Qty'])
+    else:
+        qty_cut_long = 0
+
+    if half_cut_short:
+        for cut_short in half_cut_short:
+            qty_cut_short += int(cut_short['Fa Qty'])
+
+    # 短件与长件的差
+    diff_short_long = qty_cut_short - qty_cut_long
+    # 拼接零件中,是否有长件
+    if half_cut_short:
+        # 如果有,看长件是否太少,太少的话,从普通件中再加
+        if diff_short_long > 0:
+            pass
+
 
 def gen_dtr_cut_list(cut_list, org='LKQ'):
     """
@@ -68,7 +101,7 @@ def gen_dtr_cut_list(cut_list, org='LKQ'):
                            quantity=quantity, length=length / MM_INCH,
                            material=material,
                            product_code=product_code, part_option=part_option, item_id=item_id,
-                           action=action)
+                           action=action, part_label='PP')
         return_list.append(cut_item)
     return return_list
 
@@ -438,7 +471,7 @@ def gen_butler_order_cut_list(cut_list, nc_folder, org='LKQ'):
                            quantity=quantity, length=length / MM_INCH,
                            material=material,
                            product_code=product_code, part_option=part_option, item_id=item_id,
-                           action=action)
+                           action=action, part_label='PP')
         return_list.append(cut_item)
         file_name = part_number + '.nc1'
         nc_file_path = os.path.join(nc_folder, file_name)

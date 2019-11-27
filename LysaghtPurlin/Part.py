@@ -136,6 +136,9 @@ class Part(object):
                     'dia': hole.dia
                 }
                 undefinde_holes.append(temp)
+        # 加入打印
+        part_item = DPart(part_name=self.part_no, tool_number=1, x_reference=CENTER_P, x_offset=250/MM_INCH)
+        part_list.append(part_item)
         return part_list
 
     def convert_to_dtr_holes(self, tool_list):
@@ -499,6 +502,10 @@ class Part(object):
                         'gauge': dtr_hole.gauge,
                         'diff': group_y}
                     undefinde_holes.append(temp)
+        # 加入打印
+        part_item = DPart(part_name=self.part_no, tool_number=1, x_reference=CENTER_P, x_offset=250/MM_INCH)
+        part_list.append(part_item)
+
         return part_list
 
     def convert_to_dtr_pattern_crash(self, tool_list):
@@ -531,6 +538,12 @@ class Part(object):
                     'dia': hole_single.dia
                 }
                 undefinde_holes.append(temp)
+
+        # 加入打印
+        part_item = DPart(part_name=self.part_no, tool_number=1, x_reference=CENTER_P, x_offset=250/MM_INCH)
+        part_list.append(part_item)
+
+
         return part_list
 
 def test():
