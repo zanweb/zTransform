@@ -128,6 +128,7 @@ class z_splitting(QMainWindow):
             QMessageBox.information(self, '数据导入信息', '数据导入成功！', QMessageBox.Ok)
         else:
             QMessageBox.warning(self, '数据导入警告', '数据导入未成功！', QMessageBox.Ok)
+        self.on_push_button_load_clicked()
 
     def slitting_tree_widget_ui(self):
         self.ui.tree_widget.headerItem().setText(0, '---材料---订单---编号---')
@@ -302,6 +303,7 @@ class z_splitting(QMainWindow):
                 fin = self.update_oracle_date_complete(self.list_make_all)
                 if not fin:
                     QMessageBox.information(self, '数据库更新信息', '数据库更新完成！', QMessageBox.Ok)
+                    self.on_push_button_load_clicked()
                 else:
                     QMessageBox.warning(self, '数据库更新警告', '数据库更新问题！\n 请联系相关人员！', QMessageBox.Ok)
             else:
