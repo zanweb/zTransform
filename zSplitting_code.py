@@ -298,7 +298,7 @@ class z_splitting(QMainWindow):
     def on_push_button_complete_clicked(self):
         ok = QMessageBox.question(self, '数据库数据信息', '所选内容将在数据库标注为完工，是否进行？', QMessageBox.Yes, QMessageBox.No)
         if ok == QMessageBox.Yes:
-            if self.list_make:
+            if self.list_make_all:
                 fin = self.update_oracle_date_complete(self.list_make)
                 if not fin:
                     QMessageBox.information(self, '数据库更新信息', '数据库更新完成！', QMessageBox.Ok)
