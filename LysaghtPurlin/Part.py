@@ -503,7 +503,7 @@ class Part(object):
                         'diff': group_y}
                     undefinde_holes.append(temp)
         # 加入打印
-        part_item = DPart(part_name=self.part_no, tool_number=1, x_reference=CENTER_P, x_offset=250/MM_INCH)
+        part_item = DPart(part_name=self.part_no, tool_number=1, x_reference=TRAILING_EDGE, x_offset=250/MM_INCH)
         part_list.append(part_item)
 
         return part_list
@@ -540,11 +540,11 @@ class Part(object):
                 undefinde_holes.append(temp)
 
         # 加入打印
-        part_item = DPart(part_name=self.part_no, tool_number=1, x_reference=CENTER_P, x_offset=250/MM_INCH)
+        part_item = DPart(part_name=self.part_no, tool_number=1, x_reference=TRAILING_EDGE, x_offset=250/MM_INCH)
         part_list.append(part_item)
 
-
         return part_list
+
 
 def test():
     tool_list = TransformFunctions.get_dtr_tools('./DTRTools.csv')
