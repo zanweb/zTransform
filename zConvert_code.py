@@ -5,6 +5,7 @@ from PyQt5.QtWidgets import QMessageBox, QFileDialog
 from CamGen import DataTransform
 from Zfile import zFBase, zCSV
 from zConvert import *
+from DTRGen.TransformFunctions import nc_file_header_profile
 
 
 class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
@@ -68,6 +69,12 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 nc_info = reader.read(file_full_path)
                 # need change width and qty
                 self.get_z_mtl_info(self.z_profile, nc_info.header.profile)
+                if not self.z_mtl:
+                    profile_height, flange_width, web_thickness = nc_file_header_profile(nc_info.header)
+                    self.z_mtl['Width'] = flange_width
+                    self.z_mtl['profile_height'] = profile_height
+                    self.z_mtl['web_thickness'] = web_thickness
+
                 nc_info.header.order = item['So']  # 图纸中的还是清单中？
                 nc_info.header.quantity = item['Qty']
                 nc_info.header.profile_height = self.z_mtl['Width']
