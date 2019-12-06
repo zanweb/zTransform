@@ -219,9 +219,9 @@ class XmlGen:
 
         # 判断是否有未定义的孔：
         if self.undefined_holes:
-            QMessageBox(self, '警告', self.header.part_name + '有未定义的孔\n' + self.undefined_holes)
+            QMessageBox(self, '警告', self.header.part_name + '有未定义的孔\n' + str(self.undefined_holes))
 
-    def get_plane_holes(self, nc_holes):
+    def get_plane_holes_org(self, nc_holes):
         plane_holes = []
         v_holes = []
         u_holes = []
@@ -257,6 +257,82 @@ class XmlGen:
         plane_holes.append(v_holes)
         # print(o_holes)
         return plane_holes
+
+    def get_plane_holes(self, nc_holes):
+        plane_holes = []
+        v_holes = []
+        u_holes = []
+        o_holes = []
+        h_holes = []
+        for single_hole in nc_holes:
+            # 处理Dia为0的无效孔位
+            if single_hole.diameter == 0:
+                continue
+            # 处理 NC 文件数据偏差###
+            single_hole.x = float(round(single_hole.x))
+            single_hole.y = float(round(single_hole.y))
+
+            # 处理长圆孔及花孔
+            if single_hole.special == 'l':
+                diameter = single_hole.diameter
+                width = single_hole.width
+                x = single_hole.x
+                single_hole.x = x + width / 2
+                # 花孔 6*25 长圆孔作花孔处理
+                if (diameter == 6) and (width == 19):
+                    single_hole.diameter = 7777
+                else:
+                    single_hole.diameter = diameter * 100 + (diameter + width)
+
+            if single_hole.plane == 'o' and single_hole.reference == 's' and single_hole.hole_type == '':
+                o_holes.append(single_hole)
+            if single_hole.plane == 'o' and single_hole.reference == 'o' and single_hole.hole_type == '':
+                o_holes.append(single_hole)
+            if single_hole.plane == 'o' and single_hole.reference == 'u' and single_hole.hole_type == '':
+                o_holes.append(single_hole)
+            if single_hole.plane == 'u' and single_hole.reference == 's' and single_hole.hole_type == '':
+                u_holes.append(single_hole)
+            if single_hole.plane == 'u' and single_hole.reference == 'o' and single_hole.hole_type == '':
+                u_holes.append(single_hole)
+            if single_hole.plane == 'u' and single_hole.reference == 'u' and single_hole.hole_type == '':
+                u_holes.append(single_hole)
+            if single_hole.plane == 'v' and single_hole.reference == 'o' and single_hole.hole_type == '':
+                v_holes.append(single_hole)
+            if single_hole.plane == 'v' and single_hole.reference == 'u' and single_hole.hole_type == '':
+                v_holes.append(single_hole)
+            if single_hole.plane == 'v' and single_hole.reference == 's' and single_hole.hole_type == '':
+                v_holes.append(single_hole)
+            if single_hole.plane == 'h' and single_hole.reference == 'o' and single_hole.hole_type == '':
+                h_holes.append(single_hole)
+            if single_hole.plane == 'h' and single_hole.reference == 'u' and single_hole.hole_type == '':
+                h_holes.append(single_hole)
+            if single_hole.plane == 'h' and single_hole.reference == 's' and single_hole.hole_type == '':
+                h_holes.append(single_hole)
+
+        # 避免孔重复
+        o_holes = self.delete_double_holes(o_holes)
+        u_holes = self.delete_double_holes(u_holes)
+        v_holes = self.delete_double_holes(v_holes)
+        h_holes = self.delete_double_holes(h_holes)
+
+        plane_holes.append(o_holes)
+        plane_holes.append(u_holes)
+        plane_holes.append(v_holes)
+        plane_holes.append(h_holes)
+
+        # print(o_holes)
+        return plane_holes
+
+    def delete_double_holes(self, holes):
+        new_holes = []
+        hole_attrs = []
+        for hole in holes:
+            hole_a = (hole.plane, hole.reference, hole.x, hole.y, hole.diameter)
+            if hole_a not in hole_attrs:
+                hole_attrs.append(hole_a)
+                new_holes.append(hole)
+        return new_holes
+
 
     def gen_tree(self):
         orders = self.creat_element('Orders')
