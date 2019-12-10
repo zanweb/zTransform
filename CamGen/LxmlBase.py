@@ -219,7 +219,11 @@ class XmlGen:
 
         # 判断是否有未定义的孔：
         if self.undefined_holes:
-            QMessageBox(self, '警告', self.header.part_name + '有未定义的孔\n' + str(self.undefined_holes))
+            info = ''
+            for hole in self.undefined_holes:
+                info += '\n' + 'Dia:' + hole.diameter + ',Type:' + hole.type + ',Plane:' + hole.plane
+            QMessageBox(self, '警告', self.header.part_name + '有未定义的孔\n' + info)
+            return
 
     def get_plane_holes_org(self, nc_holes):
         plane_holes = []
