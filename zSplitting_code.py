@@ -38,7 +38,7 @@ class z_splitting(QMainWindow):
         self.org = None
         self.work_center = None
         self.data_source = None
-        self.length_limit = 500
+        self.length_limit = 1500
 
         self.list_make_all = []
         self.list_make = []
@@ -397,8 +397,8 @@ class z_splitting(QMainWindow):
         self.nc_folder = QFileDialog.getExistingDirectory(None, '请指定NC文件目录：')
         # 检查NC文件是否存在
         # 获取存在的文件名列表和不存在的文件名列表
-        no_files = []
-        exit_files = []
+        # no_files = []
+        # ext_files = []
 
         exit_files, no_files = self.check_nc_files_exite(list_make_files, self.nc_folder)
         if no_files:
@@ -429,6 +429,7 @@ class z_splitting(QMainWindow):
                     print(e)
             else:
                 QMessageBox.warning(self, 'NC文件', '目录内没有NC文件！', QMessageBox.Ok)
+        # no_files = []
 
     def process_csv_to_dtr(self):
         list_auto = []
@@ -476,11 +477,15 @@ class z_splitting(QMainWindow):
             # 检查lysaght-parts是否crash
             crash_parts = check_lysaght_parts_crash(all_parts_make)
             if crash_parts:
-                QMessageBox(self, '警告', '下列零件孔位y轴上有碰撞\n' + str([part_no for part_no in crash_parts]))
-                return
-            else:
-                cut_list, no_pattern_list, parts = lysaght_csv_from_oracle_to_dtr(read_return, all_parts_make)
-                self.save_dtr_files(cut_list, no_pattern_list, parts)
+                info = ''
+                for part in crash_parts:
+                    info += part.part_no + '\n'
+                info += '继续？'
+                reply = QMessageBox.warning(self, '警告', '下列零件孔位y轴上有碰撞\n' + info, QMessageBox.Yes | QMessageBox.No)
+                if reply == QMessageBox.No:
+                    return
+            cut_list, no_pattern_list, parts = lysaght_csv_from_oracle_to_dtr(read_return, all_parts_make)
+            self.save_dtr_files(cut_list, no_pattern_list, parts)
         except Exception as e:
             print(e)
 
