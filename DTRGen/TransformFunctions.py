@@ -603,8 +603,9 @@ def gen_nc_part_to_lysaght(nc_info, org='LKQ'):
                     # 左右翻转
                     v_hole.x = nc_info.header.length - v_hole.x
                 if org == 'SJG':
-                    if v_hole.diameter == 14:
-                        v_hole.diameter = 16
+                    if nc_info.header.code_profile == 'SO':
+                        if v_hole.diameter == 14:
+                            v_hole.diameter = 16
 
                 hole_v = lpart.Hole(
                     'WEB', v_hole.x, float(
@@ -628,8 +629,9 @@ def gen_nc_part_to_lysaght(nc_info, org='LKQ'):
                     # 左右翻转
                     h_hole.x = nc_info.header.length - h_hole.x
                 if org == 'SJG':
-                    if h_hole.diameter == 14:
-                        h_hole.diameter = 16
+                    if nc_info.header.code_profile == 'SO':
+                        if h_hole.diameter == 14:
+                            h_hole.diameter = 16
                 part.add_hole(
                     lpart.Hole(
                         'WEB', h_hole.x, float(
