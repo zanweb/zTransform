@@ -101,7 +101,7 @@ def gen_dtr_cut_list(cut_list, org='LKQ'):
                            quantity=quantity, length=length / MM_INCH,
                            material=material,
                            product_code=product_code, part_option=part_option, item_id=item_id,
-                           action=action, part_label=part_number)
+                           action=action, part_label='^N1^' + part_number)
         return_list.append(cut_item)
     return return_list
 
@@ -471,7 +471,7 @@ def gen_butler_order_cut_list(cut_list, nc_folder, org='LKQ'):
                            quantity=quantity, length=length / MM_INCH,
                            material=material,
                            product_code=product_code, part_option=part_option, item_id=item_id,
-                           action=action, part_label=part_number)
+                           action=action, part_label='^N1^' + part_number)
         return_list.append(cut_item)
         file_name = part_number + '.nc1'
         nc_file_path = os.path.join(nc_folder, file_name)
