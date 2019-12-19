@@ -385,6 +385,9 @@ class z_splitting(QMainWindow):
                         item.addChild(item_info)
 
     def process_nc_to_dtr(self):
+        if not self.list_make:
+            QMessageBox.warning(self, '警告', '没有适合制作的零件!')
+            return
         # 获取关键字段
         list_auto = []
         for dic in self.list_make:
@@ -432,6 +435,9 @@ class z_splitting(QMainWindow):
         # no_files = []
 
     def process_csv_to_dtr(self):
+        if not self.list_make:
+            QMessageBox.warning(self, '警告', '没有适合制作的零件!')
+            return
         list_auto = []
         for dic in self.list_make:
             list_auto.append(dic['AutoNo'])
@@ -495,8 +501,6 @@ class z_splitting(QMainWindow):
         else:
             QMessageBox.warning(self, "警告", '此目录下没有csv文件!')
         return
-
-
 
     def save_dtr_files(self, cut_list, no_pattern_list, parts):
         if no_pattern_list:
