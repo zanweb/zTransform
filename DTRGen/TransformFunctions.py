@@ -245,6 +245,8 @@ def lysaght_csv_from_oracle_to_dtr(cut_list, parts):
     # 生成零件清单
     # 1. 转换到实际孔径，检查零件中未定义的孔
     parts_checked = prepare_lysaght_holes(parts, lysaght_dia_list)
+
+    # 不需要crash
     if True:
         parts_crash = []
         no_pattern_list = []
@@ -309,9 +311,12 @@ def convert_nc_from_oracle_to_dtr(cut_list, nc_folder, org='LKQ'):
         parts = prepare_lysaght_holes(parts_checked, lysaght_dia_list)
     else:
         parts = convert_nc_files_to_lysaght_parts(cut_list, nc_folder, org)
-
-    parts_crash = check_lysaght_parts_crash(parts)
-    no_pattern_list = check_dtr_undefined_holes_single(parts_crash, tool_list_single)
+    # 不需要crash
+    if True:
+        parts_crash = []
+    else:
+        parts_crash = check_lysaght_parts_crash(parts)
+        no_pattern_list = check_dtr_undefined_holes_single(parts_crash, tool_list_single)
     parts_no_crash = list(set(parts).difference(set(parts_crash)))
     no_pattern_list += check_dtr_undefined_holes(parts_no_crash, tool_list)
 
