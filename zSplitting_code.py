@@ -475,7 +475,10 @@ class z_splitting(QMainWindow):
 
         try:
             # 检查lysaght-parts是否crash
-            crash_parts = check_lysaght_parts_crash(all_parts_make)
+            if True:
+                crash_parts = []
+            else:
+                crash_parts = check_lysaght_parts_crash(all_parts_make)
             if crash_parts:
                 info = ''
                 for part in crash_parts:
