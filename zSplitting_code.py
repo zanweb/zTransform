@@ -446,51 +446,57 @@ class z_splitting(QMainWindow):
         all_parts_no = []
         self.csv_folder = QFileDialog.getExistingDirectory(None, '请指定csv文件目录：')
         csv_files = zFBase.get_indicate_ext_file(self.csv_folder, 'csv')
-        for csv in csv_files:
-            csv_file_path = self.csv_folder + '/' + str(csv) + '.csv'
-            csv_file = zCSV.CsvFile(csv_file_path)
-            csv_parts = csv_file.get_lysaght_punch()
-            all_parts.extend(csv_parts)
-            all_parts_no = [no.part_no for no in all_parts]
-        print(all_parts_no)
-        miss_parts = list(set(list_make_files).difference(set(all_parts_no)))
-        if miss_parts:
-            QMessageBox.warning(self, '工程数据缺失', '缺失如下零件csv数据, 请补充数据！！！\n' + str(miss_parts), QMessageBox.Ok)
-            return 0
+        if csv_files:
+            for csv in csv_files:
+                csv_file_path = self.csv_folder + '/' + str(csv) + '.csv'
+                csv_file = zCSV.CsvFile(csv_file_path)
+                csv_parts = csv_file.get_lysaght_punch()
+                all_parts.extend(csv_parts)
+                all_parts_no = [no.part_no for no in all_parts]
+            print(all_parts_no)
+            miss_parts = list(set(list_make_files).difference(set(all_parts_no)))
+            if miss_parts:
+                QMessageBox.warning(self, '工程数据缺失', '缺失如下零件csv数据, 请补充数据！！！\n' + str(miss_parts), QMessageBox.Ok)
+                return 0
 
-        # 获取清单数据
-        QMessageBox.information(self, '工程数据文件', '工程数据文件齐全,开始转换。', QMessageBox.Ok)
-        # 指定输出文件夹
-        self.out_folder = QFileDialog.getExistingDirectory(self, '获取转换后的文件夹:')
-        # 获取制作清单数据结构
-        list_auto_int = [int(x) for x in list_auto]
-        # print(list_auto_int)
-        tuple_auto = tuple(list_auto_int)
-        read_return = dbFunctions.oracle_data_read_in_auto(self.user, self.pass_word, self.server,
-                                                           self.database, tuple_auto)
-        all_parts_make = []
-        for part in all_parts:
-            if part.part_no in list_make_files:
-                all_parts_make.append(part)
+            # 获取清单数据
+            QMessageBox.information(self, '工程数据文件', '工程数据文件齐全,开始转换。', QMessageBox.Ok)
+            # 指定输出文件夹
+            self.out_folder = QFileDialog.getExistingDirectory(self, '获取转换后的文件夹:')
+            # 获取制作清单数据结构
+            list_auto_int = [int(x) for x in list_auto]
+            # print(list_auto_int)
+            tuple_auto = tuple(list_auto_int)
+            read_return = dbFunctions.oracle_data_read_in_auto(self.user, self.pass_word, self.server,
+                                                               self.database, tuple_auto)
+            all_parts_make = []
+            for part in all_parts:
+                if part.part_no in list_make_files:
+                    all_parts_make.append(part)
 
-        try:
-            # 检查lysaght-parts是否crash
-            if True:
-                crash_parts = []
-            else:
-                crash_parts = check_lysaght_parts_crash(all_parts_make)
-            if crash_parts:
-                info = ''
-                for part in crash_parts:
-                    info += part.part_no + '\n'
-                info += '继续？'
-                reply = QMessageBox.warning(self, '警告', '下列零件孔位y轴上有碰撞\n' + info, QMessageBox.Yes | QMessageBox.No)
-                if reply == QMessageBox.No:
-                    return
-            cut_list, no_pattern_list, parts = lysaght_csv_from_oracle_to_dtr(read_return, all_parts_make)
-            self.save_dtr_files(cut_list, no_pattern_list, parts)
-        except Exception as e:
-            print(e)
+            try:
+                # 检查lysaght-parts是否crash
+                if True:
+                    crash_parts = []
+                else:
+                    crash_parts = check_lysaght_parts_crash(all_parts_make)
+                if crash_parts:
+                    info = ''
+                    for part in crash_parts:
+                        info += part.part_no + '\n'
+                    info += '继续？'
+                    reply = QMessageBox.warning(self, '警告', '下列零件孔位y轴上有碰撞\n' + info, QMessageBox.Yes | QMessageBox.No)
+                    if reply == QMessageBox.No:
+                        return
+                cut_list, no_pattern_list, parts = lysaght_csv_from_oracle_to_dtr(read_return, all_parts_make)
+                self.save_dtr_files(cut_list, no_pattern_list, parts)
+            except Exception as e:
+                print(e)
+        else:
+            QMessageBox.warning(self, "警告", '此目录下没有csv文件!')
+        return
+
+
 
     def save_dtr_files(self, cut_list, no_pattern_list, parts):
         if no_pattern_list:
