@@ -121,6 +121,12 @@ class z_splitting(QMainWindow):
 
         # print(self.user_res, self.user_group)
         file_name, file_type = QFileDialog.getOpenFileName(self, '选取文件', 'C:/', 'CSV Files(*.CSV)')
+        # 判断此文件是否为空
+        if os.path.getsize(file_name):
+            pass
+        else:
+            QMessageBox.warning(self, '数据导入警告', '此文件为空,请检查!', QMessageBox.Ok)
+            return 0
         # print('import file--> ', file_name, ' ---- file type', file_type)
         insert_return = dbFunctions.oracle_data_import(self.user, self.pass_word, self.server, self.database,
                                                        self.user_group, file_name)
