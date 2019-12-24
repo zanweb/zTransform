@@ -747,12 +747,16 @@ def get_nc_plane_holes(nc_holes):
         if single_hole.plane == 'h' and single_hole.reference == 's' and single_hole.hole_type == '':
             h_holes.append(single_hole)
 
-    # 避免孔重复
+    # 避免孔重复--单个面
     o_holes = delete_double_holes(o_holes)
     u_holes = delete_double_holes(u_holes)
     v_holes = delete_double_holes(v_holes)
     h_holes = delete_double_holes(h_holes)
 
+    # 避免孔重复--v,h面合起来看
+    h_holes = delete_repeat_holes_in_v_h(v_holes, h_holes)
+
+    # 添加到组
     plane_holes.append(o_holes)
     plane_holes.append(u_holes)
     plane_holes.append(v_holes)
@@ -769,6 +773,26 @@ def delete_double_holes(holes):
         hole_a = (hole.plane, hole.reference, hole.x, hole.y, hole.diameter)
         if hole_a not in hole_attrs:
             hole_attrs.append(hole_a)
+            new_holes.append(hole)
+    return new_holes
+
+
+def delete_repeat_holes_in_v_h(v_holes, h_holes):
+    """
+    清除v,h面内重复的孔
+    :param v_holes: 原始v面孔
+    :param h_holes: 原始h面孔
+    :return: 新的h面的孔
+    """
+    # 以v面为基础,删除h面里重复的孔
+    new_holes = []
+    v_holes_attrs = []
+    for hole in v_holes:
+        v_holes_a = (hole.hole_type, hole.x, hole.y, hole.diameter)
+        v_holes_attrs.append(v_holes_a)
+    for hole in h_holes:
+        h_holes_a = (hole.hole_type, hole.x, hole.y, hole.diameter)
+        if h_holes_a not in v_holes_attrs:
             new_holes.append(hole)
     return new_holes
 
