@@ -322,7 +322,7 @@ class Nc:  # nc file
 
     @property
     def file_data(self):
-        file = open(self.file_with_path, 'r')
+        file = open(self.file_with_path, 'r', encoding='gb2312')
         file_lines = []
         bloc_list = []
 

@@ -4,7 +4,7 @@ block_cipher = None
 
 
 a = Analysis(['zConvert_code.py'],
-             pathex=['E:\\Zanweb\\PythonProgram\\Batch'],
+             pathex=['E:\\Zanweb\\PythonProgram\\zTransform'],
              binaries=[],
              datas=[],
              hiddenimports=[],
@@ -24,6 +24,6 @@ exe = EXE(pyz,
           name='zConvert_Beta',
           debug=False,
           strip=False,
-          upx=True,
+          upx=False,
           runtime_tmpdir=None,
-          console=False )
+          console=True)
