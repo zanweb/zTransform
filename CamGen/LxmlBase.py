@@ -4,6 +4,7 @@ from operator import attrgetter
 
 from PyQt5.QtWidgets import QMessageBox
 from lxml import etree
+from DTRGen.TransformFunctions import nc_file_header_profile
 
 
 class Head:
@@ -187,14 +188,15 @@ class XmlGen:
         self.header.make_direction = nc_info.header.make_direction
         self.header.part_name = nc_info.header.drawing
         self.header.order = nc_info.header.order
-        if not nc_info.header.profile.find('*') == -1:
-            if re.findall(r'\d+\.\d+', str(nc_info.header.profile).split('*')[1]):
-                self.header.thickness = re.findall(r'\d+\.\d+', str(nc_info.header.profile).split('*')[1])[0]
-        if not nc_info.header.profile.find('X') == -1:
-            if re.findall(r'\d+\.\d+', str(nc_info.header.profile).split('X')[1]):
-                self.header.thickness = re.findall(r'\d+\.\d+', str(nc_info.header.profile).split('X')[1])[0]
-
-        self.header.width = int(nc_info.header.profile_height)
+        # if not nc_info.header.profile.find('*') == -1:
+        #     if re.findall(r'\d+\.\d+', str(nc_info.header.profile).split('*')[1]):
+        #         self.header.thickness = re.findall(r'\d+\.\d+', str(nc_info.header.profile).split('*')[1])[0]
+        # if not nc_info.header.profile.find('X') == -1:
+        #     if re.findall(r'\d+\.\d+', str(nc_info.header.profile).split('X')[1]):
+        #         self.header.thickness = re.findall(r'\d+\.\d+', str(nc_info.header.profile).split('X')[1])[0]
+        profile_height, flange_width, web_thickness = nc_file_header_profile(nc_info.header)
+        self.header.thickness = web_thickness
+        self.header.width = profile_height
         self.header.length = int(nc_info.header.length)
         self.header.quantity = int(nc_info.header.quantity)
         # deal with holes
