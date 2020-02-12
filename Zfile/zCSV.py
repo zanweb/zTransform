@@ -78,7 +78,7 @@ class CsvFile:
                 f_csv = csv.DictReader(f)
                 for row in f_csv:
                     info_line = {}
-                    print(row)
+                    # print(row)
                     if str(row['Sort Complete']).strip(' ') != 'Y':
                         info_line['Unit Length'] = row['Unit Length']
                         info_line['Qty'] = row['Fa Qty']
@@ -113,7 +113,7 @@ class CsvFile:
 
                         info_line['Bundle'] = re.findall(r'\d+', str(row['Bundle']))[0]
 
-                        print(info_line['Item'])
+                        # print(info_line['Item'])
                         self.seq_info.append(info_line)
                 f.close()
         except Exception as e:

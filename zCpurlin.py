@@ -6,14 +6,17 @@
 # @IDE      :   PyCharm
 
 
-import sys, os
-from zCpurlin_ui import Ui_MainWindow
-from PyQt5.QtWidgets import QMainWindow, QApplication, QMessageBox, QFileDialog
-from PyQt5.QtCore import pyqtSlot
-from Zfile import zCSV, zFBase
-from DTRGen import TransformFunctions
+import os
+import sys
 from itertools import groupby
-from operator import attrgetter, itemgetter
+from operator import itemgetter
+
+from PyQt5.QtCore import pyqtSlot
+from PyQt5.QtWidgets import QMainWindow, QApplication, QMessageBox, QFileDialog
+
+from DTRGen import TransformFunctions
+from Zfile import zCSV, zFBase
+from zCpurlin_ui import Ui_MainWindow
 
 
 class z_c_purlin(QMainWindow):
@@ -41,7 +44,8 @@ class z_c_purlin(QMainWindow):
                 self.ui.line_edit_oracle_file.setText(self.oracle_file)
                 self.ui.statusbar.showMessage('已经指定ORACLE文件!')
         except Exception as e:
-            QMessageBox.information(None, '出错', e)
+            QMessageBox.information(self, '出错', str(e))
+
     @pyqtSlot()
     def on_push_button_source_dir_clicked(self):
         self.source_folder = QFileDialog.getExistingDirectory(None, '请指定源文件目录:')
@@ -67,15 +71,15 @@ class z_c_purlin(QMainWindow):
     @pyqtSlot()
     def on_push_button_run_clicked(self):
         if not self.oracle_file:
-            QMessageBox.warning(None, '出错:', '请输入Oracle文件!')
+            QMessageBox.warning(self, '出错:', '请输入Oracle文件!')
             self.ui.line_edit_oracle_file.setFocus()
             return
         if not self.source_folder:
-            QMessageBox.warning(None, '出错:', '请输入源数据目录!')
+            QMessageBox.warning(self, '出错:', '请输入源数据目录!')
             self.ui.line_edit_source_dir.setFocus()
             return
         if not self.dist_folder:
-            QMessageBox.warning(None, '出错:', '请输入目标数据目录!')
+            QMessageBox.warning(self, '出错:', '请输入目标数据目录!')
             self.ui.line_edit_dist_dir.setFocus()
             return
         self.data_source_type = self.ui.combo_box_source_type.currentText()
@@ -100,10 +104,11 @@ class z_c_purlin(QMainWindow):
                 org = self.item_list[0]['ORG']
                 if org != 'LKQ':
                     org = 'SJG'
-                self.lysaght_parts = TransformFunctions.convert_nc_files_to_lysaght_parts(self.item_list, self.source_folder, org=org)
+                self.lysaght_parts = TransformFunctions.convert_nc_files_to_lysaght_parts(self.item_list,
+                                                                                          self.source_folder, org=org)
             if self.data_source_type == 'CSV':
                 if not self.lysaght_parts:
-                    QMessageBox.warning(None, '错误:', '没有lysaght_parts!')
+                    QMessageBox.warning(self, '错误:', '没有lysaght_parts!')
             for each_part in self.lysaght_parts:
                 if each_part.part_no in item_exist:
                     # 看是否需要加预处理?
@@ -142,7 +147,7 @@ class z_c_purlin(QMainWindow):
             try:
                 file_name = str(self.item_list[0]['Batch']) + '.csv'
                 path = os.path.join(self.dist_folder, file_name)
-                print(line_str)
+                # print(line_str)
                 with open(path, 'w', newline='') as csvfile:
                     for row in line_str:
                         csvfile.write(row + '\n')
@@ -150,10 +155,14 @@ class z_c_purlin(QMainWindow):
                     # # for row in line_str:
                     # writer.writerow(line_str)
                     csvfile.close()
-                QMessageBox.information(None, '保存:', '文件已保存!')
-                os.system("explorer %s" % self.dist_folder)
+                QMessageBox.information(self, '保存:', '文件已保存!\n确定后将打开目标文件夹!')
+                # folder_path = str(self.dist_folder)
+                os.chdir(self.dist_folder)
+                folder_path = os.getcwd()
+                # print(folder_path)
+                os.system("start explorer %s" % folder_path)
             except Exception as e:
-                QMessageBox.warning(None, '保存出错:', '文件未保存!!!')
+                QMessageBox.warning(self, '保存出错:', '文件未保存!!!\n' + str(e))
                 return 0
 
     def get_item_list(self):
