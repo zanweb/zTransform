@@ -545,6 +545,38 @@ class Part(object):
 
         return part_list
 
+    def convert_to_c_pattern(self, tool_list):
+        c_punch_string = '0;S'
+        for one_group in self.holes_group_y:
+            tmp_web_str = ''
+            tmp_flange_str = ''
+            for one_hole in one_group:
+                if str(one_hole.location).upper() == 'WEB':
+                    if tmp_web_str == '':
+                        if one_hole.x == 0:
+                            tmp_web_str = ' ' + str(one_hole.x) + ';C02'
+                        else:
+                            tmp_web_str = ' ' + str(one_hole.x) + ';W02'
+                elif (str(one_hole.location).upper() == 'OF') or (str(one_hole.location).upper() == 'IF'):
+                    if tmp_flange_str == '':
+                        tmp_flange_str = ' ' + str(one_hole.x) + ';F02'
+            c_punch_string += tmp_web_str + tmp_flange_str
+            # if len(one_group) == 1:
+            #     if str(one_group[0].location).upper() == 'WEB':
+            #         if one_group[0].x != 0:
+            #             c_punch_string += ' ' + str(one_group[0].x) + ':W02'
+            #         else:
+            #             c_punch_string += ' ' + str(one_group[0].x) + ':C02'
+            #     elif str(one_group[0].location).upper() == 'OF':
+            #         c_punch_string += ' ' + str(one_group[0].x) + ':F02'
+            #     elif str(one_group[0].location).upper() == 'IF':
+            #         c_punch_string += ' ' + str(one_group[0].x) + ':F02'
+            # if len(one_group) == 2:
+            #     c_punch_string += ' ' + str(one_group[0].x) + ':W02'
+            # if len(one_group) == 3:
+            #     c_punch_string += ' ' + str(one_group[0].x) + ':W02'
+        c_punch_string += ' ' + str(self.part_length) + ';E'
+        return c_punch_string
 
 def test():
     tool_list = TransformFunctions.get_dtr_tools('./DTRTools.csv')

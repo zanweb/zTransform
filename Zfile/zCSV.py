@@ -83,6 +83,7 @@ class CsvFile:
                         info_line['Unit Length'] = row['Unit Length']
                         info_line['Qty'] = row['Fa Qty']
                         info_line['Item'] = str(row['Fa Item']).split('*')[0][:7]
+                        info_line['Fa Item'] = row['Fa Item']
                         info_line['So'] = row['Order Num']
                         info_line['Sorts'] = row['Sort Id']
                         if not re.findall(r'\d+\.\d+', str(row['Item Desc'])):

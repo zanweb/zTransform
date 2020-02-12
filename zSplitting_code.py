@@ -4,10 +4,11 @@ import time
 from itertools import groupby
 from operator import itemgetter
 
+from PyQt5.Qt import QSpacerItem
 # from PyQt5.QtGui import *
 from PyQt5.QtCore import pyqtSlot, Qt
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTreeWidgetItem, QTreeWidgetItemIterator, QFileDialog, QAction, \
-    QMessageBox
+    QMessageBox, QLineEdit, QPushButton, QHBoxLayout
 
 from DBbase import dbFunctions
 from DTRGen.TransformFunctions import lysaght_csv_from_oracle_to_dtr, convert_nc_from_oracle_to_dtr, \
@@ -56,6 +57,30 @@ class z_splitting(QMainWindow):
 
         work_centers = ['Slitting', 'DTR', 'CPurlin', 'ZPurlin']
         self.ui.combo_box_workcenter.addItems(work_centers)
+
+        v_spacer = QSpacerItem(500, 1)
+
+        edit_line = QLineEdit()
+        edit_line.setObjectName('edit_line')
+        edit_line.setText(edit_line.objectName())
+        edit_line.width = 50
+        self.ui.__dict__['edit_line'] = edit_line
+        search_btn = QPushButton()
+        search_btn.width = 50
+        search_btn.setText('Search')
+        hbox = QHBoxLayout()
+        hbox.addSpacerItem(v_spacer)
+        hbox.addWidget(edit_line)
+        hbox.addWidget(search_btn)
+        # bb = QPushButton('test', self.ui.verticalLayout)
+        # bb.setObjectName('bb')
+        self.ui.verticalLayout.addLayout(hbox)
+        search_btn.clicked.connect(self.on_search_btn_clicked)
+
+    @pyqtSlot()
+    def on_search_btn_clicked(self):
+        context = str(self.ui.edit_line.text())
+        print(context)
 
     def get_org_status(self):
         lkq = self.ui.check_box_lkq.checkState()
@@ -135,6 +160,7 @@ class z_splitting(QMainWindow):
         else:
             QMessageBox.warning(self, '数据导入警告', '数据导入未成功！', QMessageBox.Ok)
         self.on_push_button_load_clicked()
+        # search_treewidgt_child(self.ui.tree_view, '200000')
 
     def slitting_tree_widget_ui(self):
         self.ui.tree_widget.headerItem().setText(0, '---材料---订单---编号---')

@@ -21,6 +21,8 @@ from LysaghtPurlin import Order
 from Zfile import zCSV, zFBase
 from zBase.constant import MM_INCH, CENTER_N, CENTER_P
 
+from PyQt5.QtWidgets import QWidgetItem, QTreeWidgetItemIterator
+
 
 def gen_half_cut_list(cut_list):
     # 判断半切清单
@@ -867,6 +869,14 @@ def nc_file_z_bend(nc_aks):
         return 0
     else:  # Bend up of far side
         return -1
+
+
+def search_treewidgt_child(treewidgt, text):
+    item = QTreeWidgetItemIterator(treewidgt)
+    while item.value():
+        if item.value() == text:
+            item.Selected(True)
+        item += 1
 
 
 if __name__ == '__main__':
