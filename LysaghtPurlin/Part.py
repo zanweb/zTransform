@@ -554,12 +554,12 @@ class Part(object):
                 if str(one_hole.location).upper() == 'WEB':
                     if tmp_web_str == '':
                         if one_hole.x == 0:
-                            tmp_web_str = ' ' + str(one_hole.x) + ';C02'
+                            tmp_web_str = ' ' + str(int(one_hole.x)) + ';C03'
                         else:
-                            tmp_web_str = ' ' + str(one_hole.x) + ';W02'
+                            tmp_web_str = ' ' + str(int(one_hole.x)) + ';W03'
                 elif (str(one_hole.location).upper() == 'OF') or (str(one_hole.location).upper() == 'IF'):
                     if tmp_flange_str == '':
-                        tmp_flange_str = ' ' + str(one_hole.x) + ';F02'
+                        tmp_flange_str = ' ' + str(int(one_hole.x)) + ';F03'
             c_punch_string += tmp_web_str + tmp_flange_str
             # if len(one_group) == 1:
             #     if str(one_group[0].location).upper() == 'WEB':
@@ -575,7 +575,7 @@ class Part(object):
             #     c_punch_string += ' ' + str(one_group[0].x) + ':W02'
             # if len(one_group) == 3:
             #     c_punch_string += ' ' + str(one_group[0].x) + ':W02'
-        c_punch_string += ' ' + str(self.part_length) + ';E'
+        c_punch_string += ' ' + str(int(self.part_length)) + ';E'
         return c_punch_string
 
 def test():

@@ -138,7 +138,7 @@ class z_c_purlin(QMainWindow):
                     if project_info == pre_project_info:
                         project_info = ',,,,,'
                     line_str_tmp = project_info + part[0] + ',' + str(part[3]) + ',' + item['Qty'] + ',' + part[1] + ','
-                    line_str_tmp += item['Bundle'] + ',,,Standard,,' + str(total_qty) + ',' + str(total_qty) + ','
+                    line_str_tmp += item['Bundle'] + ',,,,Standard,,' + str(total_qty) + ',' + str(total_qty) + ','
                     line_str_tmp += str(part[3])
                     line_str.append(line_str_tmp)
                     if project_info != ',,,,,':
