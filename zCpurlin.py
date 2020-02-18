@@ -126,6 +126,7 @@ class z_c_purlin(QMainWindow):
 
         pre_project_info = ''
         line_str = []
+        line_str_list = []
 
         for item in self.item_list:
             if item['ORG'] == 'LKQ':
@@ -137,29 +138,33 @@ class z_c_purlin(QMainWindow):
                     project_info = str(order_no) + ',' + part[2] + ',' + str(customer) + ',,' + str(order_no) + ','
                     if project_info == pre_project_info:
                         project_info = ',,,,,'
+                    else:
+                        if line_str:
+                            line_str_list.append(line_str)
+                            line_str = []
                     line_str_tmp = project_info + part[0] + ',' + str(part[3]) + ',' + item['Qty'] + ',' + part[1] + ','
                     line_str_tmp += item['Bundle'] + ',,,,Standard,,' + str(total_qty) + ',' + str(total_qty) + ','
                     line_str_tmp += str(part[3])
                     line_str.append(line_str_tmp)
                     if project_info != ',,,,,':
                         pre_project_info = project_info
-        if line_str:
+        if line_str_list:
+            # print(line_str_list)
             try:
-                file_name = str(self.item_list[0]['Batch']) + '.csv'
-                path = os.path.join(self.dist_folder, file_name)
-                # print(line_str)
-                with open(path, 'w', newline='') as csvfile:
-                    for row in line_str:
-                        csvfile.write(row + '\n')
-                    # writer = csv.writer(csvfile, delimiter=' ')
-                    # # for row in line_str:
-                    # writer.writerow(line_str)
-                    csvfile.close()
+                for line_str in line_str_list:
+                    # print(line_str)
+                    os.chdir(self.dist_folder)
+                    file_name = str(line_str[0].split(',')[1]) + '.csv'
+                    file_name = file_name.replace('*', '_')
+                    print(file_name)
+                    path = os.path.join(os.getcwd(), file_name)
+                    with open(path, 'w', newline='') as csvfile:
+                        for row in line_str:
+                            csvfile.write(row + '\n')
+                        csvfile.close()
                 QMessageBox.information(self, '保存:', '文件已保存!\n确定后将打开目标文件夹!')
-                # folder_path = str(self.dist_folder)
                 os.chdir(self.dist_folder)
                 folder_path = os.getcwd()
-                # print(folder_path)
                 os.system("start explorer %s" % folder_path)
             except Exception as e:
                 QMessageBox.warning(self, '保存出错:', '文件未保存!!!\n' + str(e))

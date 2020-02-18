@@ -561,22 +561,9 @@ class Part(object):
                     if tmp_flange_str == '':
                         tmp_flange_str = ' ' + str(int(one_hole.x)) + ';F03'
             c_punch_string += tmp_web_str + tmp_flange_str
-            # if len(one_group) == 1:
-            #     if str(one_group[0].location).upper() == 'WEB':
-            #         if one_group[0].x != 0:
-            #             c_punch_string += ' ' + str(one_group[0].x) + ':W02'
-            #         else:
-            #             c_punch_string += ' ' + str(one_group[0].x) + ':C02'
-            #     elif str(one_group[0].location).upper() == 'OF':
-            #         c_punch_string += ' ' + str(one_group[0].x) + ':F02'
-            #     elif str(one_group[0].location).upper() == 'IF':
-            #         c_punch_string += ' ' + str(one_group[0].x) + ':F02'
-            # if len(one_group) == 2:
-            #     c_punch_string += ' ' + str(one_group[0].x) + ':W02'
-            # if len(one_group) == 3:
-            #     c_punch_string += ' ' + str(one_group[0].x) + ':W02'
         c_punch_string += ' ' + str(int(self.part_length)) + ';E'
         return c_punch_string
+
 
 def test():
     tool_list = TransformFunctions.get_dtr_tools('./DTRTools.csv')
