@@ -128,7 +128,7 @@ class Part(object):
                                   x_offset=hole.x / MM_INCH,
                                   x_reference=hole.x_reference, permanent=True,
                                   y_offset=hole.y,
-                                  y_reference=hole.y_reference)
+                                  y_reference=CENTER_P)
 
                 part_list.append(part_item)
             else:
@@ -523,7 +523,8 @@ class Part(object):
             if tool_num > 0:
                 x_refer = LEADING_EDGE
                 if hole_single.y > 0:
-                    y_refer = CENTER_N
+                    # y_refer = CENTER_N
+                    y_refer = CENTER_P
                 else:
                     y_refer = CENTER_P
                 y_offset = abs(hole_single.y)
