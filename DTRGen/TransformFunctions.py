@@ -130,16 +130,18 @@ def check_lysaght_parts_crash(parts):
     return crash_parts
 
 
-def get_dtr_single_tool_id(tool_list, dia):
+def get_dtr_single_tool_id(tool_list, dia, loc):
     """
     获取单孔工具号
+    :param loc:
     :param tool_list:单孔工具号列表
     :param dia: 孔径
     :return: 返回工具号，未定义的返回-1
     """
     for tool in tool_list:
         if tool['Dia'] == dia:
-            return tool['ToolID']
+            if tool['Loc'] == loc:
+                return tool['ToolID']
     return -1
 
 
@@ -248,8 +250,8 @@ def lysaght_csv_from_oracle_to_dtr(cut_list, parts):
     # 1. 转换到实际孔径，检查零件中未定义的孔
     parts_checked = prepare_lysaght_holes(parts, lysaght_dia_list)
 
-    # 不需要crash
-    if True:
+    # 是否需要crash? False--需要, True--不需要
+    if False:
         parts_crash = []
         no_pattern_list = []
     else:

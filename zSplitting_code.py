@@ -513,15 +513,15 @@ class z_splitting(QMainWindow):
                     all_parts_make.append(part)
 
             try:
-                # 检查lysaght-parts是否crash
-                if True:
+                # 检查lysaght-parts是否crash? False--需要, True--不需要
+                if False:
                     crash_parts = []
                 else:
                     crash_parts = check_lysaght_parts_crash(all_parts_make)
                 if crash_parts:
                     info = ''
                     for part in crash_parts:
-                        info += part.part_no + '\n'
+                        info += part.part_no + ','
                     info += '继续？'
                     reply = QMessageBox.warning(self, '警告', '下列零件孔位y轴上有碰撞\n' + info, QMessageBox.Yes | QMessageBox.No)
                     if reply == QMessageBox.No:

@@ -122,7 +122,7 @@ class Part(object):
         part_list = []
         for hole in self.holes:
             tool_num = TransformFunctions.get_dtr_single_tool_id(
-                tool_list, hole.dia)
+                tool_list, hole.dia, hole.y/abs(hole.y))
             if tool_num > 0:
                 part_item = DPart(part_name=self.part_no, tool_number=tool_num,
                                   x_offset=hole.x / MM_INCH,
@@ -443,10 +443,11 @@ class Part(object):
     def check_tool_id_single(self, tool_list_single):
         no_pattern_list_re = []
         for hole_single in self.holes:
-            tool_num = TransformFunctions.get_dtr_single_tool_id(tool_list_single, hole_single.dia)
+            tool_num = TransformFunctions.get_dtr_single_tool_id(tool_list_single, hole_single.dia, hole_single.y/abs(hole_single.y))
             if tool_num < 0:
                 temp = {
-                    'dia': hole_single.dia
+                    'dia': hole_single.dia,
+                    'loc': hole_single.y/abs(hole_single.y)
                 }
                 no_pattern_list_re.append(temp)
         return no_pattern_list_re
@@ -517,7 +518,7 @@ class Part(object):
         undefinde_holes = []
         part_list = DParts()
         for hole_single in self.holes:
-            tool_num = TransformFunctions.get_dtr_single_tool_id(tool_list, hole_single.dia)
+            tool_num = TransformFunctions.get_dtr_single_tool_id(tool_list, hole_single.dia, hole_single.y/abs(hole_single.y))
 
             if tool_num > 0:
                 x_refer = LEADING_EDGE
