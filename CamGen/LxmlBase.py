@@ -159,7 +159,9 @@ class XmlGen:
             elif (group[0].diameter == 13.5) or (group[0].special == 'l'):
                 if group[0].special == 'l':
                     # nc 中标准长圆孔处理
-                    group[0].x = group[0].x + group[0].width / 2
+                    group[0].x = group[0].x  # 已经在get_plane_holes()中处理过了
+                    # group[0].x = group[0].x + group[0].width / 2
+                    # group[0].x = group[0].x + (group[0].diameter + group[0].width) / 2
                 if (group[0].x == pre_group_x) or (abs(group[0].x - (pre_group_x + 75)) <= 1):
                     continue
                 hole.x = group[0].x + 37.5

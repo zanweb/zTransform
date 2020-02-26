@@ -81,7 +81,9 @@ def gen_dtr_cut_list(cut_list, org='LKQ'):
     else:
         cut_list_sorted_mark = sorted(cut_list, key=itemgetter('Fa Item'))
     cut_list_sorted_length = sorted(cut_list_sorted_mark, key=itemgetter('Unit Length'), reverse=True)
-    cut_list_sorted = sorted(cut_list_sorted_length, key=itemgetter('Bundle'))
+    cut_list_sorted_bundle = sorted(cut_list_sorted_length, key=itemgetter('Bundle'))
+    cut_list_sorted = sorted(cut_list_sorted_bundle, key=itemgetter('Raw Material'))
+
 
     for cut_part in cut_list_sorted:
         # print(cut_part)
