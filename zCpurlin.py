@@ -160,7 +160,7 @@ class z_c_purlin(QMainWindow):
                     path = os.path.join(os.getcwd(), file_name)
                     with open(path, 'w', newline='') as csvfile:
                         for row in line_str:
-                            csvfile.write(row + '\n')
+                            csvfile.write(row + '\r\n')
                         csvfile.close()
                 QMessageBox.information(self, '保存:', '文件已保存!\n确定后将打开目标文件夹!')
                 os.chdir(self.dist_folder)

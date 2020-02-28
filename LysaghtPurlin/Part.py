@@ -556,12 +556,12 @@ class Part(object):
                 if str(one_hole.location).upper() == 'WEB':
                     if tmp_web_str == '':
                         if one_hole.x == 0:
-                            tmp_web_str = ' ' + str(int(one_hole.x)) + ';C03'
+                            tmp_web_str = ' ' + str(int(one_hole.x)) + ';C02'
                         else:
-                            tmp_web_str = ' ' + str(int(one_hole.x)) + ';W03'
+                            tmp_web_str = ' ' + str(int(one_hole.x)) + ';W02'
                 elif (str(one_hole.location).upper() == 'OF') or (str(one_hole.location).upper() == 'IF'):
                     if tmp_flange_str == '':
-                        tmp_flange_str = ' ' + str(int(one_hole.x)) + ';F03'
+                        tmp_flange_str = ' ' + str(int(one_hole.x)) + ';F02'
             c_punch_string += tmp_web_str + tmp_flange_str
         c_punch_string += ' ' + str(int(self.part_length)) + ';E'
         return c_punch_string
