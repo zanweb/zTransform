@@ -118,6 +118,10 @@ class z_c_purlin(QMainWindow):
                     # one_part_info = [part_str, each_part.quantity, each_part.part_length, item_no, bundle]
                     one_part_info = [each_part.part_no, part_str, each_part.section, each_part.part_length]
                     c_lysaght_parts.append(one_part_info)
+        else:
+            QMessageBox.warning(self, '警告', 'NC文件缺失!\n' + str(item_not_exist))
+            return 0
+
         order_no = self.item_list[0]['So']
         customer = self.item_list[0]['Batch']
 

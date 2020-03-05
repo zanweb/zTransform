@@ -246,7 +246,7 @@ class Part(object):
             is_normal_gauge = TransformFunctions.get_dtr_tool_id(tool_list, dtr_hole.dia, dtr_hole.gauge,
                                                                  dtr_hole.group_y)
             if is_normal_gauge == -1:
-                if dtr_hole.gauge >= 59: # 不需判断了>=70
+                if dtr_hole.gauge >= 70:    # 不需判断了>=70
                     t_double = {
                         'Dia': dtr_hole.dia,
                         'Gauge': dtr_hole.gauge,
@@ -432,12 +432,12 @@ class Part(object):
             tool_num = TransformFunctions.get_dtr_tool_id(
                 tool_list, dtr_hole.dia, dtr_hole.gauge, group_y)
             if tool_num < 0:
-                # if dtr_hole.gauge >= 70:
-                temp = {
-                    'dia': dtr_hole.dia,
-                    'gauge': dtr_hole.gauge,
-                    'diff': group_y}
-                no_pattern_list_re.append(temp)
+                if dtr_hole.gauge >= 70:
+                    temp = {
+                        'dia': dtr_hole.dia,
+                        'gauge': dtr_hole.gauge,
+                        'diff': group_y}
+                    no_pattern_list_re.append(temp)
         return no_pattern_list_re
 
     def check_tool_id_single(self, tool_list_single):

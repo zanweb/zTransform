@@ -317,8 +317,8 @@ def convert_nc_from_oracle_to_dtr(cut_list, nc_folder, org='LKQ'):
         parts = prepare_lysaght_holes(parts_checked, lysaght_dia_list)
     else:
         parts = convert_nc_files_to_lysaght_parts(cut_list, nc_folder, org)
-    # 不需要crash
-    if True:
+    # 不需要crash, True--不需要, flase -- 需要
+    if False:
         parts_crash = []
     else:
         parts_crash = check_lysaght_parts_crash(parts)
