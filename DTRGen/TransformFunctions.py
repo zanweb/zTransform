@@ -731,7 +731,10 @@ def get_nc_plane_holes(nc_holes):
             if (diameter == 6) and (width == 19):
                 single_hole.diameter = 7777
             else:
-                single_hole.diameter = diameter * 100 + (diameter + width)
+                if (angle == 90) and (width == 0):
+                    single_hole.diameter = diameter * 100 + (diameter + height)
+                else:
+                    single_hole.diameter = diameter * 100 + (diameter + width)
 
         if single_hole.plane == 'o' and single_hole.reference == 's' and single_hole.hole_type == '':
             o_holes.append(single_hole)
