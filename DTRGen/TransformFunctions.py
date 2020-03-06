@@ -720,8 +720,13 @@ def get_nc_plane_holes(nc_holes):
         if single_hole.special == 'l':
             diameter = single_hole.diameter
             width = single_hole.width
+            height = single_hole.height
+            angle = single_hole.angle
             x = single_hole.x
-            single_hole.x = x + width / 2
+            if (angle == 90) and (width == 0):
+                single_hole.x = x + height/2
+            else:
+                single_hole.x = x + width / 2
             # 花孔 6*25 长圆孔作花孔处理
             if (diameter == 6) and (width == 19):
                 single_hole.diameter = 7777
