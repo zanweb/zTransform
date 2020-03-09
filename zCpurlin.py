@@ -132,7 +132,9 @@ class z_c_purlin(QMainWindow):
         line_str = []
         line_str_list = []
 
+        item_num = 0
         for item in self.item_list:
+            item_num += 1
             if item['ORG'] == 'LKQ':
                 part_no = item['Mark No']
             else:
@@ -152,6 +154,8 @@ class z_c_purlin(QMainWindow):
                     line_str.append(line_str_tmp)
                     if project_info != ',,,,,':
                         pre_project_info = project_info
+                    if item_num == len(self.item_list):
+                        line_str_list.append(line_str)
         if line_str_list:
             # print(line_str_list)
             try:
