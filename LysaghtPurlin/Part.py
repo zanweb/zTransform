@@ -246,7 +246,7 @@ class Part(object):
             is_normal_gauge = TransformFunctions.get_dtr_tool_id(tool_list, dtr_hole.dia, dtr_hole.gauge,
                                                                  dtr_hole.group_y)
             if is_normal_gauge == -1:
-                if dtr_hole.gauge >= 70:    # 不需判断了>=70
+                if dtr_hole.gauge >= 65:    # 不需判断了>=70
                     t_double = {
                         'Dia': dtr_hole.dia,
                         'Gauge': dtr_hole.gauge,
