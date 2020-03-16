@@ -113,7 +113,7 @@ class Part(object):
             for combins_hole in combins_holes:
                 if ((combins_hole[0].y < 0) != (combins_hole[1].y < 0)) and (
                         combins_hole[0].y != 0) and (combins_hole[1].y != 0):  # y值相反+-
-                    if abs(combins_hole[0].y - combins_hole[1].y) <= 70:
+                    if abs(combins_hole[0].y - combins_hole[1].y) <= 65:
                         return True
         return False
 
