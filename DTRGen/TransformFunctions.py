@@ -200,15 +200,18 @@ def gen_dtr_pattern_list(parts, tool_list):
     :param tool_list: DTR孔列表
     :return: 转换号的DTR-pattern列表
     """
+    undefined_holes_list = []
     part_list = Parts()
     for part in parts:
         # part.sort_holes()
         # part.group_holes_by_y()
         # part.convert_to_dtr_holes()
         # double_list = part.convert_to_dtr_holes(tool_list)
-        pattern = part.convert_to_dtr_pattern(tool_list)
+        pattern, undefined_holes = part.convert_to_dtr_pattern(tool_list)
         part_list.append(pattern)
-    return part_list
+        undefined_holes_list.append(undefined_holes)
+
+    return part_list, undefined_holes_list
 
 
 def gen_dtr_pattern_list_crash(parts, tool_list):
@@ -268,7 +271,7 @@ def lysaght_csv_from_oracle_to_dtr(cut_list, parts):
     else:
         # 1.2 如果没有未定义的孔
         if parts_no_crash:
-            part_list_temp = gen_dtr_pattern_list(parts_no_crash, tool_list)
+            part_list_temp, undefined_holes = gen_dtr_pattern_list(parts_no_crash, tool_list)
             part_list.append(part_list_temp)
         if parts_crash:
             part_list_temp = gen_dtr_pattern_list_crash(parts_crash, tool_list_single)
@@ -332,7 +335,7 @@ def convert_nc_from_oracle_to_dtr(cut_list, nc_folder, org='LKQ'):
     else:
         # 1.2 如果没有未定义的孔
         if parts_no_crash:
-            part_list_temp = gen_dtr_pattern_list(parts_no_crash, tool_list)
+            part_list_temp, undefined_holes_list = gen_dtr_pattern_list(parts_no_crash, tool_list)
             part_list.append(part_list_temp)
         if parts_crash:
             part_list_temp = gen_dtr_pattern_list_crash(parts_crash, tool_list_single)

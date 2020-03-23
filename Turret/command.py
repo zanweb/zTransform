@@ -78,15 +78,21 @@ def hole_parameter(mm, high, jj_length, gauge, gauge_number):
     critical_value_side_marge = mm * 12 / high
     if critical_value_side_marge > hole_side_marge:
         # hole_y_diff = (mm * 12 - high * hole_side_marge) / 2 / jj_length
-        hole_y_diff = (6 * mm - high * hole_side_marge) / jj_length
-        hole_x_diff = (12 * high + hole_side_marge * mm) / 2 / jj_length
+        # hole_y_diff = (6 * mm - high * hole_side_marge) / jj_length
+        # hole_x_diff = (12 * high + hole_side_marge * mm) / 2 / jj_length
+        dy = (high / 2 / jj_length) * (critical_value_side_marge - hole_side_marge)
+        dx = jj_length / (mm / 2) * critical_value_side_marge - (mm / 2) / jj_length * (
+                    critical_value_side_marge - hole_side_marge)
     else:
         # hole_x_diff = 12 * jj_length / (mm / 2) + mm / 2 * (hole_side_marge - 12 * mm / 2 / (high / 2))
-        hole_x_diff = 12 * jj_length / (high / 2) + (mm / 2 / jj_length) * (hole_side_marge - critical_value_side_marge)
+        # hole_x_diff = 12 * jj_length / (high / 2) + (mm / 2 / jj_length) * (hole_side_marge - critical_value_side_marge)
         # hole_y_diff = mm / 2 * (hole_side_marge * high / 2 - 12 * mm / 2)
-        hole_y_diff = (high / 2 / jj_length) * (hole_side_marge - critical_value_side_marge)
-        hole_y_diff = - hole_y_diff
-    return hole_x_diff, hole_y_diff
+        # hole_y_diff = (high / 2 / jj_length) * (hole_side_marge - critical_value_side_marge)
+        # hole_y_diff = - hole_y_diff
+        dy = ((high / 2) / jj_length) * (hole_side_marge - critical_value_side_marge)
+        dx = 12 * jj_length / (high / 2) + (mm / 2) / jj_length * (hole_side_marge - critical_value_side_marge)
+        dy = - dy
+    return dx, dy
 
 
 def side_parameter(mm, high, jj_length, tool_width, tool_length):
@@ -137,6 +143,8 @@ def g810974(mm, high, jj_length, tool_width, tool_length, gauge_number=None, gau
     angle = degrees(atan(high / mm))
     j_num = ceil((jj_length - 2 - tool_length) / tool_length)
     j_diff = (jj_length - 2 - tool_length) / j_num
+    d_diff = 1.5/j_num
+    j_diff = j_diff - d_diff
 
     if mm <= 1250:
         hole_code = []
@@ -341,6 +349,7 @@ def g810974(mm, high, jj_length, tool_width, tool_length, gauge_number=None, gau
         code_tmp = 'REP/DX' + format(float(part_width - 1250), '0.2f')
         code.append(code_tmp)
 
+
         # RIGHT --------------------------------------------------------------------------------------------------
         # x_centre_d = 0  # ????????????????????????????????????????
         hole_code = []
@@ -418,8 +427,14 @@ def g810974(mm, high, jj_length, tool_width, tool_length, gauge_number=None, gau
 
         code_tmp = 'C0.M03'
         code.append(code_tmp)
-        code_tmp = 'M99'
+        code_tmp = 'X' + format(float(part_width), '0.2f') + 'Y1280M03'
         code.append(code_tmp)
+        code_tmp = 'FRM/X1250'
+        code.append(code_tmp)
+        code_tmp = 'X1250Y1280M30'
+        code.append(code_tmp)
+        # code_tmp = 'M99'
+        # code.append(code_tmp)
         print(code)
 
     if 2500 < mm <= 3750:
@@ -443,7 +458,7 @@ def save(code_org, length):
 
 
 if __name__ == '__main__':
-    mm = 1010
+    mm = 1715
     high = 212
     tool_width = 5.08
     tool_length = 35.56

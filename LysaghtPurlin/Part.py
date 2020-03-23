@@ -432,12 +432,13 @@ class Part(object):
             tool_num = TransformFunctions.get_dtr_tool_id(
                 tool_list, dtr_hole.dia, dtr_hole.gauge, group_y)
             if tool_num < 0:
-                if dtr_hole.gauge >= 70:
-                    temp = {
-                        'dia': dtr_hole.dia,
-                        'gauge': dtr_hole.gauge,
-                        'diff': group_y}
-                    no_pattern_list_re.append(temp)
+                # if dtr_hole.gauge >= 65:
+                temp = {
+                    'dia': dtr_hole.dia,
+                    'gauge': dtr_hole.gauge,
+                    'diff': group_y}
+                no_pattern_list_re.append(temp)
+
         return no_pattern_list_re
 
     def check_tool_id_single(self, tool_list_single):
@@ -507,7 +508,7 @@ class Part(object):
         part_item = DPart(part_name=self.part_no, tool_number=1, x_reference=LEADING_EDGE, x_offset=250/MM_INCH)
         part_list.append(part_item)
 
-        return part_list
+        return part_list, undefinde_holes
 
     def convert_to_dtr_pattern_crash(self, tool_list):
         """
