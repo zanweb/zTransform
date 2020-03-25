@@ -3,7 +3,7 @@ __author__ = "zanweb <zanweb@163.com>"
 import os
 import re
 
-import math
+import math, numpy
 # from operator import attrgetter
 import operator
 from itertools import groupby, combinations
@@ -122,7 +122,7 @@ class Part(object):
         part_list = []
         for hole in self.holes:
             tool_num = TransformFunctions.get_dtr_single_tool_id(
-                tool_list, hole.dia, hole.y/abs(hole.y))
+                tool_list, hole.dia, hole.y / abs(hole.y))
             if tool_num > 0:
                 part_item = DPart(part_name=self.part_no, tool_number=tool_num,
                                   x_offset=hole.x / MM_INCH,
@@ -137,7 +137,7 @@ class Part(object):
                 }
                 undefinde_holes.append(temp)
         # 加入打印
-        part_item = DPart(part_name=self.part_no, tool_number=1, x_reference=LEADING_EDGE, x_offset=250/MM_INCH)
+        part_item = DPart(part_name=self.part_no, tool_number=1, x_reference=LEADING_EDGE, x_offset=250 / MM_INCH)
         part_list.append(part_item)
         return part_list
 
@@ -151,61 +151,82 @@ class Part(object):
             if len(one_group) == 1:
                 dtr_hole = self.single_dtr_hole(one_group[0])
                 self.dtr_holes.append(dtr_hole)
-            if len(one_group) == 2:
-                dtr_double_holes, undefined_double_holes = self.double_dtr_holes(
-                    tool_list, one_group)
-                self.dtr_holes.extend(dtr_double_holes)
-                double_list.extend(undefined_double_holes)
-                # dtr_hole.__dict__ = one_group[1].__dict__
-                # dtr_hole.group_type = 'double hole'
-                # dtr_hole.x_reference = LEADING_EDGE
-                # dtr_hole.y_reference = CENTER_P
-                # dtr_hole.group_x = dtr_hole.x
-                # dtr_hole.group_y = 0.0
-                # dtr_hole.group_x_reference = LEADING_EDGE
-                # dtr_hole.group_y_reference = CENTER_P
-                # if one_group[0].y == - one_group[1].y:
-                #     # x轴对称 ------------
-                #     dtr_hole.gauge = math.fabs(one_group[1].y) * 2
-                # else:
-                #     # x轴偏心 ------------
-                #     dtr_hole.gauge = math.fabs(one_group[1].y - one_group[0].y)
-                #     dtr_hole.group_y = one_group[1].y - dtr_hole.gauge / 2
-                #
-                # # y为负数时
-                # if dtr_hole.group_y < 0:
-                #     group_y = math.fabs(dtr_hole.group_y)
-                #     dtr_hole.group_y_reference = CENTER_N
-                # else:
-                #     group_y = dtr_hole.group_y
-                # # dtr_hole.group_y = group_y
-                #
-                # is_normal_gauge = TransformFunctions.get_dtr_tool_id(tool_list, dtr_hole.dia, dtr_hole.gauge,
-                #                                                      dtr_hole.group_y)
-                # if is_normal_gauge == -1:
-                #     t_double = {'Dia':dtr_hole.dia, 'Gauge': dtr_hole.gauge, 'Diff':dtr_hole.group_y}
-                #     double_list.append(t_double)
-                #     # 如果不是常规间距，按单孔处理 -------------------
-                #
-                #     dtr_hole = self.single_dtr_hole(one_group[0])
-                #     self.dtr_holes.append(dtr_hole)
-                #     dtr_hole = self.single_dtr_hole(one_group[1])
-                #     self.dtr_holes.append(dtr_hole)
-                #     continue
-                #
-                # self.dtr_holes.append(dtr_hole)
 
-            if len(one_group) > 2:
-                # TODO: 判断是否有成组的孔
-                dtr_double_holes, undefined_double_holes = self.more_dtr_holes(
-                    tool_list, one_group)
-                self.dtr_holes.extend(dtr_double_holes)
-                double_list.extend(undefined_double_holes)
+            if len(one_group) >= 2:
+                is_sinde_single = self.judge_side_single_holes(one_group)
+                if is_sinde_single:  # 如果是单侧偏心
+                    for one_hole in one_group:
+                        dtr_hole = self.side_single_dtr_hole(one_hole)
+                        self.dtr_holes.append(dtr_hole)
 
-                # for i in range(0, len(one_group)):
-                #     dtr_hole = self.single_dtr_hole(one_group[i])
-                #     self.dtr_holes.append(dtr_hole)
+                else:
+                    if len(one_group) == 2:
+                        dtr_double_holes, undefined_double_holes = self.double_dtr_holes(
+                            tool_list, one_group)
+                        self.dtr_holes.extend(dtr_double_holes)
+                        double_list.extend(undefined_double_holes)
+                        # dtr_hole.__dict__ = one_group[1].__dict__
+                        # dtr_hole.group_type = 'double hole'
+                        # dtr_hole.x_reference = LEADING_EDGE
+                        # dtr_hole.y_reference = CENTER_P
+                        # dtr_hole.group_x = dtr_hole.x
+                        # dtr_hole.group_y = 0.0
+                        # dtr_hole.group_x_reference = LEADING_EDGE
+                        # dtr_hole.group_y_reference = CENTER_P
+                        # if one_group[0].y == - one_group[1].y:
+                        #     # x轴对称 ------------
+                        #     dtr_hole.gauge = math.fabs(one_group[1].y) * 2
+                        # else:
+                        #     # x轴偏心 ------------
+                        #     dtr_hole.gauge = math.fabs(one_group[1].y - one_group[0].y)
+                        #     dtr_hole.group_y = one_group[1].y - dtr_hole.gauge / 2
+                        #
+                        # # y为负数时
+                        # if dtr_hole.group_y < 0:
+                        #     group_y = math.fabs(dtr_hole.group_y)
+                        #     dtr_hole.group_y_reference = CENTER_N
+                        # else:
+                        #     group_y = dtr_hole.group_y
+                        # # dtr_hole.group_y = group_y
+                        #
+                        # is_normal_gauge = TransformFunctions.get_dtr_tool_id(tool_list, dtr_hole.dia, dtr_hole.gauge,
+                        #                                                      dtr_hole.group_y)
+                        # if is_normal_gauge == -1:
+                        #     t_double = {'Dia':dtr_hole.dia, 'Gauge': dtr_hole.gauge, 'Diff':dtr_hole.group_y}
+                        #     double_list.append(t_double)
+                        #     # 如果不是常规间距，按单孔处理 -------------------
+                        #
+                        #     dtr_hole = self.single_dtr_hole(one_group[0])
+                        #     self.dtr_holes.append(dtr_hole)
+                        #     dtr_hole = self.single_dtr_hole(one_group[1])
+                        #     self.dtr_holes.append(dtr_hole)
+                        #     continue
+                        #
+                        # self.dtr_holes.append(dtr_hole)
+
+                    if len(one_group) > 2:
+                        # TODO: 判断是否有成组的孔
+                        dtr_double_holes, undefined_double_holes = self.more_dtr_holes(
+                            tool_list, one_group)
+                        self.dtr_holes.extend(dtr_double_holes)
+                        double_list.extend(undefined_double_holes)
+
+                    # for i in range(0, len(one_group)):
+                    #     dtr_hole = self.single_dtr_hole(one_group[i])
+                    #     self.dtr_holes.append(dtr_hole)
         return double_list
+
+    def judge_side_single_holes(self, one_group):
+        result = True
+        y_value = []
+        y_sign = []
+        for one_hole in one_group:
+            y_value.append(one_hole.y)
+        y_sign = numpy.sign(y_value)
+        if -1 not in y_sign:
+            return True
+        if 1 not in y_sign:
+            return True
 
     def double_dtr_holes(self, tool_list, one_group):
         # 若是翼板上的孔作单孔处理
@@ -246,7 +267,7 @@ class Part(object):
             is_normal_gauge = TransformFunctions.get_dtr_tool_id(tool_list, dtr_hole.dia, dtr_hole.gauge,
                                                                  dtr_hole.group_y)
             if is_normal_gauge == -1:
-                if dtr_hole.gauge >= 65:    # 不需判断了>=70
+                if dtr_hole.gauge >= 65:  # 不需判断了>=70
                     t_double = {
                         'Dia': dtr_hole.dia,
                         'Gauge': dtr_hole.gauge,
@@ -385,6 +406,24 @@ class Part(object):
             dtr_hole.y = math.fabs(one_of_group.y)
         return dtr_hole
 
+    def side_single_dtr_hole(self, one_of_group):
+        dtr_hole = DTRHole()
+        dtr_hole.__dict__ = one_of_group.__dict__
+        dtr_hole.group_type = 'side_single hole'
+        dtr_hole.x_reference = LEADING_EDGE
+        dtr_hole.y_reference = CENTER_P
+        dtr_hole.group_x = 0.0
+        dtr_hole.group_y = one_of_group.y
+        dtr_hole.group_x_reference = LEADING_EDGE
+        dtr_hole.group_y_reference = CENTER_P
+        dtr_hole.gauge = 0.0
+        if one_of_group.y < 0:
+            dtr_hole.y_reference = CENTER_N
+            dtr_hole.group_y_reference = CENTER_N
+            dtr_hole.group_y = math.fabs(one_of_group.y)
+            dtr_hole.y = math.fabs(one_of_group.y)
+        return dtr_hole
+
     def group_holes_by_y(self):
         for dia_index, dia_group in groupby(self.holes, key=attrgetter('dia')):
             for x_index, x_group in groupby(dia_group, key=attrgetter('x')):
@@ -429,8 +468,13 @@ class Part(object):
             group_y = dtr_hole.group_y
             if dtr_hole.group_y_reference == CENTER_N:
                 group_y = -group_y
-            tool_num = TransformFunctions.get_dtr_tool_id(
-                tool_list, dtr_hole.dia, dtr_hole.gauge, group_y)
+                gauge = -1
+            else:
+                gauge = 1
+            if dtr_hole.group_type == 'side_single hole':
+                tool_num = TransformFunctions.get_dtr_tool_id(tool_list, dtr_hole.dia, gauge, 0)
+            else:
+                tool_num = TransformFunctions.get_dtr_tool_id(tool_list, dtr_hole.dia, dtr_hole.gauge, group_y)
             if tool_num < 0:
                 # if dtr_hole.gauge >= 65:
                 temp = {
@@ -444,11 +488,12 @@ class Part(object):
     def check_tool_id_single(self, tool_list_single):
         no_pattern_list_re = []
         for hole_single in self.holes:
-            tool_num = TransformFunctions.get_dtr_single_tool_id(tool_list_single, hole_single.dia, hole_single.y/abs(hole_single.y))
+            tool_num = TransformFunctions.get_dtr_single_tool_id(tool_list_single, hole_single.dia,
+                                                                 hole_single.y / abs(hole_single.y))
             if tool_num < 0:
                 temp = {
                     'dia': hole_single.dia,
-                    'loc': hole_single.y/abs(hole_single.y)
+                    'loc': hole_single.y / abs(hole_single.y)
                 }
                 no_pattern_list_re.append(temp)
         return no_pattern_list_re
@@ -486,7 +531,7 @@ class Part(object):
                         'diff': group_y}
                     undefinde_holes.append(temp)
 
-            else:  # 单孔------------------------------
+            elif dtr_hole.group_type == 'single hole':  # 单孔------------------------------
                 if group_y_r == CENTER_N:
                     group_y = - group_y
                 tool_num = TransformFunctions.get_dtr_tool_id(
@@ -504,8 +549,32 @@ class Part(object):
                         'gauge': dtr_hole.gauge,
                         'diff': group_y}
                     undefinde_holes.append(temp)
+            else:  # 侧边偏心,单孔--------side_single hole---------------------------------------
+                if group_y_r == CENTER_N:
+                    group_y = - group_y
+                    gauge = -1
+                if group_y_r == CENTER_P:
+                    gauge = 1
+                tool_num = TransformFunctions.get_dtr_tool_id(tool_list, dtr_hole.dia, gauge, 0)
+                if tool_num > 0:
+                    tool_far_side = [20, 21, 24, 25, 28, 29, 32, 33]
+                    if tool_num in tool_far_side:
+                        dtr_hole.group_y = dtr_hole.group_y * 1.27
+                    part_item = DPart(part_name=self.part_no, tool_number=tool_num,
+                                      x_offset=dtr_hole.x / MM_INCH,
+                                      x_reference=dtr_hole.x_reference, permanent=True,
+                                      y_offset=dtr_hole.group_y / MM_INCH,
+                                      y_reference=CENTER_P)
+                    part_list.append(part_item)
+                else:
+                    temp = {
+                        'dia': dtr_hole.dia,
+                        'gauge': gauge,
+                        'diff': 0}
+                    undefinde_holes.append(temp)
+
         # 加入打印
-        part_item = DPart(part_name=self.part_no, tool_number=1, x_reference=LEADING_EDGE, x_offset=250/MM_INCH)
+        part_item = DPart(part_name=self.part_no, tool_number=1, x_reference=LEADING_EDGE, x_offset=250 / MM_INCH)
         part_list.append(part_item)
 
         return part_list, undefinde_holes
@@ -519,7 +588,8 @@ class Part(object):
         undefinde_holes = []
         part_list = DParts()
         for hole_single in self.holes:
-            tool_num = TransformFunctions.get_dtr_single_tool_id(tool_list, hole_single.dia, hole_single.y/abs(hole_single.y))
+            tool_num = TransformFunctions.get_dtr_single_tool_id(tool_list, hole_single.dia,
+                                                                 hole_single.y / abs(hole_single.y))
 
             if tool_num > 0:
                 x_refer = LEADING_EDGE
@@ -543,7 +613,7 @@ class Part(object):
                 undefinde_holes.append(temp)
 
         # 加入打印
-        part_item = DPart(part_name=self.part_no, tool_number=1, x_reference=LEADING_EDGE, x_offset=250/MM_INCH)
+        part_item = DPart(part_name=self.part_no, tool_number=1, x_reference=LEADING_EDGE, x_offset=250 / MM_INCH)
         part_list.append(part_item)
 
         return part_list
