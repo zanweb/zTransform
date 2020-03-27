@@ -82,7 +82,7 @@ def hole_parameter(mm, high, jj_length, gauge, gauge_number):
         # hole_x_diff = (12 * high + hole_side_marge * mm) / 2 / jj_length
         dy = (high / 2 / jj_length) * (critical_value_side_marge - hole_side_marge)
         dx = jj_length / (mm / 2) * critical_value_side_marge - (mm / 2) / jj_length * (
-                    critical_value_side_marge - hole_side_marge)
+                critical_value_side_marge - hole_side_marge)
     else:
         # hole_x_diff = 12 * jj_length / (mm / 2) + mm / 2 * (hole_side_marge - 12 * mm / 2 / (high / 2))
         # hole_x_diff = 12 * jj_length / (high / 2) + (mm / 2 / jj_length) * (hole_side_marge - critical_value_side_marge)
@@ -143,7 +143,7 @@ def g810974(mm, high, jj_length, tool_width, tool_length, gauge_number=None, gau
     angle = degrees(atan(high / mm))
     j_num = ceil((jj_length - 2 - tool_length) / tool_length)
     j_diff = (jj_length - 2 - tool_length) / j_num
-    d_diff = 1.5/j_num
+    d_diff = 1.5 / j_num
     j_diff = j_diff - d_diff
 
     if mm <= 1250:
@@ -349,7 +349,6 @@ def g810974(mm, high, jj_length, tool_width, tool_length, gauge_number=None, gau
         code_tmp = 'REP/DX' + format(float(part_width - 1250), '0.2f')
         code.append(code_tmp)
 
-
         # RIGHT --------------------------------------------------------------------------------------------------
         # x_centre_d = 0  # ????????????????????????????????????????
         hole_code = []
@@ -458,12 +457,17 @@ def save(code_org, length):
 
 
 if __name__ == '__main__':
-    mm = 1715
-    high = 212
-    tool_width = 5.08
-    tool_length = 35.56
-    gauge_number = None
-    gauge = None
-    jj_length = jj(mm, high)
-    code = g810974(mm, high, jj_length, tool_width, tool_length, gauge_number, gauge)
-    save(code, mm)
+    mm_list = [155, 315, 340, 360, 375, 400, 425, 455, 470, 490, 525, 535, 550, 570, 580, 595, 600, 605, 610, 635, 645,
+               655, 675, 685, 700, 720, 730, 750, 770, 780, 800, 820, 840, 845, 865, 880, 895, 915, 940, 965, 995, 1000,
+               1005, 1010, 1020, 1035, 1060, 1070, 1080, 1100, 1110, 1125, 1140, 1160, 1170, 1210, 1220, 1240, 1260,
+               1310, 1335, 1360, 1420, 1450, 1470, 1495, 1520, 1555, 1580, 1600, 1650, 1675, 1715, 1755, 1785,1800, 1830,
+               1870, 1950, 1990, 2005, 2045, 2050, 2100, 2150, 2180, 2200, 2235, 2260, 2310, 2350, 2400, 2450, 1490]
+    for mm in mm_list:
+        high = 212
+        tool_width = 5.08
+        tool_length = 35.56
+        gauge_number = None
+        gauge = None
+        jj_length = jj(mm, high)
+        code = g810974(mm, high, jj_length, tool_width, tool_length, gauge_number, gauge)
+        save(code, mm)
