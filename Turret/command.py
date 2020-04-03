@@ -585,35 +585,49 @@ def g810974(mm, high, jj_length, tool_width, tool_length, gauge_number=None, gau
         hole_code.extend(code_tmp)
         # side +++ up --------------------------
         side_code = []
-        side_tmp = loc(x_centre_d + side_dx + dx_tool, y_centre_u + high / 2 + side_dy + dy_tool)
-        side_tmp = side_tmp + 'T12C' + format(float(90 - angle), '0.2f') + '(REC X' + format(float(tool_length),
+        # side_tmp = loc(x_centre_d + side_dx + dx_tool, y_centre_u + high / 2 + side_dy + dy_tool)
+        # side_tmp = side_tmp + 'T12C' + format(float(90 - angle), '0.2f') + '(REC X' + format(float(tool_length),
+        #                                                                                      '0.2f') + 'Y' + format(
+        #     float(tool_width), '0.2f') + ')'
+        # side_code.append(side_tmp)
+        # side_tmp = loc(x_centre_d - side_dx - dx_tool, y_centre_u + high / 2 + side_dy + dy_tool)
+        # side_tmp = side_tmp + 'C' + format(float(90 + angle), '0.2f')
+        # side_code.append(side_tmp)
+        side_tmp = loc(x_centre_d, y_centre_u + high / 2 + tool_length/2)
+        side_tmp = side_tmp + 'T12C' + format(float(90), '0.2f') + '(REC X' + format(float(tool_length),
                                                                                              '0.2f') + 'Y' + format(
             float(tool_width), '0.2f') + ')'
         side_code.append(side_tmp)
-        side_tmp = loc(x_centre_d - side_dx - dx_tool, y_centre_u + high / 2 + side_dy + dy_tool)
-        side_tmp = side_tmp + 'C' + format(float(90 + angle), '0.2f')
-        side_code.append(side_tmp)
-
-        side_tmp = loc(x_centre_d - side_dx - dx_tool, y_centre_u - high / 2 - side_dy - dy_tool)
+        side_tmp = loc(x_centre_d, y_centre_u - high / 2 - tool_length/2)
         side_tmp = side_tmp + 'C' + format(float(90 - angle), '0.2f')
         side_code.append(side_tmp)
-        side_tmp = loc(x_centre_d + side_dx + dx_tool, y_centre_u - high / 2 - side_dy - dy_tool)
-        side_tmp = side_tmp + 'C' + format(float(90 + angle), '0.2f')
-        side_code.append(side_tmp)
+        # side_tmp = loc(x_centre_d - side_dx - dx_tool, y_centre_u - high / 2 - side_dy - dy_tool)
+        # side_tmp = side_tmp + 'C' + format(float(90 - angle), '0.2f')
+        # side_code.append(side_tmp)
+        # side_tmp = loc(x_centre_d + side_dx + dx_tool, y_centre_u - high / 2 - side_dy - dy_tool)
+        # side_tmp = side_tmp + 'C' + format(float(90 + angle), '0.2f')
+        # side_code.append(side_tmp)
+
         # side +++ down --------------------------
-        side_tmp = loc(x_centre_d + side_dx + dx_tool, y_centre_d + high / 2 + side_dy + dy_tool)
+        side_tmp = loc(x_centre_d, y_centre_d + tool_length/2)
         side_tmp = side_tmp + 'C' + format(float(90 - angle), '0.2f')
         side_code.append(side_tmp)
-        side_tmp = loc(x_centre_d - side_dx - dx_tool, y_centre_d + high / 2 + side_dy + dy_tool)
-        side_tmp = side_tmp + 'C' + format(float(90 + angle), '0.2f')
+        # side_tmp = loc(x_centre_d + side_dx + dx_tool, y_centre_d + high / 2 + side_dy + dy_tool)
+        # side_tmp = side_tmp + 'C' + format(float(90 - angle), '0.2f')
+        # side_code.append(side_tmp)
+        # side_tmp = loc(x_centre_d - side_dx - dx_tool, y_centre_d + high / 2 + side_dy + dy_tool)
+        # side_tmp = side_tmp + 'C' + format(float(90 + angle), '0.2f')
+        # side_code.append(side_tmp)
+        side_tmp = loc(x_centre_d, y_centre_d - tool_length/2)
+        side_tmp = side_tmp + 'C' + format(float(90 - angle), '0.2f')
         side_code.append(side_tmp)
 
-        side_tmp = loc(x_centre_d - side_dx - dx_tool, y_centre_d - high / 2 - side_dy - dy_tool)
-        side_tmp = side_tmp + 'C' + format(float(90 - angle), '0.2f')
-        side_code.append(side_tmp)
-        side_tmp = loc(x_centre_d + side_dx + dx_tool, y_centre_d - high / 2 - side_dy - dy_tool)
-        side_tmp = side_tmp + 'C' + format(float(90 + angle), '0.2f')
-        side_code.append(side_tmp)
+        # side_tmp = loc(x_centre_d - side_dx - dx_tool, y_centre_d - high / 2 - side_dy - dy_tool)
+        # side_tmp = side_tmp + 'C' + format(float(90 - angle), '0.2f')
+        # side_code.append(side_tmp)
+        # side_tmp = loc(x_centre_d + side_dx + dx_tool, y_centre_d - high / 2 - side_dy - dy_tool)
+        # side_tmp = side_tmp + 'C' + format(float(90 + angle), '0.2f')
+        # side_code.append(side_tmp)
 
         # jj +++ up -------------
         jj_code = []
@@ -794,6 +808,7 @@ def g810974(mm, high, jj_length, tool_width, tool_length, gauge_number=None, gau
         code.append(code_tmp)
 
         # 中---左--------------------------------------------------------------------------------------------
+
         # hole +++ up -----------------
         hole_code = []
         gauge_num_dx_t = gauge_num_dx(dx_axis, gauge_t, jj_length, mm)
@@ -816,22 +831,29 @@ def g810974(mm, high, jj_length, tool_width, tool_length, gauge_number=None, gau
         hole_code.extend(code_tmp)
         # side +++ up --------------------------
         side_code = []
-        side_tmp = loc(x_centre_d - side_dx - dx_tool, y_centre_u + high / 2 + side_dy + dy_tool)
-        side_tmp = side_tmp + 'T12C' + format(float(90 + angle), '0.2f') + '(REC X' + format(float(tool_length),
+        side_tmp = loc(x_centre_d, y_centre_u + high / 2 + tool_length/2)
+        side_tmp = side_tmp + 'T12C' + format(float(90), '0.2f') + '(REC X' + format(float(tool_length),
                                                                                              '0.2f') + 'Y' + format(
             float(tool_width), '0.2f') + ')'
         side_code.append(side_tmp)
-
-        side_tmp = loc(x_centre_d - side_dx - dx_tool, y_centre_u - high / 2 - side_dy - dy_tool)
-        side_tmp = side_tmp + 'C' + format(float(90 - angle), '0.2f')
-        side_code.append(side_tmp)
+        # side_tmp = loc(x_centre_d - side_dx - dx_tool, y_centre_u + high / 2 + side_dy + dy_tool)
+        # side_tmp = side_tmp + 'T12C' + format(float(90 + angle), '0.2f') + '(REC X' + format(float(tool_length),
+        #                                                                                      '0.2f') + 'Y' + format(
+        #     float(tool_width), '0.2f') + ')'
+        # side_code.append(side_tmp)
+        # side_tmp = loc(x_centre_d - side_dx - dx_tool, y_centre_u - high / 2 - side_dy - dy_tool)
+        # side_tmp = side_tmp + 'C' + format(float(90 - angle), '0.2f')
+        # side_code.append(side_tmp)
         # side +++ down --------------------------
-        side_tmp = loc(x_centre_d - side_dx - dx_tool, y_centre_d + high / 2 + side_dy + dy_tool)
-        side_tmp = side_tmp + 'C' + format(float(90 + angle), '0.2f')
+        side_tmp = loc(x_centre_d, y_centre_d + high / 2 + tool_length/2)
+        side_tmp = side_tmp + 'C' + format(float(90), '0.2f')
         side_code.append(side_tmp)
-        side_tmp = loc(x_centre_d - side_dx - dx_tool, y_centre_d - high / 2 - side_dy - dy_tool)
-        side_tmp = side_tmp + 'C' + format(float(90 - angle), '0.2f')
-        side_code.append(side_tmp)
+        # side_tmp = loc(x_centre_d - side_dx - dx_tool, y_centre_d + high / 2 + side_dy + dy_tool)
+        # side_tmp = side_tmp + 'C' + format(float(90 + angle), '0.2f')
+        # side_code.append(side_tmp)
+        # side_tmp = loc(x_centre_d - side_dx - dx_tool, y_centre_d - high / 2 - side_dy - dy_tool)
+        # side_tmp = side_tmp + 'C' + format(float(90 - angle), '0.2f')
+        # side_code.append(side_tmp)
 
         # jj +++ up -------------
         jj_code = []
@@ -856,6 +878,7 @@ def g810974(mm, high, jj_length, tool_width, tool_length, gauge_number=None, gau
         code.append(code_tmp)
 
         # 中===右 ===========================================
+
         # hole +++ up ---------------
         hole_code = []
         code_tmp = laa(x_centre_d + hole_dx, y_centre_u + high / 2 + hole_dy, 0.0, gauge_t, angle=-angle,
@@ -874,21 +897,23 @@ def g810974(mm, high, jj_length, tool_width, tool_length, gauge_number=None, gau
         hole_code.extend(code_tmp)
         # side +++ up ---------------
         side_code = []
-        side_tmp = loc(x_centre_d + side_dx + dx_tool, y_centre_u + high / 2 + side_dy + dy_tool)
-        side_tmp = side_tmp + 'T12C' + format(float(90 - angle), '0.2f') + '(REC X' + format(float(tool_length),
-                                                                                             '0.2f') + 'Y' + format(
-            float(tool_width), '0.2f') + ')'
-        side_code.append(side_tmp)
-        side_tmp = loc(x_centre_d + side_dx + dx_tool, y_centre_u - high / 2 - side_dy - dy_tool)
-        side_tmp = side_tmp + 'C' + format(float(90 + angle), '0.2f')
-        side_code.append(side_tmp)
+
+        # side_tmp = loc(x_centre_d + side_dx + dx_tool, y_centre_u + high / 2 + side_dy + dy_tool)
+        # side_tmp = side_tmp + 'T12C' + format(float(90 - angle), '0.2f') + '(REC X' + format(float(tool_length),
+        #                                                                                      '0.2f') + 'Y' + format(
+        #     float(tool_width), '0.2f') + ')'
+        # side_code.append(side_tmp)
+        # side_tmp = loc(x_centre_d + side_dx + dx_tool, y_centre_u - high / 2 - side_dy - dy_tool)
+        # side_tmp = side_tmp + 'C' + format(float(90 + angle), '0.2f')
+        # side_code.append(side_tmp)
         # side +++ down -------------
-        side_tmp = loc(x_centre_d + side_dx + dx_tool, y_centre_d + high / 2 + side_dy + dy_tool)
-        side_tmp = side_tmp + 'C' + format(float(90 - angle), '0.2f')
-        side_code.append(side_tmp)
-        side_tmp = loc(x_centre_d + side_dx + dx_tool, y_centre_d - high / 2 - side_dy - dy_tool)
-        side_tmp = side_tmp + 'C' + format(float(90 + angle), '0.2f')
-        side_code.append(side_tmp)
+        # side_tmp = loc(x_centre_d + side_dx + dx_tool, y_centre_d + high / 2 + side_dy + dy_tool)
+        # side_tmp = side_tmp + 'C' + format(float(90 - angle), '0.2f')
+        # side_code.append(side_tmp)
+        # side_tmp = loc(x_centre_d + side_dx + dx_tool, y_centre_d - high / 2 - side_dy - dy_tool)
+        # side_tmp = side_tmp + 'C' + format(float(90 + angle), '0.2f')
+        # side_code.append(side_tmp)
+
 
         # jj +++ up -----------------
         jj_code = []
