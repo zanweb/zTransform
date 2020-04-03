@@ -134,7 +134,7 @@ def jj_parameter(mm, high, jj_length, tool_width, tool_length):
 
 
 def jj_parameter_s(mm, high, jj_length, tool_width, tool_length):
-    dx = (mm / 2) / jj_length * (1 + tool_length / 2 - (JJ_SHORT + tool_width / 2) * high / mm)
+    dx = (mm / 2) / jj_length * (3 + tool_length / 2 - (JJ_SHORT + tool_width / 2) * high / mm)
     dy = jj_length / (mm / 2) * (tool_width / 2 + JJ_SHORT) + high / mm * dx
     return dx, dy
 
@@ -694,7 +694,7 @@ def g810974(mm, high, jj_length, tool_width, tool_length, gauge_number=None, gau
 
         # jj punch +++ up --------
         jj_code = []
-        # j_num_dx, j_diff_dx = jj_num_dx(x_centre_d - mm / 2 - jj_dx, 0.5, jj_length, mm, tool_length)
+        j_num_dx, j_diff_dx = jj_num_dx(mm / 2 - dx_axis - jj_dx_s, 0.5, jj_length, mm, tool_length)
         jj_tmp = laa(x_centre_d + mm / 2 - jj_dx_s, y_centre_u + jj_dy_s, 180 - angle, j_diff_dx, 180 - angle, j_num_dx)
         jj_code.extend(jj_tmp)
         jj_tmp = laa(x_centre_d + mm / 2 - jj_dx_s, y_centre_u - jj_dy_s, 180 + angle, j_diff_dx, 180 + angle, j_num_dx)
