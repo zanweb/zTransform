@@ -73,6 +73,12 @@ def gauge_num(jj_length, gauge):
     return num
 
 
+def gauge_num_dx(dx_length, gauge, jj_length, mm):
+    d_length = jj_length / (mm / 2) * dx_length
+    num = int(d_length / gauge)
+    return num
+
+
 def hole_parameter(mm, high, jj_length, gauge, gauge_number):
     hole_side_marge = (jj_length - gauge * gauge_number) / 2
     critical_value_side_marge = mm * 12 / high
@@ -92,6 +98,18 @@ def hole_parameter(mm, high, jj_length, gauge, gauge_number):
         dy = ((high / 2) / jj_length) * (hole_side_marge - critical_value_side_marge)
         dx = 12 * jj_length / (high / 2) + (mm / 2) / jj_length * (hole_side_marge - critical_value_side_marge)
         dy = - dy
+    return dx, dy
+
+
+def hole_parameter_s(mm, high, jj_length, gauge, gauge_number):
+    hole_side_marge = (jj_length - gauge * gauge_number) / 2
+    critical_value_side_marge = high * 12 / mm
+    if hole_side_marge > critical_value_side_marge:
+        dx = (hole_side_marge - 12 * high / mm) * mm / 2 / jj_length
+        dy = 12 * jj_length / (mm / 2) + (hole_side_marge - 12 * high / mm) * (high / 2) / jj_length
+    else:
+        dx = 0
+        dy = 0
     return dx, dy
 
 
@@ -115,6 +133,25 @@ def jj_parameter(mm, high, jj_length, tool_width, tool_length):
     return dx, dy
 
 
+def jj_parameter_s(mm, high, jj_length, tool_width, tool_length):
+    dx = (mm / 2) / jj_length * (1 + tool_length / 2 - (JJ_SHORT + tool_width / 2) * high / mm)
+    dy = jj_length / (mm / 2) * (tool_width / 2 + JJ_SHORT) + high / mm * dx
+    return dx, dy
+
+
+def jj_length_dff(mm, high, jj_length, length):
+    dx = mm / 2 / jj_length * length
+    dy = high / jj_length * length
+    return dx, dy
+
+
+def jj_num_dx(dx_length, keep_len, jj_length, mm, tool_length):
+    length = jj_length / (mm / 2) * dx_length - keep_len - tool_length / 2
+    num = ceil(length / tool_length)
+    gge = length / num
+    return num, gge
+
+
 def g810974(mm, high, jj_length, tool_width, tool_length, gauge_number=None, gauge=None):
     # 准备
     part_high, part_width = part_size(tool_width, jj_length, mm, high)
@@ -133,10 +170,13 @@ def g810974(mm, high, jj_length, tool_width, tool_length, gauge_number=None, gau
         gauge_number_t = gauge_number
     else:
         gauge_number_t = gauge_num(jj_length, gauge_t)
+
     hole_dx, hole_dy = hole_parameter(mm, high, jj_length, gauge_t, gauge_number_t)
     side_dx, side_dy = side_parameter(mm, high, jj_length, tool_width, tool_length)
     side_dx_s, side_dy_s = side_parameter_s(mm, high, jj_length, tool_width, tool_length)
     jj_dx, jj_dy = jj_parameter(mm, high, jj_length, tool_width, tool_length)
+    hole_dx_s, hole_dy_s = hole_parameter_s(mm, high, jj_length, gauge_t, gauge_number_t)
+    jj_dx_s, jj_dy_s = jj_parameter_s(mm, high, jj_length, tool_width, tool_length)
 
     # 开始
     code = []
@@ -266,7 +306,7 @@ def g810974(mm, high, jj_length, tool_width, tool_length, gauge_number=None, gau
 
         print(code)
 
-    if 1250 < mm <= 2500:
+    elif 1250 < mm <= 2500:
         # LEFT -------------------------------------------------------------------------------------------------
         # hole ++++++++++++++++++++++++++++++++++
         hole_code = []
@@ -435,10 +475,516 @@ def g810974(mm, high, jj_length, tool_width, tool_length, gauge_number=None, gau
         # code.append(code_tmp)
         print(code)
 
-    if 2500 < mm <= 3750:
-        pass
-    if 3750 < mm <= 5000:
-        pass
+    elif 2500 < mm <= 3750:
+        hole_code = []
+        dx_axis = mm / 6
+        gauge_num_dx_t = gauge_num_dx(x_centre_d - hole_dx_s - dx_axis, gauge_t, jj_length, mm)
+        # 左-----------------------------------------------------------------------------------------------
+        # hole ++++ up ------
+        code_tmp = laa(x_centre_d - mm / 2 + hole_dx_s, y_centre_u + hole_dy_s, 0.0, gauge_t, angle=angle,
+                       qty=gauge_num_dx_t)
+        code_tmp = [code_tmp[0] + "T16(DIA X 6)", code_tmp[1]]
+        hole_code.extend(code_tmp)
+
+        code_tmp = laa(x_centre_d - mm / 2 + hole_dx_s, y_centre_u - hole_dy_s, 0.0, gauge_t, angle=-angle,
+                       qty=gauge_num_dx_t)
+        hole_code.extend(code_tmp)
+        # hole ++++ down ------
+        code_tmp = laa(x_centre_d - mm / 2 + hole_dx_s, y_centre_d + hole_dy_s, 0.0, gauge_t, angle=angle,
+                       qty=gauge_num_dx_t)
+        code_tmp = [code_tmp[0] + "T16(DIA X 6)", code_tmp[1]]
+        hole_code.extend(code_tmp)
+
+        code_tmp = laa(x_centre_d - mm / 2 + hole_dx_s, y_centre_d - hole_dy_s, 0.0, gauge_t, angle=-angle,
+                       qty=gauge_num_dx_t)
+        hole_code.extend(code_tmp)
+
+        # side punch +++ up ------
+        side_code = []
+        side_tmp = loc(x_centre_d - mm / 2 - side_dx_s, y_centre_u + side_dy_s)
+        side_tmp = side_tmp + 'T12C' + format(float(90 + angle), '0.2f') + '(REC X' + format(float(tool_length),
+                                                                                             '0.2f') + 'Y' + format(
+            float(tool_width)) + ')'
+        side_code.append(side_tmp)
+        side_tmp = loc(x_centre_d - mm / 2 - side_dx_s, y_centre_u - side_dy_s)
+        side_tmp = side_tmp + 'T12C' + format(float(90 - angle), '0.2f') + '(REC X' + format(float(tool_length),
+                                                                                             '0.2f') + 'Y' + format(
+            float(tool_width)) + ')'
+        side_code.append(side_tmp)
+        # side punch +++ down ------
+        side_tmp = loc(x_centre_d - mm / 2 - side_dx_s, y_centre_d + side_dy_s)
+        side_tmp = side_tmp + 'T12C' + format(float(90 + angle), '0.2f') + '(REC X' + format(float(tool_length),
+                                                                                             '0.2f') + 'Y' + format(
+            float(tool_width)) + ')'
+        side_code.append(side_tmp)
+        side_tmp = loc(x_centre_d - mm / 2 - side_dx_s, y_centre_d - side_dy_s)
+        side_tmp = side_tmp + 'T12C' + format(float(90 - angle), '0.2f') + '(REC X' + format(float(tool_length),
+                                                                                             '0.2f') + 'Y' + format(
+            float(tool_width)) + ')'
+        side_code.append(side_tmp)
+
+        # jj punch +++ up --------
+        jj_code = []
+        j_num_dx, j_diff_dx = jj_num_dx(mm / 2 - dx_axis - jj_dx_s, 0.5, jj_length, mm, tool_length)
+        jj_tmp = laa(x_centre_d - mm / 2 + jj_dx_s, y_centre_u + jj_dy_s, angle, j_diff_dx, angle, j_num_dx)
+        jj_code.extend(jj_tmp)
+        jj_tmp = laa(x_centre_d - mm / 2 + jj_dx_s, y_centre_u - jj_dy_s, -angle, j_diff_dx, -angle, j_num_dx)
+        jj_code.extend(jj_tmp)
+        # jj punch +++ down --------
+        jj_tmp = laa(x_centre_d - mm / 2 + jj_dx_s, y_centre_d + jj_dy_s, angle, j_diff_dx, angle, j_num_dx)
+        jj_code.extend(jj_tmp)
+        jj_tmp = laa(x_centre_d - mm / 2 + jj_dx_s, y_centre_d - jj_dy_s, -angle, j_diff_dx, -angle, j_num_dx)
+        jj_code.extend(jj_tmp)
+
+        code_tmp = 'O' + str(mm)
+        code.append(code_tmp)
+        code_tmp = 'X' + format(float(1250), '0.0f') + 'Y' + format(
+            float(1280)) + 'M02'
+        code.append(code_tmp)
+        code.extend(hole_code)
+        code.extend(side_code)
+        code.extend(jj_code)
+        # *******************??????????????????????????????????????
+        code_tmp = loc(x_centre_d - dx_axis, 100) + 'M03'
+        code.append(code_tmp)
+        code_tmp = 'REP/DX' + format(float(part_width / 6), '0.2f')
+        code.append(code_tmp)
+
+        # 中-----------------------------------------------------------------------------------------------
+        # hole +++ up -----------------
+        hole_code = []
+        gauge_num_dx_t = gauge_num_dx(dx_axis, gauge_t, jj_length, mm)
+        code_tmp = laa(x_centre_d + hole_dx, y_centre_u + high / 2 + hole_dy, 0.0, gauge_t, angle=-angle,
+                       qty=gauge_num_dx_t)
+        code_tmp = [code_tmp[0] + "T16(DIA X 6)", code_tmp[1]]  # ???????????????
+        hole_code.extend(code_tmp)
+        code_tmp = laa(x_centre_d - hole_dx, y_centre_u + high / 2 + hole_dy, 0.0, gauge_t, angle=180 + angle,
+                       qty=gauge_num_dx_t)
+        hole_code.extend(code_tmp)
+
+        code_tmp = laa(x_centre_d - hole_dx, y_centre_u - high / 2 - hole_dy, 0.0, gauge_t, angle=180 - angle,
+                       qty=gauge_num_dx_t)
+        hole_code.extend(code_tmp)
+        code_tmp = laa(x_centre_d + hole_dx, y_centre_u - high / 2 - hole_dy, 0.0, gauge_t, angle=angle,
+                       qty=gauge_num_dx_t)
+        hole_code.extend(code_tmp)
+        # hole +++ down ---------------
+        code_tmp = laa(x_centre_d + hole_dx, y_centre_d + high / 2 + hole_dy, 0.0, gauge_t, angle=-angle,
+                       qty=gauge_num_dx_t)
+        code_tmp = [code_tmp[0] + "T16(DIA X 6)", code_tmp[1]]  # ???????????????
+        hole_code.extend(code_tmp)
+        code_tmp = laa(x_centre_d - hole_dx, y_centre_d + high / 2 + hole_dy, 0.0, gauge_t, angle=180 + angle,
+                       qty=gauge_num_dx_t)
+        hole_code.extend(code_tmp)
+
+        code_tmp = laa(x_centre_d - hole_dx, y_centre_d - high / 2 - hole_dy, 0.0, gauge_t, angle=180 - angle,
+                       qty=gauge_num_dx_t)
+        hole_code.extend(code_tmp)
+        code_tmp = laa(x_centre_d + hole_dx, y_centre_d - high / 2 - hole_dy, 0.0, gauge_t, angle=angle,
+                       qty=gauge_num_dx_t)
+        hole_code.extend(code_tmp)
+        # side +++ up --------------------------
+        side_code = []
+        side_tmp = loc(x_centre_d + side_dx + dx_tool, y_centre_u + high / 2 + side_dy + dy_tool)
+        side_tmp = side_tmp + 'T12C' + format(float(90 - angle), '0.2f') + '(REC X' + format(float(tool_length),
+                                                                                             '0.2f') + 'Y' + format(
+            float(tool_width), '0.2f') + ')'
+        side_code.append(side_tmp)
+        side_tmp = loc(x_centre_d - side_dx - dx_tool, y_centre_u + high / 2 + side_dy + dy_tool)
+        side_tmp = side_tmp + 'C' + format(float(90 + angle), '0.2f')
+        side_code.append(side_tmp)
+
+        side_tmp = loc(x_centre_d - side_dx - dx_tool, y_centre_u - high / 2 - side_dy - dy_tool)
+        side_tmp = side_tmp + 'C' + format(float(90 - angle), '0.2f')
+        side_code.append(side_tmp)
+        side_tmp = loc(x_centre_d + side_dx + dx_tool, y_centre_u - high / 2 - side_dy - dy_tool)
+        side_tmp = side_tmp + 'C' + format(float(90 + angle), '0.2f')
+        side_code.append(side_tmp)
+        # side +++ down --------------------------
+        side_tmp = loc(x_centre_d + side_dx + dx_tool, y_centre_d + high / 2 + side_dy + dy_tool)
+        side_tmp = side_tmp + 'C' + format(float(90 - angle), '0.2f')
+        side_code.append(side_tmp)
+        side_tmp = loc(x_centre_d - side_dx - dx_tool, y_centre_d + high / 2 + side_dy + dy_tool)
+        side_tmp = side_tmp + 'C' + format(float(90 + angle), '0.2f')
+        side_code.append(side_tmp)
+
+        side_tmp = loc(x_centre_d - side_dx - dx_tool, y_centre_d - high / 2 - side_dy - dy_tool)
+        side_tmp = side_tmp + 'C' + format(float(90 - angle), '0.2f')
+        side_code.append(side_tmp)
+        side_tmp = loc(x_centre_d + side_dx + dx_tool, y_centre_d - high / 2 - side_dy - dy_tool)
+        side_tmp = side_tmp + 'C' + format(float(90 + angle), '0.2f')
+        side_code.append(side_tmp)
+
+        # jj +++ up -------------
+        jj_code = []
+        j_num_dx, j_diff_dx = jj_num_dx(dx_axis - jj_dx, 0.5, jj_length, mm, tool_length)
+        jj_tmp = laa(x_centre_d + jj_dx, y_centre_u + high / 2 + jj_dy, -angle, j_diff_dx, -angle, j_num_dx)
+        jj_code.extend(jj_tmp)
+        jj_tmp = laa(x_centre_d - jj_dx, y_centre_u + high / 2 + jj_dy, 180 + angle, j_diff_dx, 180 + angle, j_num_dx)
+        jj_code.extend(jj_tmp)
+
+        jj_tmp = laa(x_centre_d - jj_dx, y_centre_u - high / 2 - jj_dy, 180 - angle, j_diff_dx, 180 - angle, j_num_dx)
+        jj_code.extend(jj_tmp)
+        jj_tmp = laa(x_centre_d + jj_dx, y_centre_u - high / 2 - jj_dy, angle, j_diff_dx, angle, j_num_dx)
+        jj_code.extend(jj_tmp)
+
+        # jj +++ down -------------
+        jj_tmp = laa(x_centre_d + jj_dx, y_centre_d + high / 2 + jj_dy, -angle, j_diff_dx, -angle, j_num_dx)
+        jj_code.extend(jj_tmp)
+        jj_tmp = laa(x_centre_d - jj_dx, y_centre_d + high / 2 + jj_dy, 180 + angle, j_diff_dx, 180 + angle, j_num_dx)
+        jj_code.extend(jj_tmp)
+
+        jj_tmp = laa(x_centre_d - jj_dx, y_centre_d - high / 2 - jj_dy, 180 - angle, j_diff_dx, 180 - angle, j_num_dx)
+        jj_code.extend(jj_tmp)
+        jj_tmp = laa(x_centre_d + jj_dx, y_centre_d - high / 2 - jj_dy, angle, j_diff_dx, angle, j_num_dx)
+        jj_code.extend(jj_tmp)
+
+        code.extend(hole_code)
+        code.extend(side_code)
+        code.extend(jj_code)
+        code_tmp = loc(x_centre_d + dx_axis, 100) + 'M03'  # *******************??????????????????????????????????????
+        code.append(code_tmp)
+        code_tmp = 'REP/DX' + format(float(part_width / 6), '0.2f')
+        code.append(code_tmp)
+        # 右-----------------------------------------------------------------------------------------------
+        hole_code = []
+        gauge_num_dx_t = gauge_num_dx(mm / 2 - hole_dx_s - dx_axis, gauge_t, jj_length, mm)
+        # hole ++++ up ------
+        code_tmp = laa(x_centre_d + mm / 2 - hole_dx_s, y_centre_u + hole_dy_s, 0.0, gauge_t, angle=180 - angle,
+                       qty=gauge_num_dx_t)
+        code_tmp = [code_tmp[0] + "T16(DIA X 6)", code_tmp[1]]
+        hole_code.extend(code_tmp)
+
+        code_tmp = laa(x_centre_d + mm / 2 - hole_dx_s, y_centre_u - hole_dy_s, 0.0, gauge_t, angle=180 + angle,
+                       qty=gauge_num_dx_t)
+        hole_code.extend(code_tmp)
+        # hole ++++ down ------
+        code_tmp = laa(x_centre_d + mm / 2 - hole_dx_s, y_centre_d + hole_dy_s, 0.0, gauge_t, angle=180 - angle,
+                       qty=gauge_num_dx_t)
+        code_tmp = [code_tmp[0] + "T16(DIA X 6)", code_tmp[1]]
+        hole_code.extend(code_tmp)
+
+        code_tmp = laa(x_centre_d + mm / 2 - hole_dx_s, y_centre_d - hole_dy_s, 0.0, gauge_t, angle=180 + angle,
+                       qty=gauge_num_dx_t)
+        hole_code.extend(code_tmp)
+
+        # side punch +++ up ------
+        side_code = []
+        side_tmp = loc(x_centre_d + mm / 2 + side_dx_s, y_centre_u + side_dy_s)
+        side_tmp = side_tmp + 'T12C' + format(float(90 - angle), '0.2f') + '(REC X' + format(float(tool_length),
+                                                                                             '0.2f') + 'Y' + format(
+            float(tool_width)) + ')'
+        side_code.append(side_tmp)
+        side_tmp = loc(x_centre_d + mm / 2 + side_dx_s, y_centre_u - side_dy_s)
+        side_tmp = side_tmp + 'T12C' + format(float(90 + angle), '0.2f') + '(REC X' + format(float(tool_length),
+                                                                                             '0.2f') + 'Y' + format(
+            float(tool_width)) + ')'
+        side_code.append(side_tmp)
+        # side punch +++ down ------
+        side_tmp = loc(x_centre_d + mm / 2 + side_dx_s, y_centre_d + side_dy_s)
+        side_tmp = side_tmp + 'T12C' + format(float(90 - angle), '0.2f') + '(REC X' + format(float(tool_length),
+                                                                                             '0.2f') + 'Y' + format(
+            float(tool_width)) + ')'
+        side_code.append(side_tmp)
+        side_tmp = loc(x_centre_d + mm / 2 + side_dx_s, y_centre_d - side_dy_s)
+        side_tmp = side_tmp + 'T12C' + format(float(90 + angle), '0.2f') + '(REC X' + format(float(tool_length),
+                                                                                             '0.2f') + 'Y' + format(
+            float(tool_width)) + ')'
+        side_code.append(side_tmp)
+
+        # jj punch +++ up --------
+        jj_code = []
+        # j_num_dx, j_diff_dx = jj_num_dx(x_centre_d - mm / 2 - jj_dx, 0.5, jj_length, mm, tool_length)
+        jj_tmp = laa(x_centre_d + mm / 2 - jj_dx_s, y_centre_u + jj_dy_s, 180 - angle, j_diff_dx, 180 - angle, j_num_dx)
+        jj_code.extend(jj_tmp)
+        jj_tmp = laa(x_centre_d + mm / 2 - jj_dx_s, y_centre_u - jj_dy_s, 180 + angle, j_diff_dx, 180 + angle, j_num_dx)
+        jj_code.extend(jj_tmp)
+        # jj punch +++ down --------
+        jj_tmp = laa(x_centre_d + mm / 2 - jj_dx_s, y_centre_d + jj_dy_s, 180 - angle, j_diff_dx, 180 - angle, j_num_dx)
+        jj_code.extend(jj_tmp)
+        jj_tmp = laa(x_centre_d + mm / 2 - jj_dx_s, y_centre_d - jj_dy_s, 180 + angle, j_diff_dx, 180 + angle, j_num_dx)
+        jj_code.extend(jj_tmp)
+
+        code.extend(hole_code)
+        code.extend(side_code)
+        code.extend(jj_code)
+
+        code_tmp = 'C0.M03'
+        code.append(code_tmp)
+        code_tmp = 'X' + format(float(part_width), '0.2f') + 'Y1280M03'
+        code.append(code_tmp)
+        code_tmp = 'FRM/X1250'
+        code.append(code_tmp)
+        code_tmp = 'X1250Y1280M30'
+        code.append(code_tmp)
+
+    elif 3750 < mm <= 5000:
+        hole_code = []
+        dx_axis = mm / 4
+        gauge_num_dx_t = gauge_num_dx(x_centre_d - hole_dx_s - dx_axis, gauge_t, jj_length, mm)
+        # 左-----------------------------------------------------------------------------------------------
+        # hole ++++ up ------
+        code_tmp = laa(x_centre_d - mm / 2 + hole_dx_s, y_centre_u + hole_dy_s, 0.0, gauge_t, angle=angle,
+                       qty=gauge_num_dx_t)
+        code_tmp = [code_tmp[0] + "T16(DIA X 6)", code_tmp[1]]
+        hole_code.extend(code_tmp)
+
+        code_tmp = laa(x_centre_d - mm / 2 + hole_dx_s, y_centre_u - hole_dy_s, 0.0, gauge_t, angle=-angle,
+                       qty=gauge_num_dx_t)
+        hole_code.extend(code_tmp)
+        # hole ++++ down ------
+        code_tmp = laa(x_centre_d - mm / 2 + hole_dx_s, y_centre_d + hole_dy_s, 0.0, gauge_t, angle=angle,
+                       qty=gauge_num_dx_t)
+        code_tmp = [code_tmp[0] + "T16(DIA X 6)", code_tmp[1]]
+        hole_code.extend(code_tmp)
+
+        code_tmp = laa(x_centre_d - mm / 2 + hole_dx_s, y_centre_d - hole_dy_s, 0.0, gauge_t, angle=-angle,
+                       qty=gauge_num_dx_t)
+        hole_code.extend(code_tmp)
+
+        # side punch +++ up ------
+        side_code = []
+        side_tmp = loc(x_centre_d - mm / 2 - side_dx_s, y_centre_u + side_dy_s)
+        side_tmp = side_tmp + 'T12C' + format(float(90 + angle), '0.2f') + '(REC X' + format(float(tool_length),
+                                                                                             '0.2f') + 'Y' + format(
+            float(tool_width)) + ')'
+        side_code.append(side_tmp)
+        side_tmp = loc(x_centre_d - mm / 2 - side_dx_s, y_centre_u - side_dy_s)
+        side_tmp = side_tmp + 'T12C' + format(float(90 - angle), '0.2f') + '(REC X' + format(float(tool_length),
+                                                                                             '0.2f') + 'Y' + format(
+            float(tool_width)) + ')'
+        side_code.append(side_tmp)
+        # side punch +++ down ------
+        side_tmp = loc(x_centre_d - mm / 2 - side_dx_s, y_centre_d + side_dy_s)
+        side_tmp = side_tmp + 'T12C' + format(float(90 + angle), '0.2f') + '(REC X' + format(float(tool_length),
+                                                                                             '0.2f') + 'Y' + format(
+            float(tool_width)) + ')'
+        side_code.append(side_tmp)
+        side_tmp = loc(x_centre_d - mm / 2 - side_dx_s, y_centre_d - side_dy_s)
+        side_tmp = side_tmp + 'T12C' + format(float(90 - angle), '0.2f') + '(REC X' + format(float(tool_length),
+                                                                                             '0.2f') + 'Y' + format(
+            float(tool_width)) + ')'
+        side_code.append(side_tmp)
+
+        # jj punch +++ up --------
+        jj_code = []
+        j_num_dx, j_diff_dx = jj_num_dx(mm / 2 - dx_axis - jj_dx, 0.5, jj_length, mm, tool_length)
+        jj_tmp = laa(x_centre_d - mm / 2 + jj_dx_s, y_centre_u + jj_dy_s, angle, j_diff_dx, angle, j_num_dx)
+        jj_code.extend(jj_tmp)
+        jj_tmp = laa(x_centre_d - mm / 2 + jj_dx_s, y_centre_u - jj_dy_s, -angle, j_diff_dx, -angle, j_num_dx)
+        jj_code.extend(jj_tmp)
+        # jj punch +++ down --------
+        jj_tmp = laa(x_centre_d - mm / 2 + jj_dx_s, y_centre_d + jj_dy_s, angle, j_diff_dx, angle, j_num_dx)
+        jj_code.extend(jj_tmp)
+        jj_tmp = laa(x_centre_d - mm / 2 + jj_dx_s, y_centre_d - jj_dy_s, -angle, j_diff_dx, -angle, j_num_dx)
+        jj_code.extend(jj_tmp)
+
+        code_tmp = 'O' + str(mm)
+        code.append(code_tmp)
+        code_tmp = 'X' + format(float(1250), '0.0f') + 'Y' + format(
+            float(1280)) + 'M02'
+        code.append(code_tmp)
+        code.extend(hole_code)
+        code.extend(side_code)
+        code.extend(jj_code)
+        # *******************??????????????????????????????????????
+        code_tmp = loc(x_centre_d - dx_axis, 100) + 'M03'
+        code.append(code_tmp)
+        code_tmp = 'REP/DX' + format(float(part_width / 8), '0.2f')
+        code.append(code_tmp)
+
+        # 中---左--------------------------------------------------------------------------------------------
+        # hole +++ up -----------------
+        hole_code = []
+        gauge_num_dx_t = gauge_num_dx(dx_axis, gauge_t, jj_length, mm)
+        code_tmp = laa(x_centre_d - hole_dx, y_centre_u + high / 2 + hole_dy, 0.0, gauge_t, angle=180 + angle,
+                       qty=gauge_num_dx_t)
+        code_tmp = [code_tmp[0] + "T16(DIA X 6)", code_tmp[1]]  # ???????????????
+        hole_code.extend(code_tmp)
+
+        code_tmp = laa(x_centre_d - hole_dx, y_centre_u - high / 2 - hole_dy, 0.0, gauge_t, angle=180 - angle,
+                       qty=gauge_num_dx_t)
+        hole_code.extend(code_tmp)
+        # hole +++ down ---------------
+        code_tmp = laa(x_centre_d - hole_dx, y_centre_d + high / 2 + hole_dy, 0.0, gauge_t, angle=180 + angle,
+                       qty=gauge_num_dx_t)
+        code_tmp = [code_tmp[0] + "T16(DIA X 6)", code_tmp[1]]  # ???????????????
+        hole_code.extend(code_tmp)
+
+        code_tmp = laa(x_centre_d - hole_dx, y_centre_d - high / 2 - hole_dy, 0.0, gauge_t, angle=180 - angle,
+                       qty=gauge_num_dx_t)
+        hole_code.extend(code_tmp)
+        # side +++ up --------------------------
+        side_code = []
+        side_tmp = loc(x_centre_d - side_dx - dx_tool, y_centre_u + high / 2 + side_dy + dy_tool)
+        side_tmp = side_tmp + 'T12C' + format(float(90 + angle), '0.2f') + '(REC X' + format(float(tool_length),
+                                                                                             '0.2f') + 'Y' + format(
+            float(tool_width), '0.2f') + ')'
+        side_code.append(side_tmp)
+
+        side_tmp = loc(x_centre_d - side_dx - dx_tool, y_centre_u - high / 2 - side_dy - dy_tool)
+        side_tmp = side_tmp + 'C' + format(float(90 - angle), '0.2f')
+        side_code.append(side_tmp)
+        # side +++ down --------------------------
+        side_tmp = loc(x_centre_d - side_dx - dx_tool, y_centre_d + high / 2 + side_dy + dy_tool)
+        side_tmp = side_tmp + 'C' + format(float(90 + angle), '0.2f')
+        side_code.append(side_tmp)
+        side_tmp = loc(x_centre_d - side_dx - dx_tool, y_centre_d - high / 2 - side_dy - dy_tool)
+        side_tmp = side_tmp + 'C' + format(float(90 - angle), '0.2f')
+        side_code.append(side_tmp)
+
+        # jj +++ up -------------
+        jj_code = []
+        j_num_dx, j_diff_dx = jj_num_dx(dx_axis - jj_dx, 0.5, jj_length, mm, tool_length)
+        jj_tmp = laa(x_centre_d - jj_dx, y_centre_u + high / 2 + jj_dy, 180 + angle, j_diff_dx, 180 + angle, j_num_dx)
+        jj_code.extend(jj_tmp)
+        jj_tmp = laa(x_centre_d - jj_dx, y_centre_u - high / 2 - jj_dy, 180 - angle, j_diff_dx, 180 - angle, j_num_dx)
+        jj_code.extend(jj_tmp)
+
+        # jj +++ down -------------
+        jj_tmp = laa(x_centre_d - jj_dx, y_centre_d + high / 2 + jj_dy, 180 + angle, j_diff_dx, 180 + angle, j_num_dx)
+        jj_code.extend(jj_tmp)
+        jj_tmp = laa(x_centre_d - jj_dx, y_centre_d - high / 2 - jj_dy, 180 - angle, j_diff_dx, 180 - angle, j_num_dx)
+        jj_code.extend(jj_tmp)
+
+        code.extend(hole_code)
+        code.extend(side_code)
+        code.extend(jj_code)
+        code_tmp = loc(x_centre_d, 100) + 'M03'  # *******************??????????????????????????????????????
+        code.append(code_tmp)
+        code_tmp = 'REP/DX' + format(float(part_width / 8), '0.2f')
+        code.append(code_tmp)
+
+        # 中===右 ===========================================
+        # hole +++ up ---------------
+        hole_code = []
+        code_tmp = laa(x_centre_d + hole_dx, y_centre_u + high / 2 + hole_dy, 0.0, gauge_t, angle=-angle,
+                       qty=gauge_num_dx_t)
+        code_tmp = [code_tmp[0] + "T16(DIA X 6)", code_tmp[1]]  # ???????????????
+        hole_code.extend(code_tmp)
+        code_tmp = laa(x_centre_d + hole_dx, y_centre_u - high / 2 - hole_dy, 0.0, gauge_t, angle=angle,
+                       qty=gauge_num_dx_t)
+        hole_code.extend(code_tmp)
+        # hole +++ down -------------
+        code_tmp = laa(x_centre_d + hole_dx, y_centre_d + high / 2 + hole_dy, 0.0, gauge_t, angle=-angle,
+                       qty=gauge_num_dx_t)
+        hole_code.extend(code_tmp)
+        code_tmp = laa(x_centre_d + hole_dx, y_centre_d - high / 2 - hole_dy, 0.0, gauge_t, angle=angle,
+                       qty=gauge_num_dx_t)
+        hole_code.extend(code_tmp)
+        # side +++ up ---------------
+        side_code = []
+        side_tmp = loc(x_centre_d + side_dx + dx_tool, y_centre_u + high / 2 + side_dy + dy_tool)
+        side_tmp = side_tmp + 'T12C' + format(float(90 - angle), '0.2f') + '(REC X' + format(float(tool_length),
+                                                                                             '0.2f') + 'Y' + format(
+            float(tool_width), '0.2f') + ')'
+        side_code.append(side_tmp)
+        side_tmp = loc(x_centre_d + side_dx + dx_tool, y_centre_u - high / 2 - side_dy - dy_tool)
+        side_tmp = side_tmp + 'C' + format(float(90 + angle), '0.2f')
+        side_code.append(side_tmp)
+        # side +++ down -------------
+        side_tmp = loc(x_centre_d + side_dx + dx_tool, y_centre_d + high / 2 + side_dy + dy_tool)
+        side_tmp = side_tmp + 'C' + format(float(90 - angle), '0.2f')
+        side_code.append(side_tmp)
+        side_tmp = loc(x_centre_d + side_dx + dx_tool, y_centre_d - high / 2 - side_dy - dy_tool)
+        side_tmp = side_tmp + 'C' + format(float(90 + angle), '0.2f')
+        side_code.append(side_tmp)
+
+        # jj +++ up -----------------
+        jj_code = []
+
+        jj_tmp = laa(x_centre_d + jj_dx, y_centre_u + high / 2 + jj_dy, -angle, j_diff_dx, -angle, j_num_dx)
+        jj_code.extend(jj_tmp)
+        jj_tmp = laa(x_centre_d + jj_dx, y_centre_u - high / 2 - jj_dy, angle, j_diff_dx, angle, j_num_dx)
+        jj_code.extend(jj_tmp)
+        # jj +++ down ---------------
+        jj_tmp = laa(x_centre_d + jj_dx, y_centre_d + high / 2 + jj_dy, -angle, j_diff_dx, -angle, j_num_dx)
+        jj_code.extend(jj_tmp)
+        jj_tmp = laa(x_centre_d + jj_dx, y_centre_d - high / 2 - jj_dy, angle, j_diff_dx, angle, j_num_dx)
+        jj_code.extend(jj_tmp)
+
+        # adjust move clip -------------
+        code.extend(hole_code)
+        code.extend(side_code)
+        code.extend(jj_code)
+        code_tmp = loc(x_centre_d + dx_axis, 100) + 'M03'  # *******************??????????????????????????????????????
+        code.append(code_tmp)
+        code_tmp = 'REP/DX' + format(float(part_width / 8), '0.2f')
+        code.append(code_tmp)
+
+        # 右-----------------------------------------------------------------------------------------------
+        hole_code = []
+        gauge_num_dx_t = gauge_num_dx(mm / 2 - hole_dx_s - dx_axis, gauge_t, jj_length, mm)
+        # hole ++++ up ------
+        code_tmp = laa(x_centre_d + mm / 2 - hole_dx_s, y_centre_u + hole_dy_s, 0.0, gauge_t, angle=180 - angle,
+                       qty=gauge_num_dx_t)
+        code_tmp = [code_tmp[0] + "T16(DIA X 6)", code_tmp[1]]
+        hole_code.extend(code_tmp)
+
+        code_tmp = laa(x_centre_d + mm / 2 - hole_dx_s, y_centre_u - hole_dy_s, 0.0, gauge_t, angle=180 + angle,
+                       qty=gauge_num_dx_t)
+        hole_code.extend(code_tmp)
+        # hole ++++ down ------
+        code_tmp = laa(x_centre_d + mm / 2 - hole_dx_s, y_centre_d + hole_dy_s, 0.0, gauge_t, angle=180 - angle,
+                       qty=gauge_num_dx_t)
+        code_tmp = [code_tmp[0] + "T16(DIA X 6)", code_tmp[1]]
+        hole_code.extend(code_tmp)
+
+        code_tmp = laa(x_centre_d + mm / 2 - hole_dx_s, y_centre_d - hole_dy_s, 0.0, gauge_t, angle=180 + angle,
+                       qty=gauge_num_dx_t)
+        hole_code.extend(code_tmp)
+
+        # side punch +++ up ------
+        side_code = []
+        side_tmp = loc(x_centre_d + mm / 2 + side_dx_s, y_centre_u + side_dy_s)
+        side_tmp = side_tmp + 'T12C' + format(float(90 - angle), '0.2f') + '(REC X' + format(float(tool_length),
+                                                                                             '0.2f') + 'Y' + format(
+            float(tool_width)) + ')'
+        side_code.append(side_tmp)
+        side_tmp = loc(x_centre_d + mm / 2 + side_dx_s, y_centre_u - side_dy_s)
+        side_tmp = side_tmp + 'T12C' + format(float(90 + angle), '0.2f') + '(REC X' + format(float(tool_length),
+                                                                                             '0.2f') + 'Y' + format(
+            float(tool_width)) + ')'
+        side_code.append(side_tmp)
+        # side punch +++ down ------
+        side_tmp = loc(x_centre_d + mm / 2 + side_dx_s, y_centre_d + side_dy_s)
+        side_tmp = side_tmp + 'T12C' + format(float(90 - angle), '0.2f') + '(REC X' + format(float(tool_length),
+                                                                                             '0.2f') + 'Y' + format(
+            float(tool_width)) + ')'
+        side_code.append(side_tmp)
+        side_tmp = loc(x_centre_d + mm / 2 + side_dx_s, y_centre_d - side_dy_s)
+        side_tmp = side_tmp + 'T12C' + format(float(90 + angle), '0.2f') + '(REC X' + format(float(tool_length),
+                                                                                             '0.2f') + 'Y' + format(
+            float(tool_width)) + ')'
+        side_code.append(side_tmp)
+
+        # jj punch +++ up --------
+        jj_code = []
+        # j_num_dx, j_diff_dx = jj_num_dx(x_centre_d - mm / 2 - jj_dx, 0.5, jj_length, mm, tool_length)
+        jj_tmp = laa(x_centre_d + mm / 2 - jj_dx_s, y_centre_u + jj_dy_s, 180 - angle, j_diff_dx, 180 - angle, j_num_dx)
+        jj_code.extend(jj_tmp)
+        jj_tmp = laa(x_centre_d + mm / 2 - jj_dx_s, y_centre_u - jj_dy_s, 180 + angle, j_diff_dx, 180 + angle, j_num_dx)
+        jj_code.extend(jj_tmp)
+        # jj punch +++ down --------
+        jj_tmp = laa(x_centre_d + mm / 2 - jj_dx_s, y_centre_d + jj_dy_s, 180 - angle, j_diff_dx, 180 - angle, j_num_dx)
+        jj_code.extend(jj_tmp)
+        jj_tmp = laa(x_centre_d + mm / 2 - jj_dx_s, y_centre_d - jj_dy_s, 180 + angle, j_diff_dx, 180 + angle, j_num_dx)
+        jj_code.extend(jj_tmp)
+
+        code.extend(hole_code)
+        code.extend(side_code)
+        code.extend(jj_code)
+
+        code_tmp = 'C0.M03'
+        code.append(code_tmp)
+        code_tmp = 'X' + format(float(part_width), '0.2f') + 'Y1280M03'
+        code.append(code_tmp)
+        code_tmp = 'FRM/X1250'
+        code.append(code_tmp)
+        code_tmp = 'X1250Y1280M30'
+        code.append(code_tmp)
+    else:
+        print('These Length Parts haven"t been programmed!')
 
     return code
 
@@ -463,7 +1009,9 @@ if __name__ == '__main__':
                1830,
                1870, 1950, 1990, 2005, 2045, 2050, 2100, 2150, 2180, 2200, 2235, 2260, 2310, 2350, 2400, 2450, 1490]
     mm_list_2500 = [2530, 2550, 2600, 2630, 2690, 2750, 2760, 2950, 3285, 3580, 3745, 3805, 3945, 4145, 4925]
-    for mm in mm_list:
+
+    mm_list_test = [2600]
+    for mm in mm_list_test:
         high = 212
         tool_width = 5.08
         tool_length = 35.56
