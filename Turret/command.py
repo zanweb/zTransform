@@ -928,7 +928,7 @@ def g810974(mm, high, jj_length, tool_width, tool_length, gauge_number=None, gau
         jj_tmp = laa(x_centre_d + jj_dx, y_centre_u + high / 2 + jj_dy, -angle, j_diff_dx, -angle, j_num_dx)
         jj_tmp = [jj_tmp[0] + 'T12C' + format(float(-angle), '0.2f') + '(REC X' + format(float(tool_length),
                                                                                      '0.2f') + 'Y' + format(
-            float(tool_width), '0.2f') + ')', jj_tmp[1]]
+            float(tool_width), '0.2f') + ')', jj_tmp[1]] + ''
         jj_code.extend(jj_tmp)
         jj_tmp = laa(x_centre_d + jj_dx, y_centre_u - high / 2 - jj_dy, angle, j_diff_dx, angle, j_num_dx)
         jj_code.extend(jj_tmp)
