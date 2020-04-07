@@ -593,12 +593,12 @@ def g810974(mm, high, jj_length, tool_width, tool_length, gauge_number=None, gau
         # side_tmp = loc(x_centre_d - side_dx - dx_tool, y_centre_u + high / 2 + side_dy + dy_tool)
         # side_tmp = side_tmp + 'C' + format(float(90 + angle), '0.2f')
         # side_code.append(side_tmp)
-        side_tmp = loc(x_centre_d, y_centre_u + high / 2 + tool_length/2)
+        side_tmp = loc(x_centre_d, y_centre_u + high / 2 + tool_length / 2)
         side_tmp = side_tmp + 'T12C' + format(float(90), '0.2f') + '(REC X' + format(float(tool_length),
-                                                                                             '0.2f') + 'Y' + format(
+                                                                                     '0.2f') + 'Y' + format(
             float(tool_width), '0.2f') + ')'
         side_code.append(side_tmp)
-        side_tmp = loc(x_centre_d, y_centre_u - high / 2 - tool_length/2)
+        side_tmp = loc(x_centre_d, y_centre_u - high / 2 - tool_length / 2)
         side_tmp = side_tmp + 'C' + format(float(90), '0.2f')
         side_code.append(side_tmp)
         # side_tmp = loc(x_centre_d - side_dx - dx_tool, y_centre_u - high / 2 - side_dy - dy_tool)
@@ -609,7 +609,7 @@ def g810974(mm, high, jj_length, tool_width, tool_length, gauge_number=None, gau
         # side_code.append(side_tmp)
 
         # side +++ down --------------------------
-        side_tmp = loc(x_centre_d, y_centre_d + tool_length/2)
+        side_tmp = loc(x_centre_d, y_centre_d + tool_length / 2)
         side_tmp = side_tmp + 'C' + format(float(90), '0.2f')
         side_code.append(side_tmp)
         # side_tmp = loc(x_centre_d + side_dx + dx_tool, y_centre_d + high / 2 + side_dy + dy_tool)
@@ -618,7 +618,7 @@ def g810974(mm, high, jj_length, tool_width, tool_length, gauge_number=None, gau
         # side_tmp = loc(x_centre_d - side_dx - dx_tool, y_centre_d + high / 2 + side_dy + dy_tool)
         # side_tmp = side_tmp + 'C' + format(float(90 + angle), '0.2f')
         # side_code.append(side_tmp)
-        side_tmp = loc(x_centre_d, y_centre_d - tool_length/2)
+        side_tmp = loc(x_centre_d, y_centre_d - tool_length / 2)
         side_tmp = side_tmp + 'C' + format(float(90), '0.2f')
         side_code.append(side_tmp)
 
@@ -725,7 +725,7 @@ def g810974(mm, high, jj_length, tool_width, tool_length, gauge_number=None, gau
 
         code_tmp = 'C0.M03'
         code.append(code_tmp)
-        code_tmp = 'X' + format(float(part_width/3*2+1250), '0.2f') + 'Y1280M03'
+        code_tmp = 'X' + format(float(part_width / 3 * 2 + 1250), '0.2f') + 'Y1280M03'
         code.append(code_tmp)
         code_tmp = 'FRM/X1250'
         code.append(code_tmp)
@@ -831,9 +831,9 @@ def g810974(mm, high, jj_length, tool_width, tool_length, gauge_number=None, gau
         hole_code.extend(code_tmp)
         # side +++ up --------------------------
         side_code = []
-        side_tmp = loc(x_centre_d, y_centre_u + high / 2 + tool_length/2)
+        side_tmp = loc(x_centre_d, y_centre_u + high / 2 + tool_length / 2)
         side_tmp = side_tmp + 'T12C' + format(float(90), '0.2f') + '(REC X' + format(float(tool_length),
-                                                                                             '0.2f') + 'Y' + format(
+                                                                                     '0.2f') + 'Y' + format(
             float(tool_width), '0.2f') + ')'
         side_code.append(side_tmp)
         # side_tmp = loc(x_centre_d - side_dx - dx_tool, y_centre_u + high / 2 + side_dy + dy_tool)
@@ -845,12 +845,12 @@ def g810974(mm, high, jj_length, tool_width, tool_length, gauge_number=None, gau
         # side_tmp = side_tmp + 'C' + format(float(90 - angle), '0.2f')
         # side_code.append(side_tmp)
 
-        side_tmp = loc(x_centre_d, y_centre_u - high / 2 - tool_length/2)
+        side_tmp = loc(x_centre_d, y_centre_u - high / 2 - tool_length / 2)
         side_tmp = side_tmp + 'C' + format(float(90), '0.2f')
         side_code.append(side_tmp)
 
         # side +++ down --------------------------
-        side_tmp = loc(x_centre_d, y_centre_d - high / 2 - tool_length/2)
+        side_tmp = loc(x_centre_d, y_centre_d - high / 2 - tool_length / 2)
         side_tmp = side_tmp + 'C' + format(float(90), '0.2f')
         side_code.append(side_tmp)
         # side_tmp = loc(x_centre_d - side_dx - dx_tool, y_centre_d + high / 2 + side_dy + dy_tool)
@@ -859,7 +859,7 @@ def g810974(mm, high, jj_length, tool_width, tool_length, gauge_number=None, gau
         # side_tmp = loc(x_centre_d - side_dx - dx_tool, y_centre_d - high / 2 - side_dy - dy_tool)
         # side_tmp = side_tmp + 'C' + format(float(90 - angle), '0.2f')
         # side_code.append(side_tmp)
-        side_tmp = loc(x_centre_d, y_centre_d - high / 2 - tool_length/2)
+        side_tmp = loc(x_centre_d, y_centre_d - high / 2 - tool_length / 2)
         side_tmp = side_tmp + 'C' + format(float(90), '0.2f')
         side_code.append(side_tmp)
 
@@ -922,11 +922,12 @@ def g810974(mm, high, jj_length, tool_width, tool_length, gauge_number=None, gau
         # side_tmp = side_tmp + 'C' + format(float(90 + angle), '0.2f')
         # side_code.append(side_tmp)
 
-
         # jj +++ up -----------------
         jj_code = []
-
         jj_tmp = laa(x_centre_d + jj_dx, y_centre_u + high / 2 + jj_dy, -angle, j_diff_dx, -angle, j_num_dx)
+        jj_tmp = [jj_tmp[0] + 'T12C' + format(float(-angle), '0.2f') + '(REC X' + format(float(tool_length),
+                                                                                     '0.2f') + 'Y' + format(
+            float(tool_width), '0.2f') + ')', jj_tmp[1]]
         jj_code.extend(jj_tmp)
         jj_tmp = laa(x_centre_d + jj_dx, y_centre_u - high / 2 - jj_dy, angle, j_diff_dx, angle, j_num_dx)
         jj_code.extend(jj_tmp)
@@ -1010,7 +1011,7 @@ def g810974(mm, high, jj_length, tool_width, tool_length, gauge_number=None, gau
 
         code_tmp = 'C0.M03'
         code.append(code_tmp)
-        code_tmp = 'X' + format(float(part_width/4*3+1250), '0.2f') + 'Y1280M03'
+        code_tmp = 'X' + format(float(part_width / 4 * 3 + 1250), '0.2f') + 'Y1280M03'
         code.append(code_tmp)
         code_tmp = 'FRM/X1250'
         code.append(code_tmp)
@@ -1043,7 +1044,7 @@ if __name__ == '__main__':
                1870, 1950, 1990, 2005, 2045, 2050, 2100, 2150, 2180, 2200, 2235, 2260, 2310, 2350, 2400, 2450, 1490]
     mm_list_2500 = [2530, 2550, 2600, 2630, 2690, 2750, 2760, 2950, 3285, 3580, 3745, 3805, 3945, 4145, 4925]
 
-    mm_list_test = [4000]
+    mm_list_test = [2600, 4000]
     for mm in mm_list_test:
         high = 212
         tool_width = 5.08
