@@ -545,7 +545,7 @@ def g810974(mm, high, jj_length, tool_width, tool_length, gauge_number=None, gau
         code.extend(side_code)
         code.extend(jj_code)
         # *******************??????????????????????????????????????
-        code_tmp = loc(x_centre_d - dx_axis, 100) + 'M03'
+        code_tmp = loc(1250, 100) + 'M03'
         code.append(code_tmp)
         code_tmp = 'REP/DX' + format(float(part_width / 3), '0.2f')
         code.append(code_tmp)
@@ -656,7 +656,7 @@ def g810974(mm, high, jj_length, tool_width, tool_length, gauge_number=None, gau
         code.extend(hole_code)
         code.extend(side_code)
         code.extend(jj_code)
-        code_tmp = loc(x_centre_d + dx_axis, 100) + 'M03'  # *******************??????????????????????????????????????
+        code_tmp = loc(1250 + part_width / 3, 100) + 'M03'  # *******************??????????????????????????????????????
         code.append(code_tmp)
         code_tmp = 'REP/DX' + format(float(part_width / 3), '0.2f')
         code.append(code_tmp)
@@ -802,7 +802,7 @@ def g810974(mm, high, jj_length, tool_width, tool_length, gauge_number=None, gau
         code.extend(side_code)
         code.extend(jj_code)
         # *******************??????????????????????????????????????
-        code_tmp = loc(x_centre_d - dx_axis, 100) + 'M03'
+        code_tmp = loc(1250, 100) + 'M03'
         code.append(code_tmp)
         code_tmp = 'REP/DX' + format(float(part_width / 4), '0.2f')
         code.append(code_tmp)
@@ -880,7 +880,7 @@ def g810974(mm, high, jj_length, tool_width, tool_length, gauge_number=None, gau
         code.extend(hole_code)
         code.extend(side_code)
         code.extend(jj_code)
-        code_tmp = loc(x_centre_d, 100) + 'M03'  # *******************??????????????????????????????????????
+        code_tmp = loc(1250 + part_width / 4, 100) + 'M03'  # *******************??????????????????????????????????????
         code.append(code_tmp)
         code_tmp = 'REP/DX' + format(float(part_width / 4), '0.2f')
         code.append(code_tmp)
@@ -927,7 +927,7 @@ def g810974(mm, high, jj_length, tool_width, tool_length, gauge_number=None, gau
 
         jj_tmp = laa(x_centre_d + jj_dx, y_centre_u + high / 2 + jj_dy, -angle, j_diff_dx, -angle, j_num_dx)
         jj_tmp = [jj_tmp[0] + 'T12C' + format(float(-angle), '0.2f') + '(REC X' + format(float(tool_length),
-                                                                                     '0.2f') + 'Y' + format(
+                                                                                         '0.2f') + 'Y' + format(
             float(tool_width), '0.2f') + ')', jj_tmp[1]]
         jj_code.extend(jj_tmp)
         jj_tmp = laa(x_centre_d + jj_dx, y_centre_u - high / 2 - jj_dy, angle, j_diff_dx, angle, j_num_dx)
@@ -942,7 +942,7 @@ def g810974(mm, high, jj_length, tool_width, tool_length, gauge_number=None, gau
         code.extend(hole_code)
         code.extend(side_code)
         code.extend(jj_code)
-        code_tmp = loc(x_centre_d + dx_axis, 100) + 'M03'  # *******************??????????????????????????????????????
+        code_tmp = loc(1250 + part_width / 2, 100) + 'M03'  # *******************??????????????????????????????????????
         code.append(code_tmp)
         code_tmp = 'REP/DX' + format(float(part_width / 4), '0.2f')
         code.append(code_tmp)
