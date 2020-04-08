@@ -553,7 +553,7 @@ def g810974(mm, high, jj_length, tool_width, tool_length, gauge_number=None, gau
         # 中-----------------------------------------------------------------------------------------------
         # hole +++ up -----------------
         hole_code = []
-        gauge_num_dx_t = gauge_num_dx(dx_axis, gauge_t, jj_length, mm)
+        gauge_num_dx_t = gauge_num_dx(dx_axis - hole_dx, gauge_t, jj_length, mm)
         code_tmp = laa(x_centre_d + hole_dx, y_centre_u + high / 2 + hole_dy, 0.0, gauge_t, angle=-angle,
                        qty=gauge_num_dx_t)
         code_tmp = [code_tmp[0] + "T16(DIA X 6)", code_tmp[1]]  # ???????????????
@@ -811,7 +811,7 @@ def g810974(mm, high, jj_length, tool_width, tool_length, gauge_number=None, gau
 
         # hole +++ up -----------------
         hole_code = []
-        gauge_num_dx_t = gauge_num_dx(dx_axis, gauge_t, jj_length, mm)
+        gauge_num_dx_t = gauge_num_dx(dx_axis-hole_dx, gauge_t, jj_length, mm)
         code_tmp = laa(x_centre_d - hole_dx, y_centre_u + high / 2 + hole_dy, 0.0, gauge_t, angle=180 + angle,
                        qty=gauge_num_dx_t)
         code_tmp = [code_tmp[0] + "T16(DIA X 6)", code_tmp[1]]  # ???????????????
@@ -1045,7 +1045,7 @@ if __name__ == '__main__':
                1870, 1950, 1990, 2005, 2045, 2050, 2100, 2150, 2180, 2200, 2235, 2260, 2310, 2350, 2400, 2450, 1490]
     mm_list_2500 = [2530, 2550, 2600, 2630, 2690, 2750, 2760, 2950, 3285, 3580, 3745, 3805, 3945, 4145, 4925]
 
-    mm_list_test = [2600, 4000]
+    mm_list_test = [2600, 2800, 4000]
     for mm in mm_list_test:
         high = 212
         tool_width = 5.08
