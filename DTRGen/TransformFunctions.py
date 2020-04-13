@@ -34,8 +34,8 @@ def gen_half_cut_list(cut_list):
 
 
 def core_calculate_for_half_cut(raw_group):
-    normal = []             # 普通件
-    half_cut_long = []      # 长件
+    normal = []             # 普通件 >=1500
+    half_cut_long = []      # 长件 >=1000
     half_cut_short = []     # 短件
     # 按长度分
     for raw in raw_group:
