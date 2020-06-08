@@ -11,7 +11,7 @@ JJ_SHORT = 33
 CLIP_MARGE = 70
 PART_MARGE = 10
 UP_MARGE = 20
-LEFT_MARGE = 20
+LEFT_MARGE = 0
 RIGHT_MARGE = 20
 
 
@@ -386,6 +386,7 @@ def g810974(mm, high, jj_length, tool_width, tool_length, gauge_number=None, gau
         code.extend(jj_code)
         code_tmp = loc(x_centre_d, 100) + 'M03'  # *******************??????????????????????????????????????
         code.append(code_tmp)
+        # code_tmp = 'REP/DX' + format(float(part_width - 1250), '0.2f')
         code_tmp = 'REP/DX' + format(float(part_width - 1250), '0.2f')
         code.append(code_tmp)
 
@@ -1047,6 +1048,7 @@ if __name__ == '__main__':
     mm_list_test_t = [2600, 2800, 3000, 3200, 3400, 3600, 3800, 4000, 4200, 4400, 4600, 4800, 5000]
     mm_list_test = [i for i in range(470, 5000) if i % 10 is 0]
     print(mm_list_test)
+    mm_lisst_test = [2190]
     for mm in mm_list_test:
         high = 212
         tool_width = 5.08

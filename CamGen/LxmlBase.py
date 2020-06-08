@@ -1,10 +1,9 @@
-import re
 from itertools import groupby
 from operator import attrgetter
 
 from PyQt5.QtWidgets import QMessageBox
 from lxml import etree
-from DTRGen.TransformFunctions import nc_file_header_profile
+from LysaghtPurlin.TransformFunctions import nc_file_header_profile
 
 
 class Head:
@@ -65,6 +64,9 @@ class XmlGen:
         else:
             for single_hole in o_holes:
                 if single_hole.diameter == 8:
+                    self.up_to_down = False
+                    break
+                if single_hole.diameter == 14:
                     self.up_to_down = False
                     break
 

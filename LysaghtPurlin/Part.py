@@ -1,8 +1,5 @@
 __author__ = "zanweb <zanweb@163.com>"
 
-import os
-import re
-
 import math, numpy
 # from operator import attrgetter
 import operator
@@ -10,7 +7,7 @@ from itertools import groupby, combinations
 from operator import attrgetter
 
 # from DTRGen.TransformFunctions import get_lysaght_real_dia
-from DTRGen import TransformFunctions
+from LysaghtPurlin import TransformFunctions
 from DTRGen.Part import Part as DPart, Parts as DParts
 # from zBase.base import String, Integer, Float
 # from zBase.base import String, Integer, Float
@@ -534,8 +531,11 @@ class Part(object):
             elif dtr_hole.group_type == 'single hole':  # 单孔------------------------------
                 if group_y_r == CENTER_N:
                     group_y = - group_y
+                # tool_num = TransformFunctions.get_dtr_tool_id(
+                #     tool_list, dtr_hole.dia, dtr_hole.gauge, group_y)
                 tool_num = TransformFunctions.get_dtr_tool_id(
                     tool_list, dtr_hole.dia, dtr_hole.gauge, group_y)
+
                 if tool_num > 0:
                     part_item = DPart(part_name=self.part_no, tool_number=tool_num,
                                       x_offset=dtr_hole.x / MM_INCH,
@@ -588,8 +588,9 @@ class Part(object):
         undefinde_holes = []
         part_list = DParts()
         for hole_single in self.holes:
-            tool_num = TransformFunctions.get_dtr_single_tool_id(tool_list, hole_single.dia,
-                                                                 hole_single.y / abs(hole_single.y))
+            # tool_num = TransformFunctions.get_dtr_single_tool_id(tool_list, hole_single.dia,
+            #                                                      hole_single.y / abs(hole_single.y))
+            tool_num = TransformFunctions.get_dtr_tool_id(tool_list, hole_single.dia, hole_single.y / abs(hole_single.y), 0)
 
             if tool_num > 0:
                 x_refer = LEADING_EDGE

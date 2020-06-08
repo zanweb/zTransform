@@ -199,6 +199,9 @@ class Parts:
     def append(self, part):
         self.parts.append(part)
 
+    def extend(self, parts):
+        self.parts.extend(parts)
+
     def save_as(self, file_name):
         self.file_name = file_name
         self.save()

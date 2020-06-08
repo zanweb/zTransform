@@ -2,7 +2,7 @@ from CamGen import FMIBase
 from CamGen import LxmlBase
 from CamGen import NCBase
 from CamGen import PedBase
-from DTRGen import TransformFunctions
+from LysaghtPurlin import TransformFunctions
 
 
 def __init(self):

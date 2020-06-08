@@ -11,8 +11,8 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QTreeWidgetItem, QTreeWid
     QMessageBox, QLineEdit, QPushButton, QHBoxLayout
 
 from DBbase import dbFunctions
-from DTRGen.TransformFunctions import lysaght_csv_from_oracle_to_dtr, convert_nc_from_oracle_to_dtr, \
-    check_lysaght_parts_crash
+from LysaghtPurlin.TransformFunctions import lysaght_csv_from_oracle_to_dtr, convert_nc_from_oracle_to_dtr, \
+    check_lysaght_parts_crash, process_half_cut
 from Zfile import zCSV, zFBase
 from zSplitting import Ui_zSplitting
 from zSplitting_login_code import LoginDialog
@@ -39,12 +39,13 @@ class z_splitting(QMainWindow):
         self.org = None
         self.work_center = None
         self.data_source = None
-        self.length_limit = 1500
+        self.length_limit = 0
 
         self.list_make_all = []
         self.list_make = []
         self.half_cut_list = []
         self.length_less_list = []
+        self.unable_splice_list = []
 
         self.out_folder = ''
         self.nc_folder = ''
@@ -427,7 +428,10 @@ class z_splitting(QMainWindow):
         # 获取制作列表的构件名
         list_make_files = []
         for dic in self.list_make:
-            list_make_files.append(dic['Item'][0:7])
+            if self.org == 'LKQ':
+                list_make_files.append(dic['Item'])
+            else:
+                list_make_files.append(dic['Item'][0:7])
         # 获取NC文件夹
         self.nc_folder = QFileDialog.getExistingDirectory(None, '请指定NC文件目录：')
         # 检查NC文件是否存在
@@ -441,7 +445,7 @@ class z_splitting(QMainWindow):
             for no_file in no_files:
                 str_nofiles += str(no_file) + '\n'
             QMessageBox.warning(self, 'NC文件', 'NC文件缺失警告！\n' + str_nofiles, QMessageBox.Ok)
-            print(str(no_files))
+            # print(str(no_files))
         else:
             if exit_files:
                 QMessageBox.information(self, 'NC文件', 'NC文件齐全,开始转换。', QMessageBox.Ok)
@@ -458,8 +462,10 @@ class z_splitting(QMainWindow):
                 try:
                     cut_list, no_pattern_list, parts = convert_nc_from_oracle_to_dtr(read_return, self.nc_folder,
                                                                                      self.org)
-
-                    self.save_dtr_files(cut_list, no_pattern_list, parts)
+                    # 此处重新构建cut_list,和parts
+                    print('重新建构----', cut_list, '\nparts\n', parts, '\n')
+                    cut_list, parts, unable_splice = process_half_cut(cut_list, parts)
+                    self.save_dtr_files(cut_list, no_pattern_list, parts, unable_splice)
                 except Exception as e:
                     print(e)
             else:
@@ -478,7 +484,8 @@ class z_splitting(QMainWindow):
         for dic in self.list_make:
             list_make_files.append(dic['Item'])
         list_make_files = list(set(list_make_files))  # 零件去重
-        print(list_make_files)
+        # print(list_make_files)
+
         # 从csv的文件夹中读取
         all_parts = []  # 所有csv文件中的parts（lyasght）
         all_parts_no = []
@@ -491,7 +498,7 @@ class z_splitting(QMainWindow):
                 csv_parts = csv_file.get_lysaght_punch()
                 all_parts.extend(csv_parts)
                 all_parts_no = [no.part_no for no in all_parts]
-            print(all_parts_no)
+            # print(all_parts_no)
             miss_parts = list(set(list_make_files).difference(set(all_parts_no)))
             if miss_parts:
                 QMessageBox.warning(self, '工程数据缺失', '缺失如下零件csv数据, 请补充数据！！！\n' + str(miss_parts), QMessageBox.Ok)
@@ -527,21 +534,25 @@ class z_splitting(QMainWindow):
                     if reply == QMessageBox.No:
                         return
                 cut_list, no_pattern_list, parts = lysaght_csv_from_oracle_to_dtr(read_return, all_parts_make)
-                self.save_dtr_files(cut_list, no_pattern_list, parts)
+
+                # 此处重新构建cut_list,和parts
+                print('重新建构----', cut_list, '\nparts\n', parts, '\n')
+                cut_list, parts, unable_splice = process_half_cut(cut_list, parts)
+                self.save_dtr_files(cut_list, no_pattern_list, parts, unable_splice)
             except Exception as e:
                 print(e)
         else:
             QMessageBox.warning(self, "警告", '此目录下没有csv文件!')
         return
 
-    def save_dtr_files(self, cut_list, no_pattern_list, parts):
+    def save_dtr_files(self, cut_list, no_pattern_list, parts, unable_splice):
         if no_pattern_list:
             str_show = ''
             for no_pattern in no_pattern_list:
                 str_show += str(no_pattern) + '\n'
             QMessageBox.warning(self, '警告', '有未定义的孔位\n' + str_show, QMessageBox.Ok)
             return 1
-        print(cut_list, parts)
+        # print(cut_list, parts)
         cut_list_file = 'D' + '0' * 7 + '.ORD'
         cut_list_file_path = os.path.join(self.out_folder, cut_list_file)
         cut_list.save_as(cut_list_file_path)
@@ -553,6 +564,16 @@ class z_splitting(QMainWindow):
         if self.length_less_list:
             length_less_file = os.path.join(self.out_folder, 'length_less.txt')
             self.save_lenght_limit_file(length_less_file)
+        if unable_splice:
+            for item in unable_splice:
+                tmp = {
+                    'Item': item.item_id,
+                    'Length': item.length,
+                    'Qty': item.quantity
+                }
+                self.unable_splice_list.append(tmp)
+            unable_splice_file = os.path.join(self.out_folder, 'unable_splice.txt')
+            self.save_unable_splice_file(unable_splice_file)
 
         QMessageBox.information(self, '完成', '已经完成！', QMessageBox.Ok)
 
@@ -560,8 +581,17 @@ class z_splitting(QMainWindow):
         file_context = '      Item,    Length,      Qty'
         sorted_length_less_list = sorted(self.length_less_list, key=itemgetter('Item'))
         for item in sorted_length_less_list:
-            file_context += '\n' + item['Item'].rjust(10) + ',' + item['Unit Length'].rjust(10) + ',' + item[
-                'Fa Qty'].rjust(10)
+            file_context += '\n' + item['Item'].rjust(10) + ',' + str(item['Unit Length']).rjust(10) + ',' + str(item[
+                'Fa Qty']).rjust(10)
+        list_file = open(file_name, 'w')
+        list_file.write(file_context)
+        list_file.close()
+
+    def save_unable_splice_file(self, file_name):
+        file_context = '      Item,    Length,      Qty'
+        sorted_unable_splice_list = sorted(self.unable_splice_list, key=itemgetter('Item'))
+        for item in sorted_unable_splice_list:
+            file_context += '\n' + item['Item'].rjust(10) + ',' + str(item['Length']).rjust(10) + ',' + str(item['Qty']).rjust(10)
         list_file = open(file_name, 'w')
         list_file.write(file_context)
         list_file.close()

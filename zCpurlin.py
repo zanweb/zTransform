@@ -14,7 +14,7 @@ from operator import itemgetter
 from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtWidgets import QMainWindow, QApplication, QMessageBox, QFileDialog
 
-from DTRGen import TransformFunctions
+from LysaghtPurlin import TransformFunctions
 from Zfile import zCSV, zFBase
 from zCpurlin_ui import Ui_MainWindow
 

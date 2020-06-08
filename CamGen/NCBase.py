@@ -418,7 +418,7 @@ def has_hole_nc(file_with_path):
 
 if __name__ == '__main__':
     from pprint import pprint
-    from DTRGen.TransformFunctions import get_nc_plane_holes, gen_nc_part_to_lysaght, check_patterns, get_dtr_tools
+    from LysaghtPurlin.TransformFunctions import gen_nc_part_to_lysaght, check_patterns, get_dtr_tools
 
     # file_with_path = "E:/Zanweb/BMM test file/爱仕达11#NC文件/" + "L125.nc1"
     file_with_path = "E:\Desktop\易商2号库檩条测试梅花孔\\2-MM601.nc1"

@@ -4,9 +4,9 @@
 # @Author   :   ZANWEB
 # @File     :   TransformFunctions.py in zTransform
 # @IDE      :   PyCharm
-
-
+import copy
 import os
+import sys
 import re
 from functools import reduce
 from operator import itemgetter
@@ -23,29 +23,411 @@ from zBase.constant import MM_INCH, CENTER_N, CENTER_P
 
 from PyQt5.QtWidgets import QWidgetItem, QTreeWidgetItemIterator
 
+SPLICE_LANGTH = 6000 / MM_INCH
+MAX_SPLICE_QTY = 4
+sys.setrecursionlimit(3000)
 
-def gen_half_cut_list(cut_list):
+
+def merge_cut_list_items(cut_list_org):
+    cut_list = CutList()
+    # org_cut_list = sorted(cut_list_org.cut_list, key='item_id')
+    org_cut_list = cut_list_org.cut_list
+    org_cut_list.sort(key=attrgetter('item_id'))
+    org_cut_list.sort(key=attrgetter('length'), reverse=False)
+    for index, group in groupby(org_cut_list, attrgetter('item_id')):
+        l_group = list(group)
+        if len(l_group) == 1:
+            cut_list.append(l_group[0])
+        else:
+            qty = 0
+            # print(l_group)
+            tmp = l_group[0]
+            for item in l_group:
+                tmp = item
+                qty += item.quantity
+            tmp.quantity = qty
+            cut_list.append(tmp)
+    cut_list.cut_list.sort(key=attrgetter('length'), reverse=True)
+    return cut_list
+
+
+def process_half_cut(cut_list_org, parts_org):
     # 判断半切清单
     # 先理出1.5m以下的list(auto_no, part_num, length, qty)
     # 相同材料，半切匹配，无法匹配的再与同材料大于1.5m的匹配，再无法匹配，列清单
-    half_cut_list = []
-    for raw_index, raw_group in groupby(cut_list, itemgetter('Raw Material')):
-        half_cut_list.append(list(raw_group))
+    new_cut_list = CutList()
+    new_parts = Parts()
+    material_cut_list = []
+    unable_splice = []
+    # print(cut_list_org.cut_list)
+    cut_list = merge_cut_list_items(cut_list_org)
+    cut_list.cut_list.sort(key=attrgetter('material'))
+    for raw_index, raw_group in groupby(cut_list.cut_list, attrgetter('material')):
+        material_cut_list.append(list(raw_group))
+    for raw_group in material_cut_list:
+        # 每组材料
+        # print(raw_group)
+        group_cut_list, group_parts, group_unable_splice = core_calculate_for_half_cut(raw_group, parts_org)
+        new_cut_list.extend(group_cut_list)
+        new_parts.append(group_parts)
+        unable_splice.extend(group_unable_splice)
+    return new_cut_list, new_parts, unable_splice
 
 
-def core_calculate_for_half_cut(raw_group):
-    normal = []             # 普通件 >=1500
-    half_cut_long = []      # 长件 >=1000
-    half_cut_short = []     # 短件
+def core_calculate_for_half_cut(raw_group, parts):
+    half_cut_long = []  # 长件 >=1000
+    half_cut_short = []  # 短件
+
+    new_parts_r = []
+    new_items_r = []
+    unable_splice_r = []
+
     # 按长度分
-    for raw in raw_group:
-        if raw['Unit Length'] >= 1500:
-            normal.append(raw)
-        elif raw['Unit Length'] >= 1000:
-            half_cut_long.append(raw)
+    for cut_item in raw_group:
+        if cut_item.length >= 1000 / MM_INCH:
+            half_cut_long.append(cut_item)
         else:
-            half_cut_short.append(raw)
+            half_cut_short.append(cut_item)
+    # 处理拼接
+    if not half_cut_short:
+        # 如果没有短件
+        new_items_r = half_cut_long
+        new_parts_r = parts
+    else:
+        # 如果有短件
+        if not half_cut_long:
+            # 没有长件,只有短件, 无法拼接
+            print('只有短件, 无法拼接')
+            unable_splice_r = raw_group
+            # return raw_group, parts, unable_splice
+        else:
+            new_parts = Parts()
+            new_items = []
+            new_items, new_parts, half_cut_long, half_cut_short = splice_diff_lists_qty_times(half_cut_long,
+                                                                                              half_cut_short, parts,
+                                                                                              new_parts, new_items)
 
+            new_items, new_parts, half_cut_long, half_cut_short = splice_diff_lists_one_by_one(half_cut_long,
+                                                                                               half_cut_short, parts,
+                                                                                               new_parts, new_items)
+            # new_items = half_cut_long.extend(new_items)
+            half_cut_long.extend(new_items)
+            new_items_r = half_cut_long
+            parts.append(new_parts)
+            new_parts_r = parts
+            unable_splice_r = half_cut_short
+    # 处理清单/parts合并, 及无法拼接的信息
+    pass
+    return new_items_r, new_parts_r, unable_splice_r
+
+
+def splice_diff_lists_one_by_one(item_list_long, item_list_short, parts, new_parts, new_items):
+    half_cut_long, half_cut_short, parts, new_parts, new_items = splice_diff_lists_one_by_one_iter(item_list_long,
+                                                                                                   item_list_short,
+                                                                                                   parts,
+                                                                                                   new_parts, new_items)
+
+    return new_items, new_parts, half_cut_long, half_cut_short
+
+
+def splice_diff_lists_one_by_one_iter(item_list_long, item_list_short, parts, new_parts, new_items):
+    if not item_list_long:
+        return item_list_long, item_list_short, parts, new_parts, new_items
+    if not item_list_short:
+        return item_list_long, item_list_short, parts, new_parts, new_items
+
+    tmp_long = item_list_long.pop(-1)
+    tmp_short = item_list_short.pop(0)
+    # if tmp_long.item_id == '5QSL-39':
+    #     print('debug')
+    div = (SPLICE_LANGTH - tmp_long.length) // tmp_short.length
+    if tmp_short.quantity <= div:
+        if tmp_short.quantity < MAX_SPLICE_QTY:
+            qty_short = tmp_short.quantity
+        else:
+            qty_short = MAX_SPLICE_QTY-1
+    else:
+        if div <= 0:
+            qty_short = 0
+            item_list_short.insert(1, tmp_short)
+            item_list_long.append(tmp_long)
+            return splice_diff_lists_one_by_one_iter(item_list_long, item_list_short, parts, new_parts, new_items)
+        elif div < MAX_SPLICE_QTY:
+            qty_short = div
+        else:
+            qty_short = MAX_SPLICE_QTY - 1
+
+    # 拼接
+    tmp_item, tmp_part = splice(tmp_long, tmp_short, qty_short, parts)
+    # 计算拼接的数量
+    div_p, mod_p = divmod(tmp_short.quantity, qty_short)
+    if tmp_long.quantity <= div_p:
+        div_t = tmp_long.quantity
+    else:
+        div_t = div_p
+    tmp_long.quantity -= div_t
+    tmp_short.quantity -= qty_short * div_t
+    tmp_item.quantity = div_t
+    if tmp_long.quantity == 0:
+        if tmp_short.quantity == 0:
+            # 当前长短都匹配好
+            new_items.append(tmp_item)
+            new_parts.append(tmp_part)
+            return splice_diff_lists_one_by_one_iter(item_list_long, item_list_short, parts, new_parts, new_items)
+        else:
+            # 当前短件剩余
+            new_items.append(tmp_item)
+            new_parts.append(tmp_part)
+            item_list_short.insert(0, tmp_short)
+            return splice_diff_lists_one_by_one_iter(item_list_long, item_list_short, parts, new_parts, new_items)
+
+    else:  # 当前长件剩余
+        if tmp_short.quantity == 0:
+            # 当前短件匹配好
+            new_items.append(tmp_item)
+            new_parts.append(tmp_part)
+            item_list_long.append(tmp_long)
+            return splice_diff_lists_one_by_one_iter(item_list_long, item_list_short, parts, new_parts, new_items)
+        else:  # 当前短件剩余
+            new_items.append(tmp_item)
+            new_parts.append(tmp_part)
+            item_list_long.append(tmp_long)
+            item_list_short.insert(0, tmp_short)
+            return splice_diff_lists_one_by_one_iter(item_list_long, item_list_short, parts, new_parts, new_items)
+
+
+def splice(long_item, short_item, short_qty, parts):
+    new_item = ''
+    new_part = ''
+    if short_qty == 1:
+        part1 = seek_part_by_cut_item(long_item, parts)
+        part2 = seek_part_by_cut_item(short_item, parts)
+        name = long_item.item_id + ',' + short_item.item_id
+        part1_length = long_item.length
+        new_part = splice_parts(part1, part2, name, part1_length)
+        new_length = part1_length + short_item.length
+        new_item = copy.deepcopy(long_item)
+        new_item.item_id = name
+        new_item.part_number = name
+        new_item.length = new_length
+    else:
+        part = seek_part_by_cut_item(short_item, parts)
+        name = long_item.item_id + ',' + short_item.item_id + '*' + str(short_qty)
+        part_length = short_item.length
+        new_part = copy.deepcopy(part)
+        for qty in range(1, short_qty):
+            new_part = splice_parts(new_part, part, name, part_length)
+            part_length += part_length
+        part = seek_part_by_cut_item(long_item, parts)
+        part_length = long_item.length
+        new_part = splice_parts(part, new_part, name, part_length)
+        new_item = copy.deepcopy(long_item)
+        new_item.item_id = name
+        new_item.part_number = name
+        new_item.length = long_item.length + short_item.length * short_qty
+    return new_item, new_part
+
+
+def splice_diff_lists_qty_times(item_list_long, item_list_short, parts, new_parts, new_items):
+    items_long = item_list_long
+    items_short = item_list_short
+    if items_long:
+        if items_short:
+            for index_s in range(0, len(items_short)):
+                short_quantity = items_short[index_s].quantity
+                for qty_times in range(1, 3):
+                    reminder = short_quantity % qty_times
+                    if reminder == 0:
+                        for index_l in range(0, len(items_long)):
+                            if short_quantity == items_long[index_l].quantity * qty_times:
+                                # 如果数量相等,两个列表中:
+                                # 去除相应项,加入new_items, new_parts
+                                new_part = None
+                                item_long_tmp = items_long.pop(index_l)
+                                part_long = seek_part_by_cut_item(item_long_tmp, parts)
+                                item_short_tmp = items_short.pop(index_s)
+                                part_short = seek_part_by_cut_item(item_short_tmp, parts)
+                                item_tmp = item_long_tmp
+                                item_tmp.item_id = item_long_tmp.item_id + ',' + item_short_tmp.item_id + '*' + str(
+                                    qty_times)
+                                item_tmp.part_number = item_tmp.item_id
+                                item_tmp.length = item_long_tmp.length + item_short_tmp.length * qty_times
+                                if qty_times == 1:
+                                    new_part = splice_parts(part_long, part_short, item_tmp.item_id, item_tmp.length)
+                                if qty_times == 2:
+                                    new_part = splice_parts(part_long, part_short, item_tmp.item_id,
+                                                            item_long_tmp.length + item_short_tmp.length)
+                                    new_part = splice_parts(new_part, part_short, item_tmp.item_id,
+                                                            item_long_tmp.length + item_short_tmp.length * 2)
+                                if qty_times == 3:
+                                    new_part = splice_parts(part_long, part_short, item_tmp.item_id,
+                                                            item_long_tmp.length + item_short_tmp.length)
+                                    new_part = splice_parts(new_part, part_short, item_tmp.item_id,
+                                                            item_long_tmp.length + item_short_tmp.length * 2)
+                                    new_part = splice_parts(new_part, part_short, item_tmp.item_id,
+                                                            item_long_tmp.length + item_short_tmp.length * 3)
+                                new_items.append(item_tmp)
+                                new_parts.append(new_part)
+                                new_items, new_parts, items_long, items_short = splice_diff_lists_qty_times(
+                                    item_list_long, item_list_short, parts, new_parts, new_items)
+                                return new_items, new_parts, items_long, items_short
+
+            return new_items, new_parts, items_long, items_short
+        else:
+            return new_items, new_parts, items_long, items_short
+    else:
+        return new_items, new_parts, items_long, items_short
+
+
+def splice_in_group(cut_item_group, parts, new_parts):
+    new_cut_items = []
+    single_cut_items = []
+    single_item = None
+    for cut_item in cut_item_group:
+        if cut_item.quantity == 1:
+            # 只有一件
+            single_cut_items.append(cut_item)
+        else:
+            # 件数>1件, 两两自拼, 单数加一个三拼, 添加到新items, 生成新part
+            # 判断是否数量是2的倍数
+            is_double = cut_item.quantity % 2
+            if is_double == 0:
+                # 如果能成对
+                single_part = None
+                new_parts_qty = int(cut_item.quantity / 2)
+                for part in parts:
+                    if part.part_name == cut_item.item_id:
+                        single_part = part
+                new_part = splice_parts(single_part, single_part, cut_item.item_id + '*2', cut_item.length)
+                new_cut_item = cut_item
+                new_cut_item.item_id = cut_item.item_id + '*2'
+                new_cut_item.length = cut_item.length * 2
+                new_cut_item.quantity = new_parts_qty
+                new_cut_item.part_label = cut_item.part_label + '*2'
+                new_cut_items.append(new_cut_item)
+                new_parts.append(new_part)
+            else:
+                # 如果不成对
+                # 先加个3拼
+                new_parts_qty = int(cut_item.quantity / 2)
+                single_part = None
+                for part in parts:
+                    if part.part_name == cut_item.item_id:
+                        single_part = part
+                new_part = splice_parts(single_part, single_part, cut_item.item_id + '*2', cut_item.length)
+                new_part = splice_parts(new_part, single_part, cut_item.item_id + '*3', cut_item.length * 2)
+
+                new_cut_item = cut_item
+                new_cut_item.item_id = cut_item.item_id + '*3'
+                new_cut_item.length = cut_item.length * 3
+                new_cut_item.quantity = 1
+                new_cut_item.part_label = cut_item.part_label + '*3'
+                new_cut_items.append(new_cut_item)
+                new_parts.append(new_part)
+
+                # 再加双拼
+                new_part = splice_parts(single_part, single_part, cut_item.item_id + '*2', cut_item.length)
+                single_part = None
+                new_parts_qty = int(cut_item.quantity / 2)
+                # for part in parts:
+                #     if part.part_name == cut_item.item_id:
+                #         single_part = part
+                # new_part = splice_parts(single_part, single_part, cut_item.item_id + '*3', cut_item.length)
+
+                new_cut_item = cut_item
+                new_cut_item.item_id = cut_item.item_id + '*2'
+                new_cut_item.length = cut_item.length * 2
+                new_cut_item.quantity = new_parts_qty
+                new_cut_item.part_label = cut_item.part_label + '*2'
+                new_cut_items.append(new_cut_item)
+                new_parts.append(new_part)
+
+    # 处理单件的
+    if single_cut_items:
+        if len(single_cut_items) == 1:
+            single_item = single_cut_items[0]
+        else:
+            # 依次处理不同单件列表
+            new_items, new_part_list = splice_diff_parts(single_cut_items, parts)
+            new_cut_items.extend(new_items)
+            new_parts.extend(new_part_list)
+
+    return new_cut_items, new_parts, single_item
+
+
+def splice_diff_parts(single_items_list, parts):
+    new_items_list = []
+    new_parts = []
+    reminder_list = []
+    reminder = len(single_items_list) / 2
+    if reminder == 1:
+        # 先取3 个
+        part_0 = seek_part_by_cut_item(single_items_list[0], parts)
+        part_1 = seek_part_by_cut_item(single_items_list[1], parts)
+        part_2 = seek_part_by_cut_item(single_items_list[2], parts)
+        new_item_tmp = single_items_list[0]
+        new_item_tmp.item_id = single_items_list[0].item_id + single_items_list[1].item_id + single_items_list[
+            2].item_id
+        new_item_tmp.length = single_items_list[0].length + single_items_list[1].length + single_items_list[2].length
+        new_item_tmp.part_label = single_items_list[0].part_label + single_items_list[1].item_id + single_items_list[
+            2].item_id
+        new_items_list.append(new_item_tmp)
+
+        part_tmp = splice_parts(part_0, part_1, 'tmp', part_0.length)
+        part_tmp = splice_parts(part_tmp, part_2, new_item_tmp.item_id, new_item_tmp.length)
+        new_parts.append(part_tmp)
+
+        reminder_list = single_items_list[3:]
+    else:
+        reminder_list = single_items_list
+
+    # 剩下的两个两个处理
+    if reminder_list:
+        step = 2
+        tmp_list = [list[i:i + step] for i in range(0, len(reminder_list), step)]
+        for tmp in tmp_list:
+            new_item_tmp = tmp[0]
+            new_item_tmp.item_id = tmp[0].item_id + tmp[1].item_id
+            new_item_tmp.length = tmp[0].length + tmp[1].length
+            new_item_tmp.part_label = tmp[0].part_label + tmp[1].item_id
+            new_items_list.append(new_item_tmp)
+
+            part_tmp = splice_parts(tmp[0], tmp[1], new_item_tmp.item_id, new_item_tmp.length)
+            new_parts.append(part_tmp)
+
+    return new_items_list, new_parts
+
+
+def seek_part_by_cut_item(cut_item, parts):
+    single_part = None
+    for parts_list in parts.parts:
+        for l_parts in parts_list.parts:
+            for part in l_parts.parts:
+                if part.part_name == cut_item.item_id:
+                    single_part = l_parts
+                    return single_part
+    return single_part
+
+
+def splice_parts(parts1, parts2, part_name, part1_length):
+    new_part = copy.deepcopy(parts1)
+    tmp_part = copy.deepcopy(parts2)
+
+    for part in new_part.parts:
+        part.part_name = part_name
+
+    part = Part(part_name=part_name, tool_number=74, x_offset=part1_length)
+    new_part.parts.append(part)
+
+    for part in tmp_part.parts:
+        part.part_name = part_name
+        part.x_offset = part.x_offset + part1_length
+        new_part.parts.append(part)
+
+    return new_part
+
+
+def calculate_diff_num(half_cut_long, half_cut_short):
     # 计算长件及短件的数量
     qty_cut_long = 0
     qty_cut_short = 0
@@ -63,7 +445,7 @@ def core_calculate_for_half_cut(raw_group):
     diff_short_long = qty_cut_short - qty_cut_long
     # 拼接零件中,是否有长件
     if half_cut_short:
-        # 如果有,看长件是否太少,太少的话,从普通件中再加
+        # 如果有,看长件是否太少,太少的话,长件/短件内部拼接, 从普通件中再加
         if diff_short_long > 0:
             pass
 
@@ -83,7 +465,6 @@ def gen_dtr_cut_list(cut_list, org='LKQ'):
     cut_list_sorted_length = sorted(cut_list_sorted_mark, key=itemgetter('Unit Length'), reverse=True)
     cut_list_sorted_bundle = sorted(cut_list_sorted_length, key=itemgetter('Bundle'))
     cut_list_sorted = sorted(cut_list_sorted_bundle, key=itemgetter('Raw Material'))
-
 
     for cut_part in cut_list_sorted:
         # print(cut_part)
@@ -274,7 +655,8 @@ def lysaght_csv_from_oracle_to_dtr(cut_list, parts):
             part_list_temp, undefined_holes = gen_dtr_pattern_list(parts_no_crash, tool_list)
             part_list.append(part_list_temp)
         if parts_crash:
-            part_list_temp = gen_dtr_pattern_list_crash(parts_crash, tool_list_single)
+            # part_list_temp = gen_dtr_pattern_list_crash(parts_crash, tool_list_single)
+            part_list_temp = gen_dtr_pattern_list_crash(parts_crash, tool_list)
             part_list.append(part_list_temp)
 
     # 生成制作清单
@@ -338,9 +720,10 @@ def convert_nc_from_oracle_to_dtr(cut_list, nc_folder, org='LKQ'):
             part_list_temp, undefined_holes_list = gen_dtr_pattern_list(parts_no_crash, tool_list)
             part_list.append(part_list_temp)
         if parts_crash:
-            part_list_temp = gen_dtr_pattern_list_crash(parts_crash, tool_list_single)
+            # part_list_temp = gen_dtr_pattern_list_crash(parts_crash, tool_list_single)
+            part_list_temp = gen_dtr_pattern_list_crash(parts_crash, tool_list)
             part_list.append(part_list_temp)
-
+    # 修改part_list
     # 生成制作清单
     if parts_crash:
         parts_crash_number = [part.part_no for part in parts_crash]
@@ -727,7 +1110,7 @@ def get_nc_plane_holes(nc_holes):
             angle = single_hole.angle
             x = single_hole.x
             if (angle == 90) and (width == 0):
-                single_hole.x = x + height/2
+                single_hole.x = x + height / 2
             else:
                 single_hole.x = x + width / 2
             # 花孔 6*25 长圆孔作花孔处理

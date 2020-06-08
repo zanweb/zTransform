@@ -592,6 +592,9 @@ class CutList:
     def append(self, cut_item):
         self.cut_list.append(cut_item)
 
+    def extend(self, cut_list):
+        self.cut_list.extend(cut_list)
+
     def save_as(self, file_name):
         self.file_name = file_name
         self.save()

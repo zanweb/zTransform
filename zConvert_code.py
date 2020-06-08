@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import QMessageBox, QFileDialog
 from CamGen import DataTransform
 from Zfile import zFBase, zCSV
 from zConvert import *
-from DTRGen.TransformFunctions import nc_file_header_profile
+from LysaghtPurlin.TransformFunctions import nc_file_header_profile
 
 
 class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
