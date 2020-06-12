@@ -566,9 +566,11 @@ class z_splitting(QMainWindow):
             self.save_lenght_limit_file(length_less_file)
         if unable_splice:
             for item in unable_splice:
+                print(item)
                 tmp = {
+                    'Raw': item.material,
                     'Item': item.item_id,
-                    'Length': item.length,
+                    'Length': item.length * 25.4,
                     'Qty': item.quantity
                 }
                 self.unable_splice_list.append(tmp)
@@ -588,10 +590,10 @@ class z_splitting(QMainWindow):
         list_file.close()
 
     def save_unable_splice_file(self, file_name):
-        file_context = '      Item,    Length,      Qty'
+        file_context = '       Raw,      Item,              Length,      Qty'
         sorted_unable_splice_list = sorted(self.unable_splice_list, key=itemgetter('Item'))
         for item in sorted_unable_splice_list:
-            file_context += '\n' + item['Item'].rjust(10) + ',' + str(item['Length']).rjust(10) + ',' + str(item['Qty']).rjust(10)
+            file_context += '\n' + item['Raw'].rjust(10) + item['Item'].rjust(10) + ',' + str(item['Length']).rjust(20) + ',' + str(item['Qty']).rjust(10)
         list_file = open(file_name, 'w')
         list_file.write(file_context)
         list_file.close()

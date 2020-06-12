@@ -23,8 +23,8 @@ from zBase.constant import MM_INCH, CENTER_N, CENTER_P
 
 from PyQt5.QtWidgets import QWidgetItem, QTreeWidgetItemIterator
 
-SPLICE_LANGTH = 6000 / MM_INCH
-MAX_SPLICE_QTY = 4
+SPLICE_LANGTH = 5000 / MM_INCH
+MAX_SPLICE_QTY = 6
 sys.setrecursionlimit(3000)
 
 
@@ -84,7 +84,7 @@ def core_calculate_for_half_cut(raw_group, parts):
 
     # 按长度分
     for cut_item in raw_group:
-        if cut_item.length >= 1000 / MM_INCH:
+        if cut_item.length >= 1500 / MM_INCH:
             half_cut_long.append(cut_item)
         else:
             half_cut_short.append(cut_item)
@@ -153,7 +153,7 @@ def splice_diff_lists_one_by_one_iter(item_list_long, item_list_short, parts, ne
             item_list_long.append(tmp_long)
             return splice_diff_lists_one_by_one_iter(item_list_long, item_list_short, parts, new_parts, new_items)
         elif div < MAX_SPLICE_QTY:
-            qty_short = div
+            qty_short = int(div)
         else:
             qty_short = MAX_SPLICE_QTY - 1
 
@@ -215,7 +215,7 @@ def splice(long_item, short_item, short_qty, parts):
         name = long_item.item_id + ',' + short_item.item_id + '*' + str(short_qty)
         part_length = short_item.length
         new_part = copy.deepcopy(part)
-        for qty in range(1, short_qty):
+        for qty in range(1, int(short_qty)):
             new_part = splice_parts(new_part, part, name, part_length)
             part_length += part_length
         part = seek_part_by_cut_item(long_item, parts)
