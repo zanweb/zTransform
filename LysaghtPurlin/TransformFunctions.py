@@ -23,8 +23,10 @@ from zBase.constant import MM_INCH, CENTER_N, CENTER_P
 
 from PyQt5.QtWidgets import QWidgetItem, QTreeWidgetItemIterator
 
-SPLICE_LANGTH = 5000 / MM_INCH
-MAX_SPLICE_QTY = 6
+SPLICE_LENGTH = 4000 / MM_INCH      # 拼接限制长度(长)
+SPLICE_LENGTH_S = 2000 / MM_INCH    # 拼接限制长度(短)
+MIN_LENGTH = 1500 / MM_INCH         # 长/短件分界点
+MAX_SPLICE_QTY = 5                  # 最多拼接件数/件
 sys.setrecursionlimit(3000)
 
 
@@ -66,16 +68,193 @@ def process_half_cut(cut_list_org, parts_org):
         material_cut_list.append(list(raw_group))
     for raw_group in material_cut_list:
         # 每组材料
-        # print(raw_group)
-        group_cut_list, group_parts, group_unable_splice = core_calculate_for_half_cut(raw_group, parts_org)
-        new_cut_list.extend(group_cut_list)
-        new_parts.append(group_parts)
-        unable_splice.extend(group_unable_splice)
+        print(raw_group)
+        raw_group.sort(key=attrgetter('length'), reverse=True)
+        raw_group.sort(key=attrgetter('bundle'))
+        for bundle_index, bundle_group in groupby(raw_group, attrgetter('bundle')):
+            bundle_list = list(bundle_group)
+            group_cut_list, group_parts, group_unable_splice = core_calculate_for_half_cut_1(bundle_list, parts_org)
+            new_cut_list.extend(group_cut_list)
+            new_parts.append(group_parts)
+            unable_splice.extend(group_unable_splice)
     return new_cut_list, new_parts, unable_splice
 
 
+def core_calculate_for_half_cut_1(raw_group, parts):
+    half_cut_long = []  # 长件 >=1500
+    half_cut_short = []  # 短件
+
+    new_parts_r = []
+    new_items_r = []
+    unable_splice_r = []
+
+    # 按长度分
+    for cut_item in raw_group:
+        if cut_item.length >= MIN_LENGTH:
+            half_cut_long.append(cut_item)
+        else:
+            half_cut_short.append(cut_item)
+    # 处理拼接
+    if half_cut_short:
+        new_items_t, new_parts_t, unable_splice_t = splice_in_short(half_cut_short, parts, new_items_r, new_parts_r, unable_splice_r)
+        half_cut_long.extend(new_items_t)
+        new_items_r = half_cut_long
+        parts.extend(new_parts_t)
+        new_parts_r = parts
+    return new_items_r, new_parts_r, unable_splice_r
+
+
+def splice_in_short(items, parts, new_items, new_parts, unable_splice):
+    if len(items) == 0:
+        return new_items, new_parts, unable_splice
+    else:
+        one_item = items.pop(0)
+        qty = one_item.quantity
+        length = one_item.length
+        div_s, mode_s = divmod(SPLICE_LENGTH, length)
+        if div_s > MAX_SPLICE_QTY:
+            div = MAX_SPLICE_QTY
+        else:
+            div = int(div_s)
+        count = qty//div
+        if count == 0:
+            if len(items) == 0:
+                if (qty * length) < MIN_LENGTH:
+                    unable_splice.append(one_item)
+                    return splice_in_short(items, parts, new_items, new_parts, unable_splice)
+                else:
+                    new_item, new_part = splice_qty(one_item, int(qty), parts)
+                    new_items.append(new_item)
+                    new_parts.append(new_part)
+                    return splice_in_short(items, parts, new_items, new_parts, unable_splice)
+            else:
+                total_length = one_item.length*one_item.quantity
+                total_qty = one_item.quantity
+                splice_list_tmp = [(one_item, one_item.quantity)]
+                if one_item.length > 500/MM_INCH:
+                    max_length = SPLICE_LENGTH
+                else:
+                    max_length = SPLICE_LENGTH_S
+                while total_length <= max_length:
+                    if len(items) > 0:
+                        item_tmp = items.pop(0)
+                        qty_tmp = item_tmp.quantity
+                        total_length_t = total_length
+                        total_qty_t = total_qty
+                        total_length += item_tmp.length*item_tmp.quantity
+                        total_qty += int(item_tmp.quantity)
+                        if total_length > max_length:
+                            div_t = (max_length-total_length_t)//item_tmp.length
+                            splice_list_tmp.append((item_tmp, int(div_t)))
+                            if (item_tmp.quantity - div_t) > 0:
+                                item_r = copy.deepcopy(item_tmp)
+                                item_r.quantity = int(item_tmp.quantity - div_t)
+                                items.insert(0, item_r)
+                            # 拼接MULTI
+                            new_items_t, new_parts_t = splice_qty_multi(splice_list_tmp, parts)
+                            new_items.append(new_items_t)
+                            new_parts.append(new_parts_t)
+                            return splice_in_short(items, parts, new_items, new_parts, unable_splice)
+                        else:
+                            splice_list_tmp.append((item_tmp, int(qty_tmp)))
+                    else:
+                        break
+                        # unable_splice.append(one_item)
+                        # return splice_in_short(items, parts, new_items, new_parts, unable_splice)
+                # 拼接MULTI
+                new_items_t, new_parts_t = splice_qty_multi(splice_list_tmp, parts)
+                new_items.append(new_items_t)
+                new_parts.append(new_parts_t)
+                # print('和下个拼接,还未完成!', splice_list_tmp)
+                return splice_in_short(items, parts, new_items, new_parts, unable_splice)
+        else:
+            new_item, new_part = splice_qty(one_item, int(div), parts)
+            new_item.quantity = int(count)
+            new_items.append(new_item)
+            new_parts.append(new_part)
+            rest = int(one_item.quantity - div * count)
+            if rest > 0:
+                one_item.quantity = rest
+                items.insert(0, one_item)
+
+            return splice_in_short(items, parts, new_items, new_parts, unable_splice)
+
+
+def splice_qty_multi(item_qty_list, parts):
+    # list of (item, qty)
+    new_item = copy.deepcopy(item_qty_list[0][0])
+    new_part = Parts()
+    new_item_id = ''
+    new_item_length = 0
+    new_part_list = []
+    for item, qty in item_qty_list:
+        new_item_t, new_part_t = splice_qty(item, qty, parts)
+        new_item_id = new_item_id + ',' + new_item_t.item_id
+        new_item_length = new_item_length + new_item_t.length
+        new_part_list.append((new_part_t, item.length))
+    new_item.quantity = 1
+    new_item.length = new_item_length
+    if len(new_item_id) > 20:
+        new_item.item_id = new_item_id[1:20]
+        new_item.items_user1 = new_item_id
+    else:
+        new_item.item_id = new_item_id[1:]
+    # TODO: splice new part list
+    length = 0
+    for i in range(len(new_part_list)):
+        if i == 0:
+            new_part = new_part_list[0][0]
+            length = new_part_list[0][1]
+        else:
+            new_part_t = new_part_list[i][0]
+            new_part = splice_parts(new_part, new_part_t, new_item.item_id, length)
+            length = length + new_part_list[i][1]
+    new_item.part_number = new_item.item_id
+    for pattern in new_part.parts:
+        pattern.part_name = new_item.part_number
+    return new_item, new_part
+
+
+def splice_qty_2p(item_1, qty_1, item_2, qty_2, parts):
+    tm_1 = copy.deepcopy(item_1)
+    tm_2 = copy.deepcopy(item_2)
+    p_1 = seek_part_by_cut_item(tm_1, parts)
+    p_2 = seek_part_by_cut_item(tm_2, parts)
+    if qty_1 == 1:
+        new_item_1 = tm_1
+        new_item_1.quantity = 1
+        new_part_1 = p_1
+    else:
+        new_item_1, new_part_1 = splice_qty(tm_1, qty_1, parts)
+    if qty_2 == 1:
+        new_item_2 = tm_2
+        new_item_2.quantity = 2
+        new_part_2 = p_2
+    else:
+        new_item_2, new_part_2 = splice_qty(tm_2, qty_2, parts)
+    new_item = copy.deepcopy(new_item_1)
+    new_item.item_id = new_item_1.item_id + ',' + new_item_2.item_id
+    new_item.length = new_item_1.length + new_item_2.length
+    new_item.part_name = new_item.item_id
+    new_part = splice_parts(p_1, p_2, new_item.item_id, new_item.length)
+    return new_item, new_part
+
+
+def splice_qty(item, qty, parts):
+    new_item = copy.deepcopy(item)
+    new_item.item_id = new_item.item_id + '*' + str(int(qty))
+    new_item.part_number = new_item.item_id
+    new_item.quantity = 1
+    new_item.length = new_item.length * qty
+    part = seek_part_by_cut_item(item, parts)
+    new_part = copy.deepcopy(part)
+    for i in range(1, qty):
+        new_part = splice_parts(part, new_part, new_item.item_id, item.length)
+    return new_item, new_part
+
+
 def core_calculate_for_half_cut(raw_group, parts):
-    half_cut_long = []  # 长件 >=1000
+    half_cut_long = []  # 长件 >=1500
     half_cut_short = []  # 短件
 
     new_parts_r = []
@@ -140,7 +319,7 @@ def splice_diff_lists_one_by_one_iter(item_list_long, item_list_short, parts, ne
     tmp_short = item_list_short.pop(0)
     # if tmp_long.item_id == '5QSL-39':
     #     print('debug')
-    div = (SPLICE_LANGTH - tmp_long.length) // tmp_short.length
+    div = (SPLICE_LENGTH - tmp_long.length) // tmp_short.length
     if tmp_short.quantity <= div:
         if tmp_short.quantity < MAX_SPLICE_QTY:
             qty_short = tmp_short.quantity
@@ -247,25 +426,25 @@ def splice_diff_lists_qty_times(item_list_long, item_list_short, parts, new_part
                                 part_long = seek_part_by_cut_item(item_long_tmp, parts)
                                 item_short_tmp = items_short.pop(index_s)
                                 part_short = seek_part_by_cut_item(item_short_tmp, parts)
-                                item_tmp = item_long_tmp
+                                item_tmp = copy.deepcopy(item_long_tmp)
                                 item_tmp.item_id = item_long_tmp.item_id + ',' + item_short_tmp.item_id + '*' + str(
                                     qty_times)
                                 item_tmp.part_number = item_tmp.item_id
                                 item_tmp.length = item_long_tmp.length + item_short_tmp.length * qty_times
                                 if qty_times == 1:
-                                    new_part = splice_parts(part_long, part_short, item_tmp.item_id, item_tmp.length)
+                                    new_part = splice_parts(part_long, part_short, item_tmp.item_id, item_long_tmp.length)
                                 if qty_times == 2:
                                     new_part = splice_parts(part_long, part_short, item_tmp.item_id,
-                                                            item_long_tmp.length + item_short_tmp.length)
+                                                            item_long_tmp.length)
                                     new_part = splice_parts(new_part, part_short, item_tmp.item_id,
-                                                            item_long_tmp.length + item_short_tmp.length * 2)
+                                                            item_long_tmp.length + item_short_tmp.length)
                                 if qty_times == 3:
                                     new_part = splice_parts(part_long, part_short, item_tmp.item_id,
+                                                            item_long_tmp.length)
+                                    new_part = splice_parts(new_part, part_short, item_tmp.item_id,
                                                             item_long_tmp.length + item_short_tmp.length)
                                     new_part = splice_parts(new_part, part_short, item_tmp.item_id,
                                                             item_long_tmp.length + item_short_tmp.length * 2)
-                                    new_part = splice_parts(new_part, part_short, item_tmp.item_id,
-                                                            item_long_tmp.length + item_short_tmp.length * 3)
                                 new_items.append(item_tmp)
                                 new_parts.append(new_part)
                                 new_items, new_parts, items_long, items_short = splice_diff_lists_qty_times(

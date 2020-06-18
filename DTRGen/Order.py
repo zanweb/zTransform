@@ -605,16 +605,16 @@ class CutList:
         test.close()
 
     def save_list(self, file_name):
-        list_context = '     Batch,       Raw,    Bundle,                        PartNo,    Length,       Qty,       Cat'
+        list_context = '     Batch,       Raw,    Bundle,                        PartNo,    Length,       Qty,       Cat, User1'
         for material_index, material_group in groupby(self.cut_list, key=attrgetter('material')):
             list_context += '\n' + str(self.cut_list[0].order_number).rjust(10) + str(material_index).rjust(10)
-            list_context += '\n' + '-' * 22
+            list_context += '\n' + '-' * 122
             for bundle_index, bundle_group in groupby(material_group, key=attrgetter('bundle')):
                 for bundle_one in bundle_group:
                     list_context += '\n' + ' ' * 22 + str(bundle_one.bundle).rjust(10) + ',' + str(
                         bundle_one.part_number).rjust(30) + ',' + str(int(bundle_one.length * 25.4)).rjust(
                         10) + ',' + str(
-                        bundle_one.quantity).rjust(10) + ',' + str(bundle_one.product_code).rjust(10)
+                        bundle_one.quantity).rjust(10) + ',' + str(bundle_one.product_code).rjust(10) + ',' + bundle_one.items_user1
         list_file = open(file_name, 'w')
         list_file.write(list_context)
         list_file.close()
