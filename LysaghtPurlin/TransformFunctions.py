@@ -101,6 +101,9 @@ def core_calculate_for_half_cut_1(raw_group, parts):
         new_items_r = half_cut_long
         parts.extend(new_parts_t)
         new_parts_r = parts
+    else:
+        new_items_r = half_cut_long
+        new_parts_r = parts
     return new_items_r, new_parts_r, unable_splice_r
 
 
@@ -145,7 +148,8 @@ def splice_in_short(items, parts, new_items, new_parts, unable_splice):
                         total_qty += int(item_tmp.quantity)
                         if total_length > max_length:
                             div_t = (max_length-total_length_t)//item_tmp.length
-                            splice_list_tmp.append((item_tmp, int(div_t)))
+                            if div_t > 0:
+                                splice_list_tmp.append((item_tmp, int(div_t)))
                             if (item_tmp.quantity - div_t) > 0:
                                 item_r = copy.deepcopy(item_tmp)
                                 item_r.quantity = int(item_tmp.quantity - div_t)
