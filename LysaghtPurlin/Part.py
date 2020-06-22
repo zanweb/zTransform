@@ -141,13 +141,17 @@ class Part(object):
     def convert_to_dtr_holes(self, tool_list):
         # self.dtr_holes = []
         double_list = []
+        mm_8_list = []
         # tool_list = TransformFunctions.get_dtr_tools('./DTRTools.csv')
         for one_group in self.holes_group_y:
             # print('one_group len -->{0}'.format(len(one_group)))
             dtr_hole = DTRHole()
             if len(one_group) == 1:
-                dtr_hole = self.single_dtr_hole(one_group[0])
-                self.dtr_holes.append(dtr_hole)
+                if one_group[0].dia == 8:
+                    mm_8_list.append(one_group[0])
+                else:
+                    dtr_hole = self.single_dtr_hole(one_group[0])
+                    self.dtr_holes.append(dtr_hole)
 
             if len(one_group) >= 2:
                 is_sinde_single = self.judge_side_single_holes(one_group)
@@ -207,11 +211,28 @@ class Part(object):
                             tool_list, one_group)
                         self.dtr_holes.extend(dtr_double_holes)
                         double_list.extend(undefined_double_holes)
-
-                    # for i in range(0, len(one_group)):
-                    #     dtr_hole = self.single_dtr_hole(one_group[i])
-                    #     self.dtr_holes.append(dtr_hole)
+        if mm_8_list:
+            # 处理8mm
+            if len(mm_8_list) >= 7:
+                compare = operator.attrgetter('dia', 'x', 'y')
+                # self.holes.sort(key=compare, reverse=False)
+                mm_8_list.sort(key=compare, reverse=False)
+                dtr_hole = self.group_8mm_dtr_hole(mm_8_list)
+                self.dtr_holes.append(dtr_hole)
         return double_list
+
+    def group_8mm_dtr_hole(self, mm_8_list):
+        dtr_hole = DTRHole()
+        dtr_hole.__dict__ = mm_8_list[0].__dict__
+        dtr_hole.group_type = 'group 8 holes'
+        dtr_hole.x_reference = LEADING_EDGE
+        dtr_hole.y_reference = CENTER_P
+        dtr_hole.group_x = mm_8_list[0].x
+        dtr_hole.group_y = mm_8_list[-1].y
+        dtr_hole.group_x_reference = LEADING_EDGE
+        dtr_hole.group_y_reference = CENTER_P
+        dtr_hole.gauge = 75.0
+        return dtr_hole
 
     def judge_side_single_holes(self, one_group):
         result = True
@@ -549,6 +570,27 @@ class Part(object):
                         'gauge': dtr_hole.gauge,
                         'diff': group_y}
                     undefinde_holes.append(temp)
+            elif dtr_hole.group_type == 'group 8 holes':
+                tool_num = 12
+                part_item = DPart(part_name=self.part_no, tool_number=tool_num,
+                                  x_offset=dtr_hole.x / MM_INCH,
+                                  x_reference=LEADING_EDGE, permanent=True,
+                                  y_offset=0.0,
+                                  y_reference=CENTER_P)
+                part_list.append(part_item)
+                part_item = DPart(part_name=self.part_no, tool_number=tool_num,
+                                  x_offset=dtr_hole.gauge / MM_INCH,
+                                  x_reference=EVEN_SPACE, permanent=True,
+                                  y_offset=0.0,
+                                  y_reference=CENTER_P)
+                part_list.append(part_item)
+                part_item = DPart(part_name=self.part_no, tool_number=tool_num,
+                                  x_offset=(self.part_length - dtr_hole.group_y - 8) / MM_INCH,
+                                  x_reference=TRAILING_EDGE, permanent=True,
+                                  y_offset=0.0,
+                                  y_reference=CENTER_P)
+                part_list.append(part_item)
+
             else:  # 侧边偏心,单孔--------side_single hole---------------------------------------
                 if group_y_r == CENTER_N:
                     group_y = - group_y
