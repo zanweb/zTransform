@@ -524,6 +524,7 @@ class Part(object):
         """
         undefinde_holes = []
         part_list = DParts()
+        self.part_no = self.part_no.upper()
         for dtr_hole in self.dtr_holes:
             # print('dtr_hole.group_type-->{0}'.format(dtr_hole.group_type))inf
             dia = float(dtr_hole.dia)

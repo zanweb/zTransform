@@ -348,7 +348,11 @@ class z_splitting(QMainWindow):
     def check_nc_files_exite(self, list_make_files, nc_folder):
         list_exit_files = []
         list_no_files = []
-        list_nc_files = zFBase.get_indicate_ext_file(nc_folder, 'nc1')
+        list_nc_files = []
+        list_nc_files_t = zFBase.get_indicate_ext_file(nc_folder, 'nc1')
+        for file in list_nc_files_t:
+            file = file.upper()
+            list_nc_files.append(file)
         if list_nc_files:
             for file in list_make_files:
                 if file in list_nc_files:

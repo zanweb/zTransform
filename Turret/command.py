@@ -1048,9 +1048,10 @@ if __name__ == '__main__':
     mm_list_test_t = [2600, 2800, 3000, 3200, 3400, 3600, 3800, 4000, 4200, 4400, 4600, 4800, 5000]
     mm_list_test = [i for i in range(470, 5000) if i % 10 is 0]
     print(mm_list_test)
-    mm_lisst_test = [2190]
+    mm_list_test = [1120]
     for mm in mm_list_test:
-        high = 212
+        # high = 212
+        high = 274
         tool_width = 5.08
         tool_length = 35.56
         gauge_number = None
