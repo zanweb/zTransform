@@ -66,9 +66,9 @@ class XmlGen:
                 if single_hole.diameter == 8:
                     self.up_to_down = False
                     break
-                if single_hole.diameter == 14:
-                    self.up_to_down = False
-                    break
+                # if single_hole.diameter == 14:
+                #     self.up_to_down = False
+                #     break
 
     def add_top_side_holes(self, holes):
         for single_hole in holes:
