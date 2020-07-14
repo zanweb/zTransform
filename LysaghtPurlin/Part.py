@@ -489,7 +489,7 @@ class Part(object):
                 gauge = -1
             else:
                 gauge = 1
-            if dtr_hole.group_type == 'side_single hole':
+            if dtr_hole.group_type == 'side_single hole' or dtr_hole.group_type == 'single hole':
                 tool_num = TransformFunctions.get_dtr_tool_id(tool_list, dtr_hole.dia, gauge, 0)
             else:
                 tool_num = TransformFunctions.get_dtr_tool_id(tool_list, dtr_hole.dia, dtr_hole.gauge, group_y)
@@ -550,27 +550,28 @@ class Part(object):
                         'diff': group_y}
                     undefinde_holes.append(temp)
 
-            elif dtr_hole.group_type == 'single hole':  # 单孔------------------------------
-                if group_y_r == CENTER_N:
-                    group_y = - group_y
-                # tool_num = TransformFunctions.get_dtr_tool_id(
-                #     tool_list, dtr_hole.dia, dtr_hole.gauge, group_y)
-                tool_num = TransformFunctions.get_dtr_tool_id(
-                    tool_list, dtr_hole.dia, dtr_hole.gauge, group_y)
+            # elif dtr_hole.group_type == 'single hole':  # 单孔------------------------------
+            #     if group_y_r == CENTER_N:
+            #         group_y = - group_y
+            #     # tool_num = TransformFunctions.get_dtr_tool_id(
+            #     #     tool_list, dtr_hole.dia, dtr_hole.gauge, group_y)
+            #     tool_num = TransformFunctions.get_dtr_tool_id(
+            #         tool_list, dtr_hole.dia, dtr_hole.gauge, group_y)
+            #
+            #     if tool_num > 0:
+            #         part_item = DPart(part_name=self.part_no, tool_number=tool_num,
+            #                           x_offset=dtr_hole.x / MM_INCH,
+            #                           x_reference=dtr_hole.x_reference, permanent=True,
+            #                           y_offset=0.0,
+            #                           y_reference=CENTER_P)
+            #         part_list.append(part_item)
+            #     else:
+            #         temp = {
+            #             'dia': dtr_hole.dia,
+            #             'gauge': dtr_hole.gauge,
+            #             'diff': group_y}
+            #         undefinde_holes.append(temp)
 
-                if tool_num > 0:
-                    part_item = DPart(part_name=self.part_no, tool_number=tool_num,
-                                      x_offset=dtr_hole.x / MM_INCH,
-                                      x_reference=dtr_hole.x_reference, permanent=True,
-                                      y_offset=0.0,
-                                      y_reference=CENTER_P)
-                    part_list.append(part_item)
-                else:
-                    temp = {
-                        'dia': dtr_hole.dia,
-                        'gauge': dtr_hole.gauge,
-                        'diff': group_y}
-                    undefinde_holes.append(temp)
             elif dtr_hole.group_type == 'group 8 holes':
                 tool_num = 12
                 part_item = DPart(part_name=self.part_no, tool_number=tool_num,
