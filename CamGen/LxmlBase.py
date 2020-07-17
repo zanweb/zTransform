@@ -58,7 +58,26 @@ class XmlGen:
                 self.flange_hole_top_8 = hole['HoleName']
             # print(self.flange_hole_top_14)
 
-    def up_or_down(self, o_holes):
+    def up_or_down(self, holes, profile_high):
+        # 80 在D8的一端
+        # holes[0]-o, [1] - u, [2] - v, [3] - h
+        o_holes = holes[0]
+        u_holes = holes[1]
+        v_holes = holes[2]
+        h_holes = holes[3]
+
+        vu_holes = h_holes + v_holes
+        o_side = 40
+
+        if vu_holes:
+            holes_group_y = []
+            for x_index, x_group in groupby(v_holes, key=attrgetter('x')):
+                holes_group_y.append(list(x_group))
+            for group in holes_group_y:
+                if len(group) == 2:
+                    max_y = max(group[0].y, group[1].y)
+                    o_side = profile_high - max_y
+
         if not o_holes:
             self.up_to_down = False
         else:
@@ -66,9 +85,11 @@ class XmlGen:
                 if single_hole.diameter == 8:
                     self.up_to_down = False
                     break
-                # if single_hole.diameter == 14:
-                #     self.up_to_down = False
-                #     break
+
+                if single_hole.diameter == 14:
+                    if o_side > 40:
+                        self.up_to_down = False
+                        break
 
     def add_top_side_holes(self, holes):
         for single_hole in holes:
@@ -142,6 +163,7 @@ class XmlGen:
         # 腹板孔处理
         pre_group_x = 0.0
         for group in holes_group_y:
+
             hole = Hole()
             # 腹板16孔处理 2018/11/03 加入腹板16孔径的兼容
             if (group[0].diameter == 14) or (group[0].diameter == 16):
@@ -212,7 +234,7 @@ class XmlGen:
                 for each_hole in each_plan:
                     each_hole.x = self.header.length - each_hole.x
 
-        self.up_or_down(plane_holes[0])
+        self.up_or_down(plane_holes, profile_height)
         # print(plane_holes[2])
         if not self.up_to_down:
             self.add_top_side_holes(plane_holes[0])
