@@ -154,8 +154,8 @@ class Part(object):
                     self.dtr_holes.append(dtr_hole)
 
             if len(one_group) >= 2:
-                is_sinde_single = self.judge_side_single_holes(one_group)
-                if is_sinde_single:  # 如果是单侧偏心
+                is_side_single = self.judge_side_single_holes(one_group)
+                if is_side_single:  # 如果是单侧偏心
                     for one_hole in one_group:
                         dtr_hole = self.side_single_dtr_hole(one_hole)
                         self.dtr_holes.append(dtr_hole)
@@ -596,9 +596,9 @@ class Part(object):
             else:  # 侧边偏心,单孔--------side_single hole---------------------------------------
                 if group_y_r == CENTER_N:
                     group_y = - group_y
-                    gauge = 1
-                if group_y_r == CENTER_P:
                     gauge = -1
+                if group_y_r == CENTER_P:
+                    gauge = 1
                 tool_num = TransformFunctions.get_dtr_tool_id(tool_list, dtr_hole.dia, gauge, 0)
                 if tool_num > 0:
                     tool_far_side = [20, 21, 24, 25, 28, 29, 32, 33]
