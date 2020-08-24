@@ -631,37 +631,232 @@ class Part(object):
         """
         undefinde_holes = []
         part_list = DParts()
-        for hole_single in self.holes:
-            # tool_num = TransformFunctions.get_dtr_single_tool_id(tool_list, hole_single.dia,
-            #                                                      hole_single.y / abs(hole_single.y))
-            tool_num = TransformFunctions.get_dtr_tool_id(tool_list, hole_single.dia, hole_single.y / abs(hole_single.y), 0)
-
-            if tool_num > 0:
-                x_refer = LEADING_EDGE
-                if hole_single.y > 0:
-                    # y_refer = CENTER_N
-                    y_refer = CENTER_P
+        self.group_holes_by_y()
+        for group_hole in self.holes_group_y:
+            if len(group_hole) == 1:
+                if group_hole[0].y < 0:
+                    group_y = - group_hole[0].y
+                    gauge = -1
                 else:
-                    y_refer = CENTER_P
-                y_offset = abs(hole_single.y)
-                part_item = DPart(part_name=self.part_no, tool_number=tool_num,
-                                  x_offset=hole_single.x / MM_INCH,
-                                  x_reference=x_refer, permanent=True,
-                                  y_offset=y_offset / MM_INCH,
-                                  y_reference=y_refer)
+                    group_y = group_hole[0].y
+                    gauge = 1
+                tool_num = TransformFunctions.get_dtr_tool_id(tool_list, group_hole[0].dia, gauge, 0)
+                if tool_num > 0:
+                    tool_far_side = [20, 21, 24, 25, 28, 29, 32, 33]
+                    if tool_num in tool_far_side:
+                        group_y = abs(group_hole[0].y) * 1.27
+                    part_item = DPart(part_name=self.part_no, tool_number=tool_num,
+                                      x_offset=group_hole[0].x / MM_INCH,
+                                      x_reference=LEADING_EDGE, permanent=True,
+                                      y_offset=group_y / MM_INCH,
+                                      y_reference=CENTER_P)
+                    part_list.append(part_item)
+                else:
+                    temp = {
+                        'dia': group_hole[0].dia,
+                        'gauge': gauge,
+                        'diff': 0}
+                    undefinde_holes.append(temp)
+            elif len(group_hole) == 2:
+                group_hole = sorted(group_hole, key=attrgetter('y'))
+                default_gauge = 80
+                if group_hole[0].y < 0 < group_hole[1].y:
+                    diff_1 = default_gauge / 2 + group_hole[0].y
+                    tool_num = TransformFunctions.get_dtr_tool_id(tool_list, group_hole[0].dia,
+                                                                  default_gauge, diff_1)
+                    if tool_num > 0:
+                        x_refer = LEADING_EDGE
+                        part_item = DPart(part_name=self.part_no, tool_number=tool_num,
+                                          x_offset=group_hole[0].x / MM_INCH,
+                                          x_reference=x_refer, permanent=True,
+                                          y_offset=0.0,
+                                          y_reference=CENTER_P)
+                        part_list.append(part_item)
+                    else:
+                        temp = {
+                            'DIA': group_hole[0].dia,
+                            'GAUGE': default_gauge,
+                            'DIFF': diff_1
+                        }
+                        undefinde_holes.append(temp)
 
-                part_list.append(part_item)
+                    diff_2 = group_hole[1].y - default_gauge / 2
+                    tool_num = TransformFunctions.get_dtr_tool_id(tool_list, group_hole[1].dia,
+                                                                  default_gauge, diff_2)
+                    if tool_num > 0:
+                        x_refer = LEADING_EDGE
+                        part_item = DPart(part_name=self.part_no, tool_number=tool_num,
+                                          x_offset=group_hole[1].x / MM_INCH,
+                                          x_reference=x_refer, permanent=True,
+                                          y_offset=0.0,
+                                          y_reference=CENTER_P)
+                        part_list.append(part_item)
+                    else:
+                        temp = {
+                            'DIA': group_hole[1].dia,
+                            'GAUGE': default_gauge,
+                            'DIFF': diff_2
+                        }
+                        undefinde_holes.append(temp)
+                pass
+            elif len(group_hole) == 3:
+                group_hole = sorted(group_hole, key=attrgetter('y'))
+                if group_hole[0].y < group_hole[1].y < 0 < group_hole[2].y:
+                    gauge = group_hole[2].y - group_hole[0].y
+                    diff_1 = gauge / 2 + group_hole[0].y
+                    tool_num = TransformFunctions.get_dtr_tool_id(tool_list, group_hole[0].dia,
+                                                                  gauge, diff_1)
+                    if tool_num > 0:
+                        x_refer = LEADING_EDGE
+                        part_item = DPart(part_name=self.part_no, tool_number=tool_num,
+                                          x_offset=group_hole[0].x / MM_INCH,
+                                          x_reference=x_refer, permanent=True,
+                                          y_offset=0.0,
+                                          y_reference=CENTER_P)
+                        part_list.append(part_item)
+                    else:
+                        temp = {
+                            'DIA': group_hole[0].dia,
+                            'GAUGE': gauge,
+                            'DIFF': diff_1
+                        }
+                        undefinde_holes.append(temp)
+                    diff_2 = diff_1 - abs(group_hole[0].y - group_hole[1].y)
+                    tool_num = TransformFunctions.get_dtr_tool_id(tool_list, group_hole[0].dia,
+                                                                  gauge, diff_2)
+                    if tool_num > 0:
+                        x_refer = LEADING_EDGE
+                        part_item = DPart(part_name=self.part_no, tool_number=tool_num,
+                                          x_offset=group_hole[0].x / MM_INCH,
+                                          x_reference=x_refer, permanent=True,
+                                          y_offset=0.0,
+                                          y_reference=CENTER_P)
+                        part_list.append(part_item)
+                    else:
+                        temp = {
+                            'DIA': group_hole[0].dia,
+                            'GAUGE': gauge,
+                            'DIFF': diff_2
+                        }
+                        undefinde_holes.append(temp)
+
+                if group_hole[0].y < 0 < group_hole[1].y < group_hole[2].y:
+                    gauge = group_hole[2].y - group_hole[0].y
+                    diff_1 = gauge / 2 + group_hole[0].y
+                    tool_num = TransformFunctions.get_dtr_tool_id(tool_list, group_hole[0].dia,
+                                                                  gauge, diff_1)
+                    if tool_num > 0:
+                        x_refer = LEADING_EDGE
+                        part_item = DPart(part_name=self.part_no, tool_number=tool_num,
+                                          x_offset=group_hole[0].x / MM_INCH,
+                                          x_reference=x_refer, permanent=True,
+                                          y_offset=0.0,
+                                          y_reference=CENTER_P)
+                        part_list.append(part_item)
+                    else:
+                        temp = {
+                            'DIA': group_hole[0].dia,
+                            'GAUGE': gauge,
+                            'DIFF': diff_1
+                        }
+                        undefinde_holes.append(temp)
+
+                    diff_2 = diff_1 - abs(group_hole[2].y - group_hole[1].y)
+                    tool_num = TransformFunctions.get_dtr_tool_id(tool_list, group_hole[0].dia,
+                                                                  gauge, diff_2)
+                    if tool_num > 0:
+                        x_refer = LEADING_EDGE
+                        part_item = DPart(part_name=self.part_no, tool_number=tool_num,
+                                          x_offset=group_hole[0].x / MM_INCH,
+                                          x_reference=x_refer, permanent=True,
+                                          y_offset=0.0,
+                                          y_reference=CENTER_P)
+                        part_list.append(part_item)
+                    else:
+                        temp = {
+                            'DIA': group_hole[0].dia,
+                            'GAUGE': gauge,
+                            'DIFF': diff_2
+                        }
+                        undefinde_holes.append(temp)
+
+            elif len(group_hole) == 4:
+                group_hole = sorted(group_hole, key=attrgetter('y'))
+                if group_hole[0].y < 0 < group_hole[2].y:
+                    gauge_1 = group_hole[2].y - group_hole[0].y
+                    diff_1 = gauge_1 / 2 + group_hole[0].y
+                    tool_num = TransformFunctions.get_dtr_tool_id(tool_list, group_hole[0].dia,
+                                                                  gauge_1, diff_1)
+                    if tool_num > 0:
+                        x_refer = LEADING_EDGE
+                        part_item = DPart(part_name=self.part_no, tool_number=tool_num,
+                                          x_offset=group_hole[0].x / MM_INCH,
+                                          x_reference=x_refer, permanent=True,
+                                          y_offset=0.0,
+                                          y_reference=CENTER_P)
+                        part_list.append(part_item)
+                    else:
+                        temp = {
+                            'DIA': group_hole[0].dia,
+                            'GAUGE': gauge_1,
+                            'DIFF': diff_1
+                        }
+                        undefinde_holes.append(temp)
+                if group_hole[1].y < 0 < group_hole[3].y:
+                    gauge_2 = group_hole[3].y - group_hole[1].y
+                    diff_2 = gauge_2 / 2 + group_hole[1].y
+                    tool_num = TransformFunctions.get_dtr_tool_id(tool_list, group_hole[0].dia,
+                                                                  gauge_2, diff_2)
+                    if tool_num > 0:
+                        x_refer = LEADING_EDGE
+                        part_item = DPart(part_name=self.part_no, tool_number=tool_num,
+                                          x_offset=group_hole[1].x / MM_INCH,
+                                          x_reference=x_refer, permanent=True,
+                                          y_offset=0.0,
+                                          y_reference=CENTER_P)
+                        part_list.append(part_item)
+                    else:
+                        temp = {
+                            'DIA': group_hole[1].dia,
+                            'GAUGE': gauge_2,
+                            'DIFF': diff_2
+                        }
+                        undefinde_holes.append(temp)
+
+                pass
             else:
-                temp = {
-                    'dia': hole_single.dia
-                }
-                undefinde_holes.append(temp)
+                pass
+        # for hole_single in self.holes:
+        #     # tool_num = TransformFunctions.get_dtr_single_tool_id(tool_list, hole_single.dia,
+        #     #                                                      hole_single.y / abs(hole_single.y))
+        #     tool_num = TransformFunctions.get_dtr_tool_id(tool_list, hole_single.dia, hole_single.y / abs(hole_single.y), 0)
+        #
+        #     if tool_num > 0:
+        #         x_refer = LEADING_EDGE
+        #         if hole_single.y > 0:
+        #             # y_refer = CENTER_N
+        #             y_refer = CENTER_P
+        #         else:
+        #             y_refer = CENTER_P
+        #         y_offset = abs(hole_single.y)
+        #         part_item = DPart(part_name=self.part_no, tool_number=tool_num,
+        #                           x_offset=hole_single.x / MM_INCH,
+        #                           x_reference=x_refer, permanent=True,
+        #                           y_offset=y_offset / MM_INCH,
+        #                           y_reference=y_refer)
+        #
+        #         part_list.append(part_item)
+        #     else:
+        #         temp = {
+        #             'dia': hole_single.dia
+        #         }
+        #         undefinde_holes.append(temp)
 
         # 加入打印
         part_item = DPart(part_name=self.part_no, tool_number=1, x_reference=LEADING_EDGE, x_offset=250 / MM_INCH)
         part_list.append(part_item)
 
-        return part_list
+        return part_list, undefinde_holes
 
     def convert_to_c_pattern(self, tool_list):
         c_punch_string = '0;S'

@@ -791,9 +791,9 @@ def gen_dtr_pattern_list_crash(parts, tool_list):
         # part.group_holes_by_y()
         # part.convert_to_dtr_holes()
         # double_list = part.convert_to_dtr_holes(tool_list)
-        pattern = part.convert_to_dtr_pattern_crash(tool_list)
+        pattern, undefined_holes = part.convert_to_dtr_pattern_crash(tool_list)
         part_list.append(pattern)
-    return part_list
+    return part_list, undefined_holes
 
 
 def lysaght_csv_from_oracle_to_dtr(cut_list, parts):
@@ -839,8 +839,15 @@ def lysaght_csv_from_oracle_to_dtr(cut_list, parts):
             part_list.append(part_list_temp)
         if parts_crash:
             # part_list_temp = gen_dtr_pattern_list_crash(parts_crash, tool_list_single)
-            part_list_temp = gen_dtr_pattern_list_crash(parts_crash, tool_list)
+            part_list_temp, undefined_holes = gen_dtr_pattern_list_crash(parts_crash, tool_list)
             part_list.append(part_list_temp)
+            undefined_holes = [
+                dict(t) for t in {
+                    tuple(
+                        d.items()) for d in undefined_holes}]
+            if undefined_holes:
+                return return_list, undefined_holes, part_list
+                pass
 
     # 生成制作清单
     if parts_crash:
@@ -904,8 +911,14 @@ def convert_nc_from_oracle_to_dtr(cut_list, nc_folder, org='LKQ'):
             part_list.append(part_list_temp)
         if parts_crash:
             # part_list_temp = gen_dtr_pattern_list_crash(parts_crash, tool_list_single)
-            part_list_temp = gen_dtr_pattern_list_crash(parts_crash, tool_list)
+            part_list_temp, undefined_holes_list = gen_dtr_pattern_list_crash(parts_crash, tool_list)
             part_list.append(part_list_temp)
+        undefined_holes_list = [
+            dict(t) for t in {
+                tuple(
+                    d.items()) for d in undefined_holes_list}]
+        if undefined_holes_list:
+            return return_list, undefined_holes_list, part_list
     # 修改part_list
     # 生成制作清单
     if parts_crash:

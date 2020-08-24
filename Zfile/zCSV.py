@@ -207,6 +207,7 @@ class CsvFile:
                 parts = []
                 for line in lines:
                     item = line.replace('\r', '').replace('\n', '').replace('\t', '')
+                    item = item.rstrip(',')
                     if item[-1] == ',':
                         item = item[0:-2]
                     item = item.split(',')
