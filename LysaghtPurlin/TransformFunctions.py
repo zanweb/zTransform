@@ -773,7 +773,8 @@ def gen_dtr_pattern_list(parts, tool_list):
         # double_list = part.convert_to_dtr_holes(tool_list)
         pattern, undefined_holes = part.convert_to_dtr_pattern(tool_list)
         part_list.append(pattern)
-        undefined_holes_list.append(undefined_holes)
+        if undefined_holes:
+            undefined_holes_list.append(undefined_holes)
 
     return part_list, undefined_holes_list
 
@@ -913,10 +914,11 @@ def convert_nc_from_oracle_to_dtr(cut_list, nc_folder, org='LKQ'):
             # part_list_temp = gen_dtr_pattern_list_crash(parts_crash, tool_list_single)
             part_list_temp, undefined_holes_list = gen_dtr_pattern_list_crash(parts_crash, tool_list)
             part_list.append(part_list_temp)
-        undefined_holes_list = [
-            dict(t) for t in {
-                tuple(
-                    d.items()) for d in undefined_holes_list}]
+        if undefined_holes_list:
+            undefined_holes_list = [
+                dict(t) for t in {
+                    tuple(
+                        d.items()) for d in undefined_holes_list}]
         if undefined_holes_list:
             return return_list, undefined_holes_list, part_list
     # 修改part_list
