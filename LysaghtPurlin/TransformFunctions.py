@@ -195,7 +195,7 @@ def splice_qty_multi(item_qty_list, parts):
         new_item_t, new_part_t = splice_qty(item, qty, parts)
         new_item_id = new_item_id + ',' + new_item_t.item_id
         new_item_length = new_item_length + new_item_t.length
-        new_part_list.append((new_part_t, item.length))
+        new_part_list.append((new_part_t, new_item_length))
     new_item.quantity = 1
     new_item.length = new_item_length
     if len(new_item_id) > 20:
