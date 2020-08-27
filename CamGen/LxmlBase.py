@@ -66,6 +66,15 @@ class XmlGen:
         v_holes = holes[2]
         h_holes = holes[3]
 
+        for single_hole in o_holes:
+            if single_hole.diameter == 8:
+                self.up_to_down = False
+                break
+        for single_hole in u_holes:
+            if single_hole.diameter == 8:
+                self.up_to_down = True
+                break
+
         vu_holes = h_holes + v_holes
         o_side = 40
 
@@ -78,18 +87,8 @@ class XmlGen:
                     max_y = max(group[0].y, group[1].y)
                     o_side = profile_high - max_y
 
-        if not o_holes:
+        if o_side > 40:
             self.up_to_down = False
-        else:
-            for single_hole in o_holes:
-                if single_hole.diameter == 8:
-                    self.up_to_down = False
-                    break
-
-                if single_hole.diameter == 14:
-                    if o_side > 40:
-                        self.up_to_down = False
-                        break
 
     def add_top_side_holes(self, holes):
         for single_hole in holes:
