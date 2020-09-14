@@ -18,6 +18,8 @@ from LysaghtPurlin import TransformFunctions
 from Zfile import zCSV, zFBase
 from zCpurlin_ui import Ui_MainWindow
 
+import csv
+
 
 class z_c_purlin(QMainWindow):
     def __init__(self, parent=None):
@@ -133,14 +135,25 @@ class z_c_purlin(QMainWindow):
         line_str_list = []
 
         item_num = 0
+        length_diff = []
+        length_diff_dic = []
         for item in self.item_list:
             item_num += 1
             if item['ORG'] == 'LKQ':
                 part_no = item['Mark No']
             else:
                 part_no = item['Item']
+            part_length = float(item['Unit Length'])
             for part in c_lysaght_parts:
                 if part[0] == part_no:
+                    if part[3] != part_length:
+                        length_diff.append(part_no)
+                        tmp_dic = {'part_no': part_no,
+                                   'oracle_length': part[3],
+                                   'detail_length': part_length
+                                   }
+                        length_diff_dic.append(tmp_dic)
+
                     project_info = str(order_no) + ',' + part[2] + ',' + str(customer) + ',,' + str(order_no) + ','
                     if project_info == pre_project_info:
                         project_info = ',,,,,'
@@ -156,6 +169,21 @@ class z_c_purlin(QMainWindow):
                         pre_project_info = project_info
                     if item_num == len(self.item_list):
                         line_str_list.append(line_str)
+
+        header = ['part_no', 'oracle_length', 'detail_length']
+        if length_diff:
+            description = ''
+            for row in length_diff_dic:
+                description = description + row['part_no'] + '---' + str(row['oracle_length']) \
+                              + '---' + str(row['detail_length']) + '\n'
+
+            reply = QMessageBox.warning(self, '长度问题', '下列零件与Oracle中的长度不符, 是否继续?(y/n)\n' + str(description),
+                                        QMessageBox.Yes | QMessageBox.No)
+            if reply == QMessageBox.No:
+                path = self.dist_folder
+                path = os.path.join(path, 'length_diff.csv')
+                self.save_csv(header, length_diff_dic, path)
+                return
         if line_str_list:
             # print(line_str_list)
             try:
@@ -166,10 +194,10 @@ class z_c_purlin(QMainWindow):
                     file_name = file_name.replace('*', '_')
                     print(file_name)
                     path = os.path.join(os.getcwd(), file_name)
-                    with open(path, 'w', newline='') as csvfile:
+                    with open(path, 'w', newline='') as csv_file:
                         for row in line_str:
-                            csvfile.write(row + '\r\n')
-                        csvfile.close()
+                            csv_file.write(row + '\r\n')
+                        csv_file.close()
                 QMessageBox.information(self, '保存:', '文件已保存!\n确定后将打开目标文件夹!')
                 os.chdir(self.dist_folder)
                 folder_path = os.getcwd()
@@ -178,6 +206,17 @@ class z_c_purlin(QMainWindow):
                 QMessageBox.warning(self, '保存出错:', '文件未保存!!!\n' + str(e))
                 return 0
 
+    def save_csv(self, header, data, file_path):
+        try:
+            with open(file_path, 'w', newline='') as f:
+                writer = csv.DictWriter(f, fieldnames=header)
+                writer.writeheader()
+                writer.writerows(data)
+                f.close()
+        except Exception as error:
+            QMessageBox.warning(self, '警告', 'csv保存有问题:' + str(error))
+            return
+
     def get_item_list(self):
         seq_file = self.oracle_file
         if seq_file:
@@ -185,8 +224,8 @@ class z_c_purlin(QMainWindow):
             csv_file.del_lines_begin(8)
             self.item_list = csv_file.get_seq_list()
         else:
-            QMessageBox.warning(self, '错误', '没有制作清单文件!\n请指定Oracel制作清单文件!', QMessageBox.Ok)
-            return 0
+            QMessageBox.warning(self, '错误', '没有制作清单文件!\n请指定Oracle制作清单文件!', QMessageBox.Ok)
+            return
 
     def get_item_names(self):
         item_names = []
@@ -216,12 +255,12 @@ class z_c_purlin(QMainWindow):
                 return 0
         if self.data_source_type == 'CSV':
             # 从csv的文件夹中读取
-            all_parts = []  # 所有csv文件中的parts（lyasght）
+            all_parts = []  # 所有csv文件中的parts（lysaght）
             all_parts_no = []
             csv_files = zFBase.get_indicate_ext_file(self.source_folder, 'csv')
             if csv_files:
-                for csv in csv_files:
-                    csv_file_path = self.source_folder + '/' + str(csv) + '.csv'
+                for csv_name in csv_files:
+                    csv_file_path = self.source_folder + '/' + str(csv_name) + '.csv'
                     csv_file = zCSV.CsvFile(csv_file_path)
                     csv_parts = csv_file.get_lysaght_punch()
                     all_parts.extend(csv_parts)

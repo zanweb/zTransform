@@ -194,7 +194,8 @@ def splice_qty_multi(item_qty_list, parts):
     for item, qty in item_qty_list:
         new_item_t, new_part_t = splice_qty(item, qty, parts)
         new_item_id = new_item_id + ',' + new_item_t.item_id
-        new_item_length = new_item_length + new_item_t.length
+        # new_item_length = new_item_length + new_item_t.length
+        new_item_length = new_item_t.length
         new_part_list.append((new_part_t, new_item_length))
     new_item.quantity = 1
     new_item.length = new_item_length
@@ -213,6 +214,7 @@ def splice_qty_multi(item_qty_list, parts):
             new_part_t = new_part_list[i][0]
             new_part = splice_parts(new_part, new_part_t, new_item.item_id, length)
             length = length + new_part_list[i][1]
+            # length = new_part_list[i][1]
     new_item.part_number = new_item.item_id
     for pattern in new_part.parts:
         pattern.part_name = new_item.part_number
