@@ -218,6 +218,7 @@ def splice_qty_multi(item_qty_list, parts):
     new_item.part_number = new_item.item_id
     for pattern in new_part.parts:
         pattern.part_name = new_item.part_number
+    new_item.length = length
     return new_item, new_part
 
 
@@ -879,7 +880,9 @@ def convert_nc_from_oracle_to_dtr(cut_list, nc_folder, org='LKQ'):
     """
     # global new_cut_list
     tool_list = get_dtr_tools('./DTRTools.csv')
+    # tool_list_single = tool_list
     tool_list_single = get_dtr_tools_single('./DTRSingleTools.csv')
+
     lysaght_dia_list = get_lysaght_dias('./LysaghtHoleDia.csv')
 
     return_list = CutList()

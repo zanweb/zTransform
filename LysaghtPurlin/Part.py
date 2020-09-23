@@ -507,7 +507,7 @@ class Part(object):
         no_pattern_list_re = []
         for hole_single in self.holes:
             tool_num = TransformFunctions.get_dtr_single_tool_id(tool_list_single, hole_single.dia,
-                                                                 hole_single.y / abs(hole_single.y))
+                                                                 math.copysign(1, hole_single.y))
             if tool_num < 0:
                 temp = {
                     'dia': hole_single.dia,
