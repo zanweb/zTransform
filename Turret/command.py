@@ -1043,7 +1043,7 @@ def g810974(mm, high, jj_length, tool_width, tool_length, gauge_number=None, gau
 
 
 def save(code_org, length):
-    file_name = './' + str(length) + '.txt'
+    file_name = './runtimeData/' + str(length) + '.txt'
     try:
         with open(file_name, 'w', newline='') as txt_file:
             for line in code_org:
@@ -1078,11 +1078,11 @@ if __name__ == '__main__':
     #                 2080, 2090, 2100, 2110, 2120, 2130, 2140, 2150, 2160, 2170, 2180, 2190, 2200, 2210, 2220, 2230,
     #                 2240, 2250, 2260, 2270, 2280, 2290, 2300, 2310, 2320, 2330, 2340, 2350, 2360, 2370, 2380, 2390,
     #                 2400, 2410, 2420, 2430, 2440, 2450, 2460, 2470, 2480, 2490, 2500]
-    mm_list_test = [3750]
+    mm_list_test = [944, 1040, 3214, 1118]
     for mm in mm_list_test:
-        high = 212
+        # high = 212
         # high = 274
-        # high = 282
+        high = 282
         tool_width = 5.08
         tool_length = 35.56
         gauge_number = None
