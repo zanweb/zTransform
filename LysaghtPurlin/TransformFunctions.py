@@ -75,7 +75,9 @@ def process_half_cut(cut_list_org, parts_org):
             bundle_list = list(bundle_group)
             group_cut_list, group_parts, group_unable_splice = core_calculate_for_half_cut_1(bundle_list, parts_org)
             new_cut_list.extend(group_cut_list)
-            new_parts.append(group_parts)
+            # new_parts.parts.extend(group_parts.parts)
+            # new_parts.append(group_parts)
+            new_parts = group_parts
             unable_splice.extend(group_unable_splice)
     return new_cut_list, new_parts, unable_splice
 

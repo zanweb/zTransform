@@ -24,7 +24,8 @@ def reset(path):
         filePath = path + filename + filetype
         filePath = os.path.join(path, filename+filetype)
 
-        alter(filePath, "13.50", "14.00")
+        # alter(filePath, "13.50", "14.00")
+        alter_any(filePath)
 
 
 def alter(file, old_str, new_str):
@@ -40,7 +41,20 @@ def alter(file, old_str, new_str):
     os.rename("%s.bak" % file, file)
 
 
+def alter_any(file):
+    # with open(file, "r", encoding="utf-8") as f1, open("%s.bak" % file, "w", encoding="utf-8") as f2:
+    with open(file, "r", encoding="gbk") as f1, open("%s.bak" % file, "w", encoding="gbk") as f2:
+        for line in f1:
+            if ',' in line:
+                index = line.find(',')
+                line = line[:index]+'\n'
+            f2.write(line)
+    os.remove(file)
+    os.rename("%s.bak" % file, file)
+
+
 if __name__ == '__main__':
-    path_files = r'C:\Users\zzimo\Desktop\2199308-nc文本替换-8mm\nc'
+    path_files = r'C:\Users\zzimo\Desktop\double-length-in-nc\2203207\NCFiles'
 
     reset(path_files)
+    print('ok')
