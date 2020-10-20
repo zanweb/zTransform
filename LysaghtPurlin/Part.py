@@ -494,7 +494,7 @@ class Part(object):
             else:
                 tool_num = TransformFunctions.get_dtr_tool_id(tool_list, dtr_hole.dia, dtr_hole.gauge, group_y)
             if tool_num < 0:
-                if dtr_hole.group_type == 'group 8 holes':
+                if dtr_hole.group_type != 'group 8 holes':
                     temp = {
                         'dia': dtr_hole.dia,
                         'gauge': dtr_hole.gauge,
