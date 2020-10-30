@@ -23,6 +23,8 @@ class MainWin(QWidget):
         self.width = 1280
         self.height = 980
 
+        self.image_ext_list = ['.bmp', '.jpg', '.png', '.gif']
+
         self.tree = QTreeView(self)
         self.label_pdf = QLabel()
         # self.label_pdf.setText('image')
@@ -55,11 +57,18 @@ class MainWin(QWidget):
 
     def set_connects(self):
         self.tree.doubleClicked.connect(self.tree_double_clicked)
+        # self.tree.selectionModel().selectionChanged.connect(self.tree_double_clicked)
+        self.tree.selectionModel().currentRowChanged.connect(self.tree_double_clicked)
+        # self.tree.currentChanged.connect(self.tree_double_clicked)
         # self.tree.Clicked.connect(self.tree_double_clicked)
         # self.label_pdf.wheelEvent.connect(self.on_mouse_wheel)
 
-    # @pyqtSlot()
-    def tree_double_clicked(self, index):
+    # @pyqtSlot(QModelIndex, QModelIndex)
+    def tree_double_clicked(self, index, old_index=None):
+        try:    # if qItemSelection
+            new_index = index.indexes()[0]
+        except: # if qModelIndex
+            new_index = index
         path = self.model.filePath(index)
         print(path)
         is_dir = self.model.fileInfo(index).isDir()
@@ -69,6 +78,17 @@ class MainWin(QWidget):
             if ext == '.pdf':
                 print('it\'s a pdf')
                 self.set_pdf_info(path)
+            if ext.lower() in self.image_ext_list:
+                width = self.label_pdf.width()
+                height = self.label_pdf.height()
+                pix = QPixmap(path)
+                fit_pix = pix.scaled(width,height,Qt.KeepAspectRatio, Qt.SmoothTransformation)
+                self.label_pdf.setPixmap(fit_pix)
+                self.label_pdf.setAlignment(Qt.AlignCenter)
+                # self.label_pdf.setScaledContents(True)
+                # image = cv2.imread(path)
+                # cv2.imshow('图片', image)
+                # cv2.waitKey(0)
 
     def set_pdf_info(self, file_path):
         self.doc = fitz.open(file_path)
