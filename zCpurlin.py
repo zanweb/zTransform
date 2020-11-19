@@ -95,6 +95,7 @@ class z_c_purlin(QMainWindow):
         sorted_item_list = []
         for item in self.item_list:
             item['Unit Length'] = int(item['Unit Length'])
+        self.item_list.sort(key=itemgetter('Raw Material'))
         for index_mtl, mtl_group in groupby(self.item_list, key=itemgetter('Raw Material')):
             # print(index_mtl)
             sorted_item_list.extend(sorted(list(mtl_group), key=itemgetter('Unit Length'), reverse=True))

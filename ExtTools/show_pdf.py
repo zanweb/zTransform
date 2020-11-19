@@ -76,7 +76,7 @@ class MainWin(QWidget):
         if not is_dir:
             root, ext = os.path.splitext(path)
             if ext == '.pdf':
-                print('it\'s a pdf')
+                # print('it\'s a pdf')
                 self.set_pdf_info(path)
             if ext.lower() in self.image_ext_list:
                 width = self.label_pdf.width()
