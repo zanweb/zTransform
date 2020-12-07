@@ -26,6 +26,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.pushButton_ConvertPath.clicked.connect(self.browse_convert_path)
         self.pushButton_Run.clicked.connect(self.run)
 
+        self.no_nc_file = []
+
     def browse_nc_path(self):
         QMessageBox.information(self, '信息', '请指定NC文件目录！', QMessageBox.Yes)
         self.lineEdit_NCPath.setText(QFileDialog.getExistingDirectory(None, '请指定NC文件目录:'))
@@ -114,14 +116,26 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 file_name = item['Item'] + '.nc1'
                 file_full_path = os.path.join(self.in_folder, file_name)
                 if not os.path.isfile(file_full_path):
-                    answer = QMessageBox.warning(self, '警告', file_name + '文件不存在!\n继续（Y/N)?',
-                                                 QMessageBox.Yes | QMessageBox.No)
-                    if answer == QMessageBox.Yes:
-                        continue
-                    else:
-                        self.make_item_list = []
-                        break
-                self.make_item_list.append(item)
+                    self.no_nc_file.append(file_name)
+                else:
+                    self.make_item_list.append(item)
+            if self.no_nc_file:
+                answer = QMessageBox.warning(self, '警告', str(self.no_nc_file) + '文件不存在!\n继续（Y/N)?',
+                                             QMessageBox.Yes | QMessageBox.No)
+                if answer == QMessageBox.Yes:
+                    self.save_no_nc()
+                    return
+                else:
+                    self.make_item_list = []
+                    self.save_no_nc()
+
+    def save_no_nc(self):
+        file_name = os.path.join(self.out_folder,'no_nc_file.txt')
+        file_no_nc = open(file_name, 'w')
+        no_nc_ordered = sorted(self.no_nc_file)
+        no_nc_list = ((line + '\n') for line in no_nc_ordered)
+        file_no_nc.writelines(no_nc_list)
+        file_no_nc.close()
 
     def finish_check(self):
         answer = QMessageBox.question(self, '信息', '文件转换成功，请检查输出文件夹！\n继续转换？(Y/N)?',
