@@ -603,7 +603,7 @@ class Part(object):
                 if tool_num > 0:
                     tool_far_side = [20, 21, 24, 25, 28, 29, 32, 33]
                     if tool_num in tool_far_side:
-                        dtr_hole.group_y = dtr_hole.group_y * 1.27
+                        dtr_hole.group_y = dtr_hole.group_y     # * 1.27  2021/1/5 公制改英制, 不需乘1.27
                     part_item = DPart(part_name=self.part_no, tool_number=tool_num,
                                       x_offset=dtr_hole.x / MM_INCH,
                                       x_reference=dtr_hole.x_reference, permanent=True,
@@ -644,7 +644,7 @@ class Part(object):
                 if tool_num > 0:
                     tool_far_side = [20, 21, 24, 25, 28, 29, 32, 33]
                     if tool_num in tool_far_side:
-                        group_y = abs(group_hole[0].y) * 1.27
+                        group_y = abs(group_hole[0].y)  # * 1.27 2021/1/5 公制改英制, 不需乘1.27
                     part_item = DPart(part_name=self.part_no, tool_number=tool_num,
                                       x_offset=group_hole[0].x / MM_INCH,
                                       x_reference=LEADING_EDGE, permanent=True,
