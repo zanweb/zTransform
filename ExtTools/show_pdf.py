@@ -31,6 +31,8 @@ class MainWin(QWidget):
         self.model = QFileSystemModel()
         self.doc = None
         self.current_page = 0
+        self.focus_label = False
+        self.label_pdf.installEventFilter(self)
 
         self.ui_init()
         self.set_connects()
@@ -109,7 +111,7 @@ class MainWin(QWidget):
         fit_pixmap = pixmap.scaled(width, height, Qt.KeepAspectRatio, Qt.SmoothTransformation)
         self.label_pdf.setPixmap(fit_pixmap)
         self.label_pdf.setAlignment(Qt.AlignCenter)
-        self.label_pdf.setFocus()
+        # self.label_pdf.setFocus()
 
     def show_image(self, pno):
         page_no = int(pno) - 1
@@ -117,23 +119,34 @@ class MainWin(QWidget):
         if self.dl_array[page_no] == 0:
             self.dl_array[page_no] = self.doc[page_no].getDisplayList()
         dl = self.dl_array[page_no]
-        zoom = int(100)
+
+        zoom = int(1)
         rotate = int(0)
-        trans = fitz.Matrix(zoom / 100.0, zoom / 100.0).preRotate(rotate)
-        pix = dl.getPixmap(matrix=trans, alpha=False)
+        # trans = fitz.Matrix(zoom / 100.0, zoom / 100.0).preRotate(rotate)
+        # pix = dl.getPixmap(matrix=trans, alpha=False)
+        pix = self.get_pix(dl, zoom, clip_rate=0.0)
+
         fmt = QImage.Format_RGBA8888 if pix.alpha else QImage.Format_RGB888
         qt_image = QImage(pix.samples, pix.width, pix.height, pix.stride, fmt)
         pixmap = QPixmap()
         pixmap.convertFromImage(qt_image)
         return pixmap
 
+    def get_pix(self, page, zoom, clip_rate):
+        mat = fitz.Matrix(zoom, zoom)   # zoom factor 2 in each direction
+        rect = page.rect                # the page rectangle
+        mp = (rect.tl + rect.br) * clip_rate  # its middle point, bocomes top_left of clip
+        clip = fitz.Rect(mp, rect.br)  # the area we want
+        pix = page.getPixmap(matrix=mat, clip=clip)
+        return pix
+
     def wheelEvent(self, event):
         print('wheelEvent() captured.')
         # if event.modifiers():  # & Qt.ControlModifier:
-        if self.label_pdf.hasFocus():
-            print('ok')
+        # if self.label_pdf.hasFocus():
+        if self.focus_label:
+            # print('ok')
             self.on_mouse_wheel(event)
-
         else:
             super().wheelEvent(event)
 
@@ -164,6 +177,17 @@ class MainWin(QWidget):
         self.fit_page(page)
         # event.Skip()
 
+    def eventFilter(self, object: 'QObject', event: 'QEvent') -> bool:
+        if event.type() == QEvent.Enter:
+            # print("Mouse is over the label")
+            self.focus_label = True
+            # print('program stop is', self.stop)
+            return True
+        elif event.type() == QEvent.Leave:
+            # print("Mouse is not over the label")
+            self.focus_label = False
+            # print('program stop is', self.stop)
+        return False
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
@@ -180,5 +204,4 @@ if __name__ == '__main__':
     # tree.setWindowTitle("QTreeView例子")
     # tree.resize(640, 480)
     # tree.show()
-
     sys.exit(app.exec_())
