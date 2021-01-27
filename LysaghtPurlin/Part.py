@@ -706,8 +706,9 @@ class Part(object):
                                                                       default_gauge, diff_2)
                         if tool_num > 0:
                             x_refer = LEADING_EDGE
+                            # 2021/01/27 一组孔x轴加0.5, 如果X轴>3孔,需要错开些
                             part_item = DPart(part_name=self.part_no, tool_number=tool_num,
-                                              x_offset=group_hole[1].x / MM_INCH,
+                                              x_offset=(group_hole[1].x + 0.5) / MM_INCH,
                                               x_reference=x_refer, permanent=True,
                                               y_offset=0.0,
                                               y_reference=CENTER_P)
@@ -748,7 +749,7 @@ class Part(object):
                     if tool_num > 0:
                         x_refer = LEADING_EDGE
                         part_item = DPart(part_name=self.part_no, tool_number=tool_num,
-                                          x_offset=group_hole[0].x / MM_INCH,
+                                          x_offset=(group_hole[0].x + 0.5) / MM_INCH,
                                           x_reference=x_refer, permanent=True,
                                           y_offset=0.0,
                                           y_reference=CENTER_P)
@@ -788,7 +789,7 @@ class Part(object):
                     if tool_num > 0:
                         x_refer = LEADING_EDGE
                         part_item = DPart(part_name=self.part_no, tool_number=tool_num,
-                                          x_offset=group_hole[0].x / MM_INCH,
+                                          x_offset=(group_hole[0].x + 0.5)/ MM_INCH,
                                           x_reference=x_refer, permanent=True,
                                           y_offset=0.0,
                                           y_reference=CENTER_P)
@@ -831,7 +832,7 @@ class Part(object):
                     if tool_num > 0:
                         x_refer = LEADING_EDGE
                         part_item = DPart(part_name=self.part_no, tool_number=tool_num,
-                                          x_offset=group_hole[1].x / MM_INCH,
+                                          x_offset=(group_hole[1].x + 0.5) / MM_INCH,
                                           x_reference=x_refer, permanent=True,
                                           y_offset=0.0,
                                           y_reference=CENTER_P)

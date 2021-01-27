@@ -67,9 +67,9 @@ class MainWin(QWidget):
 
     # @pyqtSlot(QModelIndex, QModelIndex)
     def tree_double_clicked(self, index, old_index=None):
-        try:    # if qItemSelection
+        try:  # if qItemSelection
             new_index = index.indexes()[0]
-        except: # if qModelIndex
+        except:  # if qModelIndex
             new_index = index
         path = self.model.filePath(index)
         print(path)
@@ -84,7 +84,7 @@ class MainWin(QWidget):
                 width = self.label_pdf.width()
                 height = self.label_pdf.height()
                 pix = QPixmap(path)
-                fit_pix = pix.scaled(width,height,Qt.KeepAspectRatio, Qt.SmoothTransformation)
+                fit_pix = pix.scaled(width, height, Qt.KeepAspectRatio, Qt.SmoothTransformation)
                 self.label_pdf.setPixmap(fit_pix)
                 self.label_pdf.setAlignment(Qt.AlignCenter)
                 # self.label_pdf.setScaledContents(True)
@@ -133,8 +133,8 @@ class MainWin(QWidget):
         return pixmap
 
     def get_pix(self, page, zoom, clip_rate):
-        mat = fitz.Matrix(zoom, zoom)   # zoom factor 2 in each direction
-        rect = page.rect                # the page rectangle
+        mat = fitz.Matrix(zoom, zoom)  # zoom factor 2 in each direction
+        rect = page.rect  # the page rectangle
         mp = (rect.tl + rect.br) * clip_rate  # its middle point, bocomes top_left of clip
         clip = fitz.Rect(mp, rect.br)  # the area we want
         pix = page.getPixmap(matrix=mat, clip=clip)
@@ -188,6 +188,7 @@ class MainWin(QWidget):
             self.focus_label = False
             # print('program stop is', self.stop)
         return False
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
